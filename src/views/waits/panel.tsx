@@ -7,6 +7,7 @@ import {
 } from 'orca'
 import '../../protocol.ts'
 import type { Wait, WaitsSnapshot } from '../../protocol.ts'
+import { clean, MAX } from './text.ts'
 
 /** The worker's last snapshot; null until it answers. */
 const snapshot = atom<WaitsSnapshot | null>(null)
@@ -68,7 +69,7 @@ function Banner({ snap }: { snap: WaitsSnapshot }) {
   return (
     <Callout tone="warning" title={title}>
       <Stack gap="xs">
-        <Text size="sm">{b.message}</Text>
+        <Text size="sm">{clean(b.message, MAX.what)}</Text>
         {b.tried && b.tried.length ? <Text size="xs" muted>Tried: {b.tried.join(', ')}. Set the path in Settings, Orca CLI path.</Text> : null}
         {snap.waits.length ? <Text size="xs" muted>Showing the last good data.</Text> : null}
       </Stack>

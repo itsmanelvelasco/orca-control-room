@@ -7,10 +7,10 @@ const snap = await fixtureSnapshot(Date.now())
 
 export default defineCheck({
   waits: { requests: { 'waits.get': snap } },
-  empty: { requests: { 'waits.get': { waits: [], updatedAt: Date.now(), banner: null, cliPath: '/opt/Orca/resources/bin/orca' } } },
+  empty: { requests: { 'waits.get': { waits: [], updatedAt: Date.now(), primed: true, banner: null, cliPath: '/opt/Orca/resources/bin/orca' } } },
   cliMissing: {
     requests: {
-      'waits.get': { waits: [], updatedAt: Date.now(), banner: { kind: 'not_found', message: 'The Orca CLI was not found.', tried: ['/opt/Orca/resources/bin/orca', 'orca on PATH'] }, cliPath: null }
+      'waits.get': { waits: [], updatedAt: Date.now(), primed: true, banner: { kind: 'not_found', message: 'The Orca CLI was not found.', tried: ['/opt/Orca/resources/bin/orca', 'orca on PATH'] }, cliPath: null }
     }
   }
 })

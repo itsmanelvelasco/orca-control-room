@@ -15,9 +15,11 @@ const fakeRunner = (): CliRunner => ({
 async function start(storage: Record<string, any> = { 'waits.notified': [] }, settings: Record<string, any> = { orcaCli: '', notifyNewWaits: true }) {
   const real = { ...main.runtime }
   const timers: (() => void)[] = []
+  /** The "read `worktree ps` soon after an event" timeouts, run by the test. */
+  const soon: (() => void)[] = []
   main.runtime.createRunner = fakeRunner
   main.runtime.setInterval = ((fn: () => void) => (timers.push(fn), 0)) as unknown as typeof setInterval
-  main.runtime.setTimeout = ((fn: () => void) => (fn(), 0)) as unknown as typeof setTimeout
+  main.runtime.setTimeout = ((fn: () => void) => (soon.push(fn), 0)) as unknown as typeof setTimeout
   const host = mockHost({ storage, settings })
   const worker = await mountWorker(main, { host, events: ['agent.status.changed'] })
   const settle = async () => {
@@ -28,7 +30,7 @@ async function start(storage: Record<string, any> = { 'waits.notified': [] }, se
     await worker.deactivate()
     Object.assign(main.runtime, real)
   }
-  return { host, worker, settle, timers, done }
+  return { host, worker, settle, timers, soon, done }
 }
 
 test('worker: waits.get answers the fixture waits; status bar counts them; one notification each', async () => {
@@ -56,12 +58,18 @@ test('worker: a later cycle with the same waits notifies nothing more', async ()
 })
 
 test('worker: an agent event adds a wait at once and posts it', async () => {
-  const { host, worker, settle, done } = await start()
+  const { host, worker, settle, soon, done } = await start()
   await worker.emit('agent.status.changed', { workspaceId: null, paneKey: 'pane-loose:1', terminalId: 'term_8e4f3fb7-bd76-4a6c-8e92-3f5e3a3a9d44', title: 'Loose agent', state: 'blocked', receivedAt: 1795400800000 })
   await settle()
-  const snap = (await worker.request('waits.get')) as any
-  assert.ok(snap.waits.some((w: any) => w.key === 'agent:term_8e4f3fb7-bd76-4a6c-8e92-3f5e3a3a9d44'))
+  const has = async () => ((await worker.request('waits.get')) as any).waits.some((w: any) => w.key === 'agent:term_8e4f3fb7-bd76-4a6c-8e92-3f5e3a3a9d44')
+  assert.ok(await has())
   assert.equal((host.callsOf('statusBar.update').at(-1) as any).text, '9 waiting')
+  // The read soon after: `worktree ps` does not list that pane (its terminal closed), so the row goes.
+  assert.equal(soon.length, 1)
+  soon[0]()
+  await settle()
+  assert.equal(await has(), false)
+  assert.equal((host.callsOf('statusBar.update').at(-1) as any).text, '8 waiting')
   await done()
 })
 

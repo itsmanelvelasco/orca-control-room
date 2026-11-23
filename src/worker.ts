@@ -13,6 +13,8 @@ import { createWaitsRefresher, FAST_MS, SLOW_EVERY, type WaitsSnapshot } from '.
 import { registerLine } from './views/line/worker.ts'
 
 export const ORCA_CLI_SETTING = 'orcaCli'
+/** Gate id -> when this plugin first saw it, so a restart keeps "since". */
+export const GATES_SEEN_KEY = 'waits.gatesSeen'
 
 /** Seams for the worker test: a fake CLI runner and timers. Orca never changes them. */
 export const runtime = { createRunner: createHostCliRunner, setInterval, setTimeout }
@@ -79,9 +81,14 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
       lastCount = snap.waits.length
       void orca.host.call('statusBar.update', { id: STATUS_ITEM, ...statusBarOf(lastCount), icon: 'bell' }).catch((e: unknown) => orca.log(`statusBar.update failed: ${String((e as Error)?.message ?? e)}`))
     }
-    void notifier.update(snap.waits).catch(() => undefined)
+    void notifier.update(snap.waits, snap.primed).catch(() => undefined)
   }
-  const refresher = createWaitsRefresher({ run: (r) => cli.run(r), onChange, cliPath: () => cli.current()?.path ?? null })
+  const refresher = createWaitsRefresher({
+    run: (r) => cli.run(r),
+    onChange,
+    cliPath: () => cli.current()?.path ?? null,
+    seen: { load: () => orca.storage.get(GATES_SEEN_KEY), save: (seen) => orca.storage.set(GATES_SEEN_KEY, seen) }
+  })
 
   orca.panels.handle('waits.get', () => refresher.snapshot())
   orca.panels.handle('waits.open', async (input) => {

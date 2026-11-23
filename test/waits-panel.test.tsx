@@ -22,7 +22,7 @@ test('panel: one row per wait, newest first, labels and options; HTML shown as t
 })
 
 test('panel: empty state, banner when the CLI is missing, live update from the worker', async () => {
-  const host = mockHost({ requests: { 'waits.get': { waits: [], updatedAt: 1, banner: { kind: 'not_found', message: 'The Orca CLI was not found.', tried: ['/opt/Orca/resources/bin/orca'] }, cliPath: null } } })
+  const host = mockHost({ requests: { 'waits.get': { waits: [], updatedAt: 1, primed: true, banner: { kind: 'not_found', message: 'The Orca CLI was not found.', tried: ['/opt/Orca/resources/bin/orca'] }, cliPath: null } } })
   const view = await mount(panel, { host })
   assert.ok(view.summary().includes('EmptyState "Nothing waits on you"'))
   assert.ok(view.summary().includes('Callout warning "Orca CLI not found"'))

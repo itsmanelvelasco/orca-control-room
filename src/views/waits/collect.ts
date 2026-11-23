@@ -21,7 +21,10 @@ export type WaitTarget = { kind: 'terminal'; terminalId: string } | { kind: 'wor
 export type Wait = {
   /** Stable row key: `item:<uid>`, `task:<taskId>` or `agent:<id>`. */
   key: string
-  /** Changes when the wait is new again (a new question, a new block); notifications key on it. */
+  /**
+   * Changes when the wait is new again (a new question, a new wait of the agent); notifications key
+   * on it. An agent's is keyed on its pane key, so it is the same whichever source sees it first.
+   */
   notifyId: string
   kind: WaitKind
   /** Who waits: a bot, a task, an agent. Cleaned. */
@@ -52,7 +55,19 @@ export type WaitSources = {
   events: readonly Agent[]
   /** When this worker first saw each gate (gates carry no time). */
   firstSeen?: ReadonlyMap<string, number>
+  /**
+   * The notify memory of agent waits, carried from one call to the next by the refresher. While an
+   * agent stays listed, its wait keeps one `notifyId`, even when a trust reason, a terminal id or a
+   * more exact start time arrives later. Updated in place: agents no longer listed drop out.
+   */
+  spells?: Map<string, AgentSpell>
 }
+
+/** One agent wait as first keyed, by `agent:<paneKey>`. */
+export type AgentSpell = { notifyId: string; since: number | null }
+
+/** A listed agent whose wait starts more than this after the last one has a new wait. */
+export const SPELL_SLACK_MS = 2_000
 
 export const TRUST_LABEL = 'trust this folder'
 
@@ -131,6 +146,19 @@ export function collectWaits(src: WaitSources): Wait[] {
   }
 
   const agents = mergeAgents(src.worktrees.flatMap((w) => w.agents), src.events)
+  const listed = new Set<string>()
+  // Every `worktree ps` row and every event has a pane key, so it is the stable part.
+  const notifyIdOf = (a: Agent): string => {
+    const spell = `agent:${a.paneKey ?? a.key}`
+    listed.add(spell)
+    const since = a.stateStartedAt
+    const prev = src.spells?.get(spell)
+    const newer = prev && since !== null && prev.since !== null && since > prev.since + SPELL_SLACK_MS
+    if (prev && !newer) return prev.notifyId
+    const next = { notifyId: `${spell}:${since ?? ''}`, since }
+    src.spells?.set(spell, next)
+    return next.notifyId
+  }
   for (const a of agents) {
     if (!agentWaits(a)) continue
     const merged = (a.terminalId && gatedBy.get(a.terminalId)) || undefined
@@ -150,7 +178,7 @@ export function collectWaits(src: WaitSources): Wait[] {
     const what = a.trustPrompt ? `Asks you to ${TRUST_LABEL}` : a.waitMessage ?? (a.state === 'blocked' ? 'Blocked on you' : 'Waiting for your input')
     out.set(`agent:${id}`, {
       key: `agent:${id}`,
-      notifyId: `agent:${id}:${a.trustPrompt ? 'trust' : a.state}:${a.stateStartedAt ?? ''}`,
+      notifyId: notifyIdOf(a),
       kind: 'agent',
       who: clean(place ? `${name} · ${place}` : name, MAX.who),
       what: clean(what, MAX.what),
@@ -162,5 +190,6 @@ export function collectWaits(src: WaitSources): Wait[] {
     })
   }
 
+  if (src.spells) for (const k of [...src.spells.keys()]) if (!listed.has(k)) src.spells.delete(k)
   return [...out.values()].sort((a, b) => (b.since ?? -1) - (a.since ?? -1) || a.key.localeCompare(b.key))
 }

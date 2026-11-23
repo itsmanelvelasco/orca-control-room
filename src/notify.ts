@@ -2,7 +2,8 @@
 //
 // A wait is "new" when its `notifyId` was never notified: a new question on an item, a new
 // gate, an agent that enters a wait again. Notified ids live in the plugin's storage, so a
-// restart does not notify again. The first run ever records what already waits, silently.
+// restart does not notify again. The first run ever records what already waits, silently, until
+// the first clean full CLI cycle (`primed`): an agent event before it does not end the silence.
 // The `notifyNewWaits` setting turns notifications off; ids are still recorded, so turning it
 // back on does not flood.
 
@@ -12,7 +13,7 @@ import { clean, MAX } from './views/waits/text.ts'
 export const NOTIFY_SETTING = 'notifyNewWaits'
 export const NOTIFIED_KEY = 'waits.notified'
 export const STATUS_ITEM = 'waits'
-/** Ids kept; older ones drop off. */
+/** Ids kept; older ones drop off, except those of waits still listed. */
 export const MAX_NOTIFIED = 500
 /** At most this many notifications per refresh; the rest go in one summary. */
 export const MAX_PER_UPDATE = 3
@@ -25,13 +26,31 @@ export type NotifierDeps = {
 }
 
 export type Notifier = {
-  /** Notifies the waits not notified before; resolves with how many notifications it showed. */
-  update(waits: readonly Wait[]): Promise<number>
+  /**
+   * Notifies the waits not notified before; resolves with how many notifications it showed.
+   * `primed`: the list comes after a clean full CLI cycle (default true).
+   */
+  update(waits: readonly Wait[], primed?: boolean): Promise<number>
 }
 
 export function notificationOf(w: Wait): { title: string; body: string } {
   const opts = w.options.length ? ` (${w.options.join(' / ')})` : ''
   return { title: clean(`Waits on you: ${w.who}`, MAX.who + 14), body: clean(`${w.label === 'Gate' || w.label === 'Needs you' ? '' : `${w.label}: `}${w.what}${opts}`, MAX.what) }
+}
+
+/** Cuts `seen` to MAX_NOTIFIED, oldest first, but never drops the id of a wait still listed. */
+export function trim(seen: string[], listed: readonly Wait[]): void {
+  let over = seen.length - MAX_NOTIFIED
+  if (over <= 0) return
+  const keep = new Set(listed.map((w) => w.notifyId))
+  for (let i = 0; i < seen.length && over > 0; ) {
+    if (keep.has(seen[i])) {
+      i++
+    } else {
+      seen.splice(i, 1)
+      over--
+    }
+  }
 }
 
 export function createNotifier(deps: NotifierDeps): Notifier {
@@ -52,14 +71,14 @@ export function createNotifier(deps: NotifierDeps): Notifier {
     return ids
   }
 
-  const run = async (waits: readonly Wait[]): Promise<number> => {
+  const run = async (waits: readonly Wait[], primed: boolean): Promise<number> => {
     const seen = await ready()
     const fresh = waits.filter((w) => !seen.includes(w.notifyId))
     const silent = firstRun
-    firstRun = false
-    if (fresh.length === 0 && !silent) return 0
+    if (primed) firstRun = false
+    if (fresh.length === 0) return 0
     seen.push(...fresh.map((w) => w.notifyId))
-    if (seen.length > MAX_NOTIFIED) seen.splice(0, seen.length - MAX_NOTIFIED)
+    trim(seen, waits)
     try {
       await deps.save([...seen])
     } catch {
@@ -88,9 +107,9 @@ export function createNotifier(deps: NotifierDeps): Notifier {
   }
 
   return {
-    update(waits) {
+    update(waits, primed) {
       // One update at a time, so two quick refreshes never notify the same wait twice.
-      const p = chain.then(() => run(waits))
+      const p = chain.then(() => run(waits, primed ?? true))
       chain = p.catch(() => undefined)
       return p
     }
