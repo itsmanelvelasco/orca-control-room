@@ -23,9 +23,15 @@ async function ask(force = false): Promise<void> {
   }
 }
 
+/** The tab was just switched to: ask now rather than at the next tick. */
+export function wake(): void {
+  void ask()
+}
+
 export function setup(ctx: PanelContext): void {
   ctx.subscriptions.push(plugin.on('line.changed', (s) => set(snap, s)))
-  void ask()
+  // A hidden tab makes no CLI call, not even at mount: the first ask is the first visible tick.
+  if (read(ctx.visible)) void ask()
   let inFlight = false
   const timer = setInterval(() => {
     if (!read(ctx.visible) || inFlight) return

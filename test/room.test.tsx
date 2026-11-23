@@ -53,6 +53,48 @@ test('the panel opens on the tab it was left on', async () => {
   await view.unmount()
 })
 
+test('review 1: opening on Waits asks the hidden tabs nothing, not even at mount', async () => {
+  const { host, asks } = await hostWithCounts()
+  const view = await mount(room, { host })
+  assert.equal(asks.line, 0, 'line asked at mount while hidden')
+  assert.equal(asks.agents, 0, 'agents asked at mount while hidden')
+  await view.unmount()
+})
+
+test('review 1: opening on Agents asks agents only; a switch asks the new tab at once', async () => {
+  const { host, asks } = await hostWithCounts()
+  const view = await mount(room, { host, persisted: { plugin: { 'room.tab': 'agents' } } })
+  assert.ok(view.summary()[0].includes('"Agents" selected'))
+  assert.equal(asks.line, 0, 'line asked at mount while hidden')
+  assert.ok(asks.agents >= 1, 'agents did not ask at mount while shown')
+  await view.select({ type: 'Tabs' }, 'line')
+  assert.ok(asks.line >= 1, 'line did not ask on the switch')
+  await view.unmount()
+})
+
+test('review 1: an unknown stored tab shows Waits and polls as Waits', async () => {
+  const { host, asks } = await hostWithCounts()
+  const view = await mount(room, { host, persisted: { plugin: { 'room.tab': 'gone' } } })
+  assert.ok(view.summary()[0].includes('selected'), view.summary()[0])
+  assert.ok(view.find({ text: 'Waits on you' }))
+  await sleep(1_300)
+  assert.equal(asks.line + asks.agents, 0)
+  await view.unmount()
+})
+
+test('PRD goal (English UI): relative times are English whatever the locale', async () => {
+  const { host } = await hostWithCounts()
+  const view = await mount(room, { host, locale: 'es-ES' })
+  await sleep(20)
+  assert.ok(view.find({ text: /^Updated (just now|\d+[smhd] ago)$/ }), view.summary().join('\n'))
+  assert.ok(view.find({ text: /^(just now|\d+[smhd] ago)$/ }), 'a row says since when, in English')
+  assert.ok(!view.find({ text: /hace|segundos?|minutos?/i }))
+  await view.select({ type: 'Tabs' }, 'agents')
+  await sleep(20)
+  assert.ok(view.find({ text: /· read (just now|\d+[smhd] ago)$/ }), view.summary().join('\n'))
+  await view.unmount()
+})
+
 test('only the tab shown polls; a hidden panel polls nothing', async () => {
   const { host, asks } = await hostWithCounts()
   const view = await mount(room, { host })

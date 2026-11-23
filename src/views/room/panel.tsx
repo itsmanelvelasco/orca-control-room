@@ -5,6 +5,7 @@ import { atom, derived, read, set, Tab, Tabs, type PanelContext } from 'orca'
 import * as waits from '../waits/panel.tsx'
 import * as line from '../line/panel.tsx'
 import * as agents from '../agents/panel.tsx'
+import { startClock } from '../time.ts'
 
 export const TABS = ['waits', 'line', 'agents'] as const
 export type TabId = (typeof TABS)[number]
@@ -14,22 +15,36 @@ export const tab = atom<TabId>('room.tab', 'waits', { persist: 'plugin' })
 
 const isTab = (v: unknown): v is TabId => typeof v === 'string' && (TABS as readonly string[]).includes(v)
 
+/** The tab on screen. Tabs is controlled by it, so what shows and what polls never differ. */
+const shown = derived<TabId>(() => {
+  const t = read(tab)
+  return isTab(t) ? t : 'waits'
+})
+
 /** The same context, with `visible` true only while the panel is visible and `id` is the tab shown. */
 function contextFor(ctx: PanelContext, id: TabId): PanelContext {
-  return { ...ctx, visible: derived(() => read(ctx.visible) && read(tab) === id) }
+  return { ...ctx, visible: derived(() => read(ctx.visible) && read(shown) === id) }
 }
 
 export function setup(ctx: PanelContext): void {
   waits.setup(contextFor(ctx, 'waits'))
   line.setup(contextFor(ctx, 'line'))
   agents.setup(contextFor(ctx, 'agents'))
+  startClock(ctx)
+}
+
+/** A tab press: show it, and let its view ask at once (a hidden tab asked nothing). */
+function show(v: string): void {
+  if (!isTab(v) || v === read(shown)) return
+  set(tab, v)
+  if (v === 'line') line.wake()
+  if (v === 'agents') agents.wake()
 }
 
 export default function Panel() {
   const count = read(waits.snapshot)?.waits.length ?? 0
-  const current = read(tab)
   return (
-    <Tabs label="Control Room" defaultValue={isTab(current) ? current : 'waits'} onChange={(v) => isTab(v) && set(tab, v)}>
+    <Tabs label="Control Room" value={read(shown)} onChange={show}>
       <Tab value="waits" label={count ? `Waits (${count})` : 'Waits'} icon="bell">
         <waits.default />
       </Tab>
