@@ -61,9 +61,11 @@ export type AgentsSnapshot = {
   error: string | null
   /** Workspaces whose `agents.list` failed on the last read; their last known agents stay. */
   stale: string[]
+  /** `workspace.list` said it left workspaces out, so some agents may be missing. */
+  truncated: boolean
 }
 
-export const emptySnapshot = (): AgentsSnapshot => ({ status: 'loading', groups: [], total: 0, updatedAt: null, error: null, stale: [] })
+export const emptySnapshot = (): AgentsSnapshot => ({ status: 'loading', groups: [], total: 0, updatedAt: null, error: null, stale: [], truncated: false })
 
 /**
  * Untrusted text (titles, task titles, names) for one line: control characters out, first line
@@ -71,8 +73,9 @@ export const emptySnapshot = (): AgentsSnapshot => ({ status: 'loading', groups:
  */
 export function cleanText(text: string | null | undefined, max = 120): string {
   if (typeof text !== 'string') return ''
+  // Control and invisible format characters (zero-width, bidi overrides) out; tabs become a space.
   // eslint-disable-next-line no-control-regex
-  const line = text.replace(/[\u0000-\u0008\u000B-\u001F\u007F-\u009F​-‏‪-‮⁦-⁩]/g, '').split(/\r?\n|\r|\t/, 1)[0].trim()
+  const line = text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g, '').split(/\r?\n|\r/, 1)[0].replace(/\t+/g, ' ').trim()
   return line.length > max ? `${line.slice(0, max - 1).trimEnd()}…` : line
 }
 
@@ -84,10 +87,30 @@ export function hostLabel(hostId: string | null): string | null {
   return cleanText(hostId, 40)
 }
 
-/** An event row, tied to the id `workspace.list` gives its workspace (host API 1.7), else the event's own. */
+/** The id `workspace.list` gives an event's workspace: `workspaceListId`, always sent from API 1.7. */
+export const eventWorkspaceId = (e: AgentStatusEvent): string | null => e.workspaceListId ?? e.workspaceId ?? null
+
+/** An event row, tied to its workspace's `workspace.list` id. */
 export function agentFromStatusEvent(e: AgentStatusEvent): Agent {
-  const a = agentFromEvent(e)
-  return e.workspaceListId ? { ...a, workspaceId: e.workspaceListId } : a
+  return { ...agentFromEvent(e), workspaceId: eventWorkspaceId(e) }
+}
+
+/**
+ * `terminalId` is optional on an event and `agents.list` rows have no pane key, so an event without
+ * it could not merge and the agent would show twice. Such an event takes the terminal id of the one
+ * list row in its workspace with the same title that no other event claims; with none or several,
+ * it stays its own row (an agent the list has not shown yet).
+ */
+export function joinEvents(events: readonly AgentStatusEvent[], listed: ReadonlyMap<string, readonly AgentsListRow[]>): AgentStatusEvent[] {
+  const claimed = new Set(events.map((e) => e.terminalId).filter((t): t is string => !!t))
+  return events.map((e) => {
+    if (e.terminalId || !e.title) return e
+    const wsId = eventWorkspaceId(e)
+    const hits = (wsId ? (listed.get(wsId) ?? []) : []).filter((r) => r.terminalId && r.title === e.title && !claimed.has(r.terminalId))
+    if (hits.length !== 1) return e
+    claimed.add(hits[0].terminalId!)
+    return { ...e, terminalId: hits[0].terminalId! }
+  })
 }
 
 /** Waits first, then work, then done. */
@@ -117,7 +140,7 @@ export function buildGroups(input: BuildInput): { groups: AgentGroup[]; total: n
       if (a) listRows.push(a)
     }
   }
-  const agents = mergeAgents(listRows, input.events.map(agentFromStatusEvent))
+  const agents = mergeAgents(listRows, joinEvents(input.events, input.listed).map(agentFromStatusEvent))
 
   const groups = new Map<string, AgentGroup & { all: AgentRow[] }>()
   for (const a of agents) {

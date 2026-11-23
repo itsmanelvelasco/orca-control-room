@@ -310,3 +310,85 @@ test('panel: a table row action asks the worker to open that row', async () => {
   assert.deepEqual(opened, ['term_docs_1'])
   await panel.unmount()
 })
+
+// ---------- review of PR 5 ----------
+
+test('a waiting agent stays waiting when its workspace read fails after the event', async () => {
+  const listedOnce: AgentsCase = { ...CASE, agentsList: { ...CASE.agentsList, 'wt-broken': { agents: [{ terminalId: 'term_api_2', title: 'Migrate', agent: 'codex', state: 'working', stateStartedAt: CASE.now - 60_000, sessionId: null, task: null }] } } }
+  let c = listedOnce
+  let t = CASE.now
+  const r = createAgentsRefresher({ host: { listWorkspaces: async () => c.workspaceList, listAgents: async (id) => agentsListOf(c, id) }, now: () => t })
+  await r.refresh()
+  t += 1000
+  r.onEvent({ workspaceId: 'ws-internal-broken', workspaceListId: 'wt-broken', paneKey: 'tab-api:2', terminalId: 'term_api_2', title: 'Migrate', state: 'waiting', receivedAt: t, mainAgent: { state: 'waiting', stateStartedAt: t } })
+  assert.equal(rowsOf(r.snapshot()).find((x) => x.key === 'tab-api:2')?.state, 'waiting')
+  // The SSH host stops answering: the old list row says working, the event says waiting.
+  c = CASE
+  t += 5000
+  await r.refresh()
+  const row = rowsOf(r.snapshot()).find((x) => x.key === 'tab-api:2')
+  assert.equal(row?.state, 'waiting', 'the wait does not flip back to working')
+  assert.deepEqual(r.snapshot().stale, ['unreachable'])
+  // A workspace that read fine still drops its older events (term_main_1 is back to its list state).
+  r.onEvent(CASE.events[0])
+  t += 5000
+  await r.refresh()
+  assert.equal(rowsOf(r.snapshot()).find((x) => x.key === 'term_main_1')?.state, 'working')
+})
+
+test('an event with no terminal id joins its list row by title, so the agent shows once', async () => {
+  const { host } = caseHost(CASE)
+  const r = createAgentsRefresher({ host, now: () => CASE.now })
+  await r.refresh()
+  r.onEvent({ workspaceId: 'ws-internal-export', workspaceListId: 'wt-sample-export', paneKey: 'tab-export:1', title: 'Slice 2: export view', state: 'working', receivedAt: CASE.now + 10, mainAgent: { state: 'working', stateStartedAt: CASE.now + 5 } })
+  const rows = rowsOf(r.snapshot()).filter((x) => x.title === 'Slice 2: export view')
+  assert.equal(rows.length, 1)
+  assert.equal(rows[0].state, 'working')
+  assert.equal(r.snapshot().total, 7)
+  // Later events of that pane without a terminal id keep joining (learned pane -> terminal).
+  r.onEvent({ workspaceId: null, workspaceListId: 'wt-sample-main', paneKey: 'tab-main:1', terminalId: 'term_main_1', state: 'waiting', receivedAt: CASE.now + 20 })
+  r.onEvent({ workspaceId: null, workspaceListId: 'wt-sample-main', paneKey: 'tab-main:1', state: 'working', receivedAt: CASE.now + 30, mainAgent: { state: 'working', stateStartedAt: CASE.now + 30 } })
+  assert.equal(r.snapshot().total, 7)
+})
+
+test('tabs in a title become a space', () => {
+  assert.equal(cleanText('Fix\tthe export bug'), 'Fix the export bug')
+})
+
+test('workspace.list truncated: one line says some agents may be missing', async () => {
+  const c: AgentsCase = { ...CASE, workspaceList: { ...CASE.workspaceList, truncated: true } }
+  const { host } = caseHost(c)
+  const r = createAgentsRefresher({ host, now: () => c.now })
+  await r.refresh()
+  assert.equal(r.snapshot().truncated, true)
+  const panel = await mount(() => <AgentsView snap={r.snapshot()} expanded={[]} onShowAll={() => {}} onOpen={() => {}} onRefresh={() => {}} />)
+  assert.ok(panel.find({ text: /some agents may be missing/ }))
+  await panel.unmount()
+})
+
+test('past the 500-row hard cap the button says "Show 500 of 600"', async () => {
+  const listed = new Map([['w', Array.from({ length: 600 }, (_, i) => ({ terminalId: `term_${i}`, title: `t${i}`, agent: 'claude', state: 'working' as const, stateStartedAt: i }))]])
+  const { groups, total } = buildGroups({ workspaces: [{ id: 'w', name: 'w', project: 'p', projectId: 'p', hostId: 'local' }], listed, events: [] })
+  const panel = await mount(() => <AgentsView snap={{ ...emptySnapshot(), status: 'ok', updatedAt: 1, groups, total }} expanded={[]} onShowAll={() => {}} onOpen={() => {}} onRefresh={() => {}} />)
+  assert.ok(panel.find({ type: 'Button', text: `Show ${GROUP_HARD_CAP} of 600` }))
+  await panel.unmount()
+})
+
+test('a row press that cannot open says so and reads again', async () => {
+  const { host: h } = caseHost(CASE)
+  const r = createAgentsRefresher({ host: h, now: () => CASE.now })
+  await r.refresh()
+  const asks: unknown[] = []
+  const host = mockHost({ requests: { 'agents.get': (i: unknown) => (asks.push(i), r.snapshot()), 'agents.open': { opened: false, reason: 'no_target' } } })
+  const panel = await mount(await import('../src/views/agents/panel.tsx'), { host })
+  const before = asks.length
+  await panel.activateRow({ type: 'Table', label: 'Agents in docs-site' }, 'term_docs_1')
+  assert.ok(panel.find({ text: /That agent is gone or moved/ }))
+  assert.deepEqual(asks.slice(before), [{ force: true }])
+  await panel.unmount()
+})
+
+test('the manifest asks for an Orca with plugin API 1.10 (agents.list by workspace id)', () => {
+  const m = JSON.parse(readFileSync(new URL('../orca-plugin.json', import.meta.url), 'utf8')) as { engines: { orca: string } }
+  assert.equal(m.engines.orca, '>=1.4.260')
+})

@@ -9,16 +9,10 @@ import { createAgentsRefresher, type AgentsHost } from './refresh.ts'
 const POST_DEBOUNCE_MS = 250
 
 export function registerAgents(orca: OrcaWorkerApi): void {
-  // `agents.list` takes a workspace id since host API 1.10; before, it answers for the focused one.
-  const perWorkspace = orca.api.major > 1 || orca.api.minor >= 10
+  // `agents.list` by workspace id needs plugin API 1.10: the manifest's `engines.orca` (>=1.4.260) asks for it.
   const host: AgentsHost = {
     listWorkspaces: () => orca.host.call('workspace.list', { includeStatus: true }),
-    listAgents: (workspaceId) => orca.host.call('agents.list', { workspaceId }),
-    focusedAgents: async () => {
-      const ctx = await orca.host.call('workspace.readContext')
-      const r = await orca.host.call('agents.list')
-      return { workspaceId: ctx?.workspaceId ?? null, agents: r.agents }
-    }
+    listAgents: (workspaceId) => orca.host.call('agents.list', { workspaceId })
   }
 
   let pending: ReturnType<typeof setTimeout> | null = null
@@ -30,7 +24,7 @@ export function registerAgents(orca: OrcaWorkerApi): void {
     }, POST_DEBOUNCE_MS)
     ;(pending as { unref?: () => void }).unref?.()
   }
-  const agents = createAgentsRefresher({ host, perWorkspace, onChange: post })
+  const agents = createAgentsRefresher({ host, onChange: post })
 
   orca.panels.handle('agents.get', async (input) => {
     await agents.refresh(input?.force === true)

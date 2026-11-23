@@ -10,7 +10,7 @@
   "repository": "https://github.com/itsmanelvelasco/orca-control-room",
   "license": "MIT",
   "engines": {
-    "orca": ">=1.4.248"
+    "orca": ">=1.4.260"
   },
   "execution": "trusted-worker",
   "pluginApi": 1,

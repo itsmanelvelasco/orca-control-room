@@ -7,6 +7,7 @@ import { AgentsView } from './view.tsx'
 
 const snap = atom<AgentsSnapshot>(emptySnapshot())
 const expanded = atom<string[]>([])
+const notice = atom<string | null>(null)
 
 async function ask(force = false): Promise<void> {
   try {
@@ -18,8 +19,20 @@ async function ask(force = false): Promise<void> {
   }
 }
 
-function open(key: string): void {
-  void plugin.request('agents.open', { key }).catch(() => undefined)
+/** A press that cannot open its agent says so and reads again: the row is often gone or renamed. */
+async function open(key: string): Promise<void> {
+  let r: { opened: boolean; reason?: string }
+  try {
+    r = await plugin.request('agents.open', { key })
+  } catch {
+    r = { opened: false, reason: 'failed' }
+  }
+  if (r.opened) {
+    set(notice, null)
+    return
+  }
+  set(notice, r.reason === 'no_target' ? 'That agent is gone or moved. Reading agents again.' : 'Orca did not open that agent. Reading agents again.')
+  await ask(true)
 }
 
 export function setup(ctx: PanelContext): void {
@@ -39,8 +52,9 @@ export default function Panel() {
       snap={read(snap)}
       expanded={read(expanded)}
       onShowAll={(key, all) => update(expanded, (xs) => (all ? [...xs.filter((x) => x !== key), key] : xs.filter((x) => x !== key)))}
-      onOpen={open}
+      onOpen={(key) => void open(key)}
       onRefresh={() => void ask(true)}
+      notice={read(notice)}
     />
   )
 }
