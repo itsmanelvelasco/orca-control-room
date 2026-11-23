@@ -1,0 +1,26 @@
+{
+  "about": "Orca plugin worker env on Linux from an AppImage, hand-made: the app runs from a mount whose path changes per run, so only process.execPath finds the CLI. HOME present. Values invented.",
+  "platform": "linux",
+  "execPath": "/tmp/.mount_OrcaX1y2z3/orca",
+  "cwd": "/tmp/.mount_OrcaX1y2z3",
+  "homedir": "/home/alex",
+  "env": {
+    "ELECTRON_RUN_AS_NODE": "1",
+    "HOME": "/home/alex",
+    "PATH": "/usr/local/bin:/usr/bin:/bin",
+    "APPIMAGE": "/home/alex/Applications/Orca-1.4.271.AppImage",
+    "APPDIR": "/tmp/.mount_OrcaX1y2z3",
+    "USER": "alex",
+    "XDG_RUNTIME_DIR": "/run/user/1000"
+  },
+  "files": [
+    "/tmp/.mount_OrcaX1y2z3/orca",
+    "/tmp/.mount_OrcaX1y2z3/resources/bin/orca"
+  ],
+  "expect": {
+    "cliPath": "/tmp/.mount_OrcaX1y2z3/resources/bin/orca",
+    "source": "app",
+    "envAdded": {},
+    "envRemoved": ["ELECTRON_RUN_AS_NODE"]
+  }
+}

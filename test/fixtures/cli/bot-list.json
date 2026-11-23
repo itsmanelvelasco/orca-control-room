@@ -1,0 +1,122 @@
+{
+  "id": "5ff03136-7b6a-44fa-aaf3-739c3ed38e3e",
+  "ok": true,
+  "result": {
+    "bots": [
+      {
+        "id": "d9ec3578-8f3a-4251-aa26-32620fccac8a",
+        "name": "Anvil",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Fix the flaky import test (specialty 1)",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "31a8196f-d5db-471f-a9a2-d101c8bba710",
+        "name": "Captain",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Add a dark theme to settings (specialty 2)",
+        "chats": {
+          "count": 8,
+          "home": true
+        }
+      },
+      {
+        "id": "ae0c505b-e609-4a4d-a38d-3edad61a390f",
+        "name": "Keeper",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Rename the export command (specialty 3)",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "be7655ca-b3bf-4937-ae30-e2b43cd34082",
+        "name": "Harbor",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Check the nightly backup (specialty 4)",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "a84495fc-aa06-4029-a8fe-55f9d8892687",
+        "name": "Stream",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Write the onboarding page (specialty 5)",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "60a18168-b361-49d6-a439-3bae70c32991",
+        "name": "Scout",
+        "agent": "claude",
+        "paused": false,
+        "linked": [
+          "Speed up the search index (linked 6)"
+        ],
+        "specialty": "Review the billing copy (specialty 7)",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "e596ea67-c26a-470c-a2fe-aea35ffc01f2",
+        "name": "Draft",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Tidy the release notes (specialty 8)",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "aab4e63e-beb8-45bd-a2e3-31f0509163f9",
+        "name": "Checker",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Fix the flaky import test (specialty 9)",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "2796491c-9013-428b-a04b-cbb2185c49fa",
+        "name": "Lookout",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Add a dark theme to settings (specialty 10)",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      }
+    ],
+    "unreachable": []
+  },
+  "_meta": {
+    "runtimeId": "c95d9b3b-8bbb-4dc9-a288-640b42abd341"
+  }
+}

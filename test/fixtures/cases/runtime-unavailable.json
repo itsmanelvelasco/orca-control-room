@@ -1,0 +1,11 @@
+{
+  "id": "local",
+  "ok": false,
+  "error": {
+    "code": "runtime_unavailable",
+    "message": "APPDATA is not set, so the Orca runtime metadata path cannot be resolved."
+  },
+  "_meta": {
+    "runtimeId": "8c0be6c2-30f7-481a-a4bc-2292dc8b2e88"
+  }
+}

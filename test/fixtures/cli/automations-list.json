@@ -1,0 +1,173 @@
+{
+  "id": "f42c6930-cae4-4496-a35c-24f7aaceac3b",
+  "ok": true,
+  "result": {
+    "automations": [
+      {
+        "id": "835f44c5-a28e-42de-a04e-8e4dc78676a6",
+        "name": "Bot b113",
+        "prompt": "Fix the flaky import test (prompt 1)",
+        "precheck": null,
+        "agentId": "Add a dark theme to settings (agentId 2)",
+        "runContext": null,
+        "sourceContext": null,
+        "bot": {
+          "botId": "31a8196f-d5db-471f-a9a2-d101c8bba710",
+          "runsIn": "chat",
+          "resultsTo": "chat"
+        },
+        "timezoneExplicit": true,
+        "projectId": "",
+        "executionTargetType": "local",
+        "executionTargetId": "2cb0704e-4558-4da2-af5f-bcbafedc8edf::/home/alex/work/sample-app/2cb070",
+        "schedulerOwner": "local_host_service",
+        "workspaceMode": "existing",
+        "workspaceId": "9bbe2c6f-b404-4fbd-a84f-7c12b6b274d6::/home/alex/work/sample-app/9bbe2c",
+        "baseBranch": null,
+        "reuseSession": false,
+        "timezone": "Rename the export command (timezone 3)",
+        "rrule": "Check the nightly backup (rrule 4)",
+        "dtstart": 1795351185062,
+        "enabled": true,
+        "nextRunAt": 1796025600000,
+        "missedRunPolicy": "run_once_within_grace",
+        "missedRunGraceMinutes": 720,
+        "createdAt": 1795351185076,
+        "updatedAt": 1795435428027,
+        "lastRunAt": 1795435428027,
+        "launchSetup": {}
+      },
+      {
+        "id": "26f81aea-95aa-4961-a7a9-83118403c327",
+        "name": "Bot ed24",
+        "prompt": "Write the onboarding page (prompt 5)",
+        "precheck": null,
+        "agentId": "Add a dark theme to settings (agentId 2)",
+        "runContext": null,
+        "sourceContext": null,
+        "bot": {
+          "botId": "31a8196f-d5db-471f-a9a2-d101c8bba710",
+          "runsIn": "chat",
+          "resultsTo": "chat"
+        },
+        "timezoneExplicit": true,
+        "projectId": "",
+        "executionTargetType": "local",
+        "executionTargetId": "2cb0704e-4558-4da2-af5f-bcbafedc8edf::/home/alex/work/sample-app/2cb070",
+        "schedulerOwner": "local_host_service",
+        "workspaceMode": "existing",
+        "workspaceId": "9bbe2c6f-b404-4fbd-a84f-7c12b6b274d6::/home/alex/work/sample-app/9bbe2c",
+        "baseBranch": null,
+        "reuseSession": false,
+        "timezone": "Rename the export command (timezone 3)",
+        "rrule": "Speed up the search index (rrule 6)",
+        "dtstart": 1795351183178,
+        "enabled": true,
+        "nextRunAt": 1795503600000,
+        "missedRunPolicy": "run_once_within_grace",
+        "missedRunGraceMinutes": 720,
+        "createdAt": 1795351183210,
+        "updatedAt": 1795435434536,
+        "lastRunAt": 1795435434536,
+        "launchSetup": {}
+      },
+      {
+        "id": "c332b384-2791-462e-a5d2-4ac5f976844d",
+        "name": "Bot b57f",
+        "prompt": "Review the billing copy (prompt 7)",
+        "precheck": null,
+        "agentId": "Add a dark theme to settings (agentId 2)",
+        "runContext": null,
+        "sourceContext": null,
+        "bot": {
+          "botId": "d9ec3578-8f3a-4251-aa26-32620fccac8a",
+          "runsIn": "chat",
+          "resultsTo": "chat"
+        },
+        "timezoneExplicit": true,
+        "projectId": "",
+        "executionTargetType": "local",
+        "executionTargetId": "2cb0704e-4558-4da2-af5f-bcbafedc8edf::/home/alex/work/sample-app/2cb070",
+        "schedulerOwner": "local_host_service",
+        "workspaceMode": "existing",
+        "workspaceId": "7cf8b166-4a42-4df8-a96a-6f8e151e996e::/home/alex/work/sample-app/7cf8b1",
+        "baseBranch": null,
+        "reuseSession": false,
+        "timezone": "Rename the export command (timezone 3)",
+        "rrule": "Tidy the release notes (rrule 8)",
+        "dtstart": 1795351186135,
+        "enabled": true,
+        "nextRunAt": 1795473000000,
+        "missedRunPolicy": "run_once_within_grace",
+        "missedRunGraceMinutes": 720,
+        "createdAt": 1795351186149,
+        "updatedAt": 1795440737607,
+        "lastRunAt": 1795391263506,
+        "launchSetup": {}
+      }
+    ],
+    "items": [
+      {
+        "automationId": "835f44c5-a28e-42de-a04e-8e4dc78676a6",
+        "selector": {
+          "kind": "self"
+        },
+        "usageSummary": {
+          "knownRuns": 0,
+          "unavailableRuns": 1,
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "cacheTokens": 0,
+          "reasoningOutputTokens": 0,
+          "totalTokens": 0,
+          "estimatedCostUsd": null,
+          "lastRunStatus": "completed",
+          "lastRunAt": 1795435201857,
+          "lastRunListedAt": 1795420800000
+        }
+      },
+      {
+        "automationId": "26f81aea-95aa-4961-a7a9-83118403c327",
+        "selector": {
+          "kind": "self"
+        },
+        "usageSummary": {
+          "knownRuns": 0,
+          "unavailableRuns": 1,
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "cacheTokens": 0,
+          "reasoningOutputTokens": 0,
+          "totalTokens": 0,
+          "estimatedCostUsd": null,
+          "lastRunStatus": "completed",
+          "lastRunAt": 1795435201885,
+          "lastRunListedAt": 1795417200000
+        }
+      },
+      {
+        "automationId": "c332b384-2791-462e-a5d2-4ac5f976844d",
+        "selector": {
+          "kind": "self"
+        },
+        "usageSummary": {
+          "knownRuns": 0,
+          "unavailableRuns": 1,
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "cacheTokens": 0,
+          "reasoningOutputTokens": 0,
+          "totalTokens": 0,
+          "estimatedCostUsd": null,
+          "lastRunStatus": "completed",
+          "lastRunAt": 1795391226254,
+          "lastRunListedAt": 1795386600000
+        }
+      }
+    ],
+    "orphanCount": 0
+  },
+  "_meta": {
+    "runtimeId": "c95d9b3b-8bbb-4dc9-a288-640b42abd341"
+  }
+}

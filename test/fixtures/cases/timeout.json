@@ -1,0 +1,11 @@
+{
+  "about": "What execFile gives when the 10 s timeout kills the CLI.",
+  "error": {
+    "message": "Command failed: orca bot list --json",
+    "killed": true,
+    "signal": "SIGTERM",
+    "code": null
+  },
+  "stdout": "",
+  "stderr": ""
+}

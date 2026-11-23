@@ -1,0 +1,728 @@
+{
+  "id": "ba467c11-734c-4506-a954-9f089fe23d3d",
+  "ok": true,
+  "result": {
+    "bots": [
+      {
+        "id": "0d5f0e5c-63c7-448b-ad24-85009ded0272",
+        "name": "Atlas 1",
+        "agent": "codex",
+        "paused": true,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 1.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "d00010d1-9f11-45e0-a26a-ce472e33cc7e",
+        "name": "Beacon 1",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 2.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "e7affdcb-5d43-4d70-ad52-5bad945e20a3",
+        "name": "Cedar 1",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 3.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "fdc89171-6927-44ef-a0e3-b2679fbc4ccd",
+        "name": "Delta 1",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 4.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "7deecae7-8526-44bd-a2fd-ffb8afefba9f",
+        "name": "Ember 1",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 5.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "8287fe30-5102-4727-a214-e279556fb1c4",
+        "name": "Fable 1",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 6.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "ac2d7472-4d56-4836-adc2-9d872844d122",
+        "name": "Garnet 1",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 7.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "dc668033-cd31-400b-adc4-1e790de24415",
+        "name": "Harbor 1",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 8.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "1f909a27-5852-40d5-ae85-d63014576cae",
+        "name": "Iris 1",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 9.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "37cfd27e-10a2-4c9d-ae00-ef5cb5d737c8",
+        "name": "Juniper 1",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 10.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "768e6029-28c9-4ef3-aba9-abc3fdd6933b",
+        "name": "Atlas 2",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 11.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "2eb271f9-efff-4e27-aa0b-40f9cffcec2b",
+        "name": "Beacon 2",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 12.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "0a4cdc8e-4672-4024-aa70-65796e862f1b",
+        "name": "Cedar 2",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 13.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "e2ca533f-d354-44ea-ad9c-caa277b2b1e0",
+        "name": "Delta 2",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 14.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "19291ab6-a2c6-42ba-a106-8547dd53d9bf",
+        "name": "Ember 2",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 15.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "988d456c-8d60-401d-a410-8dad1b2ea79a",
+        "name": "Fable 2",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 16.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "3ff5290a-4581-40d6-aed8-5195ef60daf2",
+        "name": "Garnet 2",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 17.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "b9d4fa1f-8784-4eaa-a580-dd303abac4f2",
+        "name": "Harbor 2",
+        "agent": "claude",
+        "paused": true,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 18.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "28f1dbf2-b37f-463f-a3eb-2195eca7deae",
+        "name": "Iris 2",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 19.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "4925d37a-48db-4bea-ad07-8c5bf1f3c21c",
+        "name": "Juniper 2",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 20.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "8450cca1-6037-4fe9-a137-193b00d54f45",
+        "name": "Atlas 3",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 21.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "2e7f5772-c46a-4575-adad-5cfd9d14a42b",
+        "name": "Beacon 3",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 22.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "2d3e9eb3-7097-488b-a558-4e3bdf00194d",
+        "name": "Cedar 3",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 23.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "348512e1-90af-463c-adc2-53d25a1279a7",
+        "name": "Delta 3",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 24.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "adaedfb1-49d0-4c36-a744-db4c6d503bf5",
+        "name": "Ember 3",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 25.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "db5777e3-fe5d-4ec1-a49b-5ecbbd76f388",
+        "name": "Fable 3",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 26.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "52141e3c-301f-42e8-a48a-8c97542b635d",
+        "name": "Garnet 3",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 27.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "79d84d59-6188-444f-ac15-92e3c3f79006",
+        "name": "Harbor 3",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 28.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "27aaa5b4-73bc-432f-a3a7-e2da98c62bf7",
+        "name": "Iris 3",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 29.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "d916ac4e-2feb-4eb0-aef8-39eee418c103",
+        "name": "Juniper 3",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 30.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "36c78538-0b36-40b0-aeab-22aaa2715f30",
+        "name": "Atlas 4",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 31.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "b57c02f0-c9d9-4970-a790-378b463c7ae8",
+        "name": "Beacon 4",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 32.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "bbfac761-c636-4e7d-ab96-e76c3adf0fa6",
+        "name": "Cedar 4",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 33.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "351e3d2b-4e53-406f-a7a5-8f1ddbd1c4d2",
+        "name": "Delta 4",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 34.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "c3e57792-7a44-4cd2-afb5-b1cf546e2728",
+        "name": "Ember 4",
+        "agent": "claude",
+        "paused": true,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 35.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "a38e770e-7b5c-41ea-a74d-dd20c7f3eae8",
+        "name": "Fable 4",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 36.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "65d95781-920f-4564-a9c7-8d6c462b6147",
+        "name": "Garnet 4",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 37.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "6ba45e52-69fa-4929-a03e-f2bd751c2835",
+        "name": "Harbor 4",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 38.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "9c6110d5-be08-418f-a800-a1298b65253f",
+        "name": "Iris 4",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 39.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "0c949e58-f504-4c42-a3fd-611c15e1cb14",
+        "name": "Juniper 4",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 40.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "8eb24349-1bc4-46d5-a9aa-0578f51fb811",
+        "name": "Atlas 5",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 41.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "5bf2c0e8-0bea-4f74-a92c-f5ff04d62529",
+        "name": "Beacon 5",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 42.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "5d7dc31c-13de-4be1-a0f9-14c7e8051a2c",
+        "name": "Cedar 5",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 43.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "afb79d47-6136-4138-a3a0-38d11263dad1",
+        "name": "Delta 5",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 44.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "9253f1da-e52c-456d-abc7-58f89150daa4",
+        "name": "Ember 5",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 45.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "497002e2-4be6-4994-aa7b-1dfece9069c2",
+        "name": "Fable 5",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 46.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "cf8c57da-1c40-47bc-a839-c7b418f47500",
+        "name": "Garnet 5",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 47.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "22846f67-4d8f-438b-aab4-7be3dceb6cf5",
+        "name": "Harbor 5",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 48.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "f80d97b3-202e-43a9-ab08-07e017ded2b6",
+        "name": "Iris 5",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 49.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "f3c7090b-617d-4a5c-a6df-3f02c8406e73",
+        "name": "Juniper 5",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 50.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "e5cec342-51a2-497f-a3de-925946e46902",
+        "name": "Atlas 6",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 51.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "a9c2c51f-d29a-4915-a9ab-55ec8700c913",
+        "name": "Beacon 6",
+        "agent": "codex",
+        "paused": true,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 52.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "65336d13-9f35-4118-a419-34c0659845b2",
+        "name": "Cedar 6",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 53.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "e68e8802-507a-4778-af30-507b130efc67",
+        "name": "Delta 6",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 54.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "4273f386-4f3b-4ffe-af77-8b117d21daeb",
+        "name": "Ember 6",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 55.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "16417a13-d0ae-4406-a04f-162453615876",
+        "name": "Fable 6",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 56.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      },
+      {
+        "id": "b4d1922b-8d52-4273-a27c-452f76dd4d24",
+        "name": "Garnet 6",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 57.",
+        "chats": {
+          "count": 1,
+          "home": true
+        }
+      },
+      {
+        "id": "c6aa2890-1926-4ca3-a871-3145db0d91f3",
+        "name": "Harbor 6",
+        "agent": "codex",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 58.",
+        "chats": {
+          "count": 2,
+          "home": true
+        }
+      },
+      {
+        "id": "26691d7c-44c0-4bf4-af37-e8262339f8c5",
+        "name": "Iris 6",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 59.",
+        "chats": {
+          "count": 3,
+          "home": true
+        }
+      },
+      {
+        "id": "c69a479b-a077-49cf-a13b-ed0ef1415a88",
+        "name": "Juniper 6",
+        "agent": "claude",
+        "paused": false,
+        "linked": [],
+        "specialty": "Purpose: invented bot number 60.",
+        "chats": {
+          "count": 4,
+          "home": true
+        }
+      }
+    ]
+  }
+}

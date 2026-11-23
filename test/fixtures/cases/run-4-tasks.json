@@ -1,0 +1,158 @@
+{
+  "about": "A Run with 4 tasks in build order (1 -> 2 and 3 -> 4), a worker on each started task (one failed), gate A (open questions, pending, on task 1) and gate B (merge, pending, on task 2), plus a resolved gate.",
+  "runList": {
+    "ok": true,
+    "result": {
+      "runs": [
+        {
+          "id": "run_4a9c1e7b2d30",
+          "objective": "Ship the sample export feature in four slices"
+        },
+        {
+          "id": "run_unbound",
+          "objective": "Mail from terminals in no Run"
+        }
+      ]
+    }
+  },
+  "runShow": {
+    "ok": true,
+    "result": {
+      "runId": "run_4a9c1e7b2d30",
+      "objective": "Ship the sample export feature in four slices",
+      "removedWork": {
+        "coverage": "complete",
+        "recordedSince": "2026-11-20T09:00:00Z",
+        "tasks": 0,
+        "dispatches": 0,
+        "workers": 0,
+        "terminals": 0,
+        "activeWorkersAtRemoval": 0,
+        "lastRemovedAt": null
+      }
+    }
+  },
+  "taskList": {
+    "ok": true,
+    "result": {
+      "runId": "run_4a9c1e7b2d30",
+      "tasks": [
+        {
+          "id": "task_d4e5f6a1b2c3",
+          "status": "pending",
+          "title": "Slice 4: release notes",
+          "deps": "[\"task_b2c3d4e5f6a1\",\"task_c3d4e5f6a1b2\"]"
+        },
+        {
+          "id": "task_a1b2c3d4e5f6",
+          "status": "blocked",
+          "title": "Slice 1: data model",
+          "dispatchId": "ctx_0a1b2c3d4e5f",
+          "assignee": "term_03d70d0b-6eff-4557-a980-036162fa9748"
+        },
+        {
+          "id": "task_b2c3d4e5f6a1",
+          "status": "completed",
+          "title": "Slice 2: export view",
+          "deps": "[\"task_a1b2c3d4e5f6\"]"
+        },
+        {
+          "id": "task_c3d4e5f6a1b2",
+          "status": "failed",
+          "title": "Slice 3: import view",
+          "deps": "[\"task_a1b2c3d4e5f6\"]"
+        }
+      ]
+    }
+  },
+  "workerList": {
+    "ok": true,
+    "result": {
+      "scope": {
+        "run": "run_4a9c1e7b2d30",
+        "source": "flag"
+      },
+      "workers": [
+        {
+          "dispatchId": "ctx_0a1b2c3d4e5f",
+          "taskId": "task_a1b2c3d4e5f6",
+          "state": "ready",
+          "outcome": "in_progress",
+          "liveness": "live",
+          "agent": "claude/claude-opus-5-5",
+          "terminal": "term_03d70d0b-6eff-4557-a980-036162fa9748",
+          "terminalState": "retained",
+          "workspace": "cb50cddf-9c16-4f08-a091-4e4291af41f0::/home/alex/work/sample-app/slice-1",
+          "host": "local"
+        },
+        {
+          "dispatchId": "ctx_1b2c3d4e5f0a",
+          "taskId": "task_b2c3d4e5f6a1",
+          "state": "succeeded",
+          "outcome": "succeeded",
+          "liveness": "gone",
+          "agent": "codex/gpt-5",
+          "terminal": "term_ccd0b7b6-cbc1-4f37-ad28-cd3d507b800e",
+          "terminalState": "released",
+          "workspace": "d8221cfc-f6be-402c-af08-b57a48bc7844::/home/alex/work/sample-app/slice-2",
+          "host": "local"
+        },
+        {
+          "dispatchId": "ctx_2c3d4e5f0a1b",
+          "taskId": "task_c3d4e5f6a1b2",
+          "state": "failed",
+          "outcome": "failed",
+          "liveness": "gone",
+          "agent": "claude/claude-sonnet-5-5",
+          "terminal": "term_77a2a429-2946-4bf7-aca2-285762379354",
+          "terminalState": "reclaimable",
+          "workspace": "a99ae719-d392-48fb-ad46-ad0948a1b3c9::/home/alex/work/sample-app/slice-3",
+          "host": "local"
+        }
+      ]
+    }
+  },
+  "gateList": {
+    "ok": true,
+    "result": {
+      "runId": "run_4a9c1e7b2d30",
+      "gates": [
+        {
+          "id": "gate_5e6f7a8b9c0d",
+          "taskId": "task_a1b2c3d4e5f6",
+          "status": "pending",
+          "question": "Gate A: which export format first, CSV or JSON?",
+          "options": "[\"CSV\",\"JSON\"]"
+        },
+        {
+          "id": "gate_6f7a8b9c0d1e",
+          "taskId": "task_b2c3d4e5f6a1",
+          "status": "pending",
+          "question": "Gate B: merge PR #42?"
+        },
+        {
+          "id": "gate_7a8b9c0d1e2f",
+          "taskId": "task_b2c3d4e5f6a1",
+          "status": "resolved",
+          "question": "Gate A: keep the old column names?",
+          "options": "[]"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "buildOrder": [
+      "task_a1b2c3d4e5f6",
+      "task_b2c3d4e5f6a1",
+      "task_c3d4e5f6a1b2",
+      "task_d4e5f6a1b2c3"
+    ],
+    "pendingGates": [
+      "gate_5e6f7a8b9c0d",
+      "gate_6f7a8b9c0d1e"
+    ],
+    "failedWorkers": [
+      "ctx_2c3d4e5f0a1b"
+    ]
+  }
+}

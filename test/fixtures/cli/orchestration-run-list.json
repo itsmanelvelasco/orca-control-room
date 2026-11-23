@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "result": {
+    "runs": [
+      {
+        "id": "run_b858fe7792de",
+        "objective": "Fix the flaky import test (objective 1)"
+      },
+      {
+        "id": "run_6240641810e1",
+        "objective": "Add a dark theme to settings (objective 2)"
+      },
+      {
+        "id": "run_unbound",
+        "objective": "Rename the export command (objective 3)"
+      },
+      {
+        "id": "run_legacy_local",
+        "objective": "Write the onboarding page (objective 5)",
+        "legacy": true
+      }
+    ]
+  }
+}
