@@ -2,11 +2,9 @@
 
 One [Orca](https://github.com/stablyai/orca) panel that answers two questions: **what waits on me**, and **where does each piece of work stand**. It works on Windows, macOS and Linux with no setup, and it is read only.
 
-| Light | Dark |
+| Shipping line | Agents |
 | --- | --- |
-| ![Waits on you, light theme](assets/waits-light.png) | ![Waits on you, dark theme](assets/waits-dark.png) |
-| ![Shipping line, light theme](assets/line-light.png) | ![Shipping line, dark theme](assets/line-dark.png) |
-| ![Agents, light theme](assets/agents-light.png) | ![Agents, dark theme](assets/agents-dark.png) |
+| ![The Shipping line tab: a Run with four tasks, workers, gates and a pull request](assets/line-dark.png) | ![The Agents tab: every agent by project, with its state and how long](assets/agents-dark.png) |
 
 The screenshots show invented test data, not a real account.
 
