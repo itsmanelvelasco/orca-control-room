@@ -1,6 +1,6 @@
 // R5 AC with a slow CLI: an agent at a trust prompt gets its "trust this folder" label within
 // 10 s, even when every other CLI call takes 2.5 s (live: 1.6-2.7 s each). The real worker runs
-// with its timers and the fake CLI's delays scaled down 20 times, so 10 s of Orca time is 0.5 s.
+// with its timers and the fake CLI's delays scaled down 5 times, so 10 s of Orca time is 2 s.
 import { assert, mockHost, mountWorker, test } from 'orca/testing'
 import type { CliRequest } from '../src/cli/commands.ts'
 import type { CliResult, CliRunner } from '../src/cli/run.ts'
@@ -9,7 +9,7 @@ import { TRUST_LABEL } from '../src/views/waits/collect.ts'
 import { fixture } from './helpers.ts'
 import { FIXTURE_CLI_PATH } from './waits-fixture.ts'
 
-const SCALE = 20
+const SCALE = 5
 /** Orca time in ms -> test time in ms. */
 const t = (ms: number): number => ms / SCALE
 const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms))
