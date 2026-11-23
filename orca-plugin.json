@@ -30,6 +30,13 @@
         "icon": "rocket",
         "entry": "src/views/line/panel.tsx",
         "ui": "components"
+      },
+      {
+        "id": "agents",
+        "title": "Agents",
+        "icon": "agent",
+        "entry": "src/views/agents/panel.tsx",
+        "ui": "components"
       }
     ],
     "statusBarItems": [
