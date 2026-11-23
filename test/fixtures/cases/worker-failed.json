@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "result": {
+    "scope": {
+      "run": "run_4a9c1e7b2d30",
+      "source": "flag"
+    },
+    "workers": [
+      {
+        "dispatchId": "ctx_3d4e5f0a1b2c",
+        "taskId": "task_c3d4e5f6a1b2",
+        "state": "failed",
+        "outcome": "failed",
+        "liveness": "gone",
+        "agent": "claude/claude-opus-5-5",
+        "terminal": "term_5bfbcd05-8108-4cd7-ab70-968cb8496ced",
+        "terminalState": "reclaimable",
+        "workspace": "8e981256-1ebd-4fc8-a203-2d4c755ca866::/home/alex/work/sample-app/retry",
+        "host": "local"
+      }
+    ]
+  }
+}

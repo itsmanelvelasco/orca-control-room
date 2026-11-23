@@ -1,0 +1,105 @@
+{
+  "id": "bcb3ceb4-801a-4810-a8f2-b9d57933e3eb",
+  "ok": true,
+  "result": {
+    "botId": "0d5f0e5c-63c7-448b-ad24-85009ded0272",
+    "botName": "Atlas 1",
+    "items": [
+      {
+        "uid": "d2c23fd0-6829-4dc2-a764-0a1d2e9b6b87",
+        "number": 3,
+        "owner": {
+          "botId": "0d5f0e5c-63c7-448b-ad24-85009ded0272",
+          "name": "Atlas 1"
+        },
+        "title": "Invented item 3",
+        "description": null,
+        "doneMeans": null,
+        "status": "needs_you",
+        "chat": {
+          "id": "407f58ba-e6bb-4059-aba1-d3a6151340a2",
+          "kind": "home",
+          "title": "Home"
+        },
+        "madeBy": null,
+        "question": {
+          "eventId": "e7",
+          "text": "Ship <b>v2</b> today, or wait for the review?"
+        },
+        "closeNote": null,
+        "links": [],
+        "version": 2,
+        "lastEventId": "e3",
+        "othersLastEventId": "e3",
+        "snoozedUntil": null,
+        "lastActivityAt": 1795400000003,
+        "createdAt": 1795400000000,
+        "updatedAt": 1795400000003,
+        "closedAt": null
+      },
+      {
+        "uid": "66ecd14a-a170-4ad2-ac60-81d0451ea5d1",
+        "number": 2,
+        "owner": {
+          "botId": "0d5f0e5c-63c7-448b-ad24-85009ded0272",
+          "name": "Atlas 1"
+        },
+        "title": "Invented item 2",
+        "description": null,
+        "doneMeans": null,
+        "status": "in_progress",
+        "chat": {
+          "id": "0f001226-bb11-482d-af12-69637012bb33",
+          "kind": "home",
+          "title": "Home"
+        },
+        "madeBy": null,
+        "question": null,
+        "closeNote": null,
+        "links": [],
+        "version": 2,
+        "lastEventId": "e3",
+        "othersLastEventId": "e3",
+        "snoozedUntil": null,
+        "lastActivityAt": 1795400000002,
+        "createdAt": 1795400000000,
+        "updatedAt": 1795400000002,
+        "closedAt": null
+      },
+      {
+        "uid": "2c24272a-c7cd-432c-ab02-59b153560093",
+        "number": 1,
+        "owner": {
+          "botId": "0d5f0e5c-63c7-448b-ad24-85009ded0272",
+          "name": "Atlas 1"
+        },
+        "title": "Invented item 1",
+        "description": null,
+        "doneMeans": null,
+        "status": "planned",
+        "chat": {
+          "id": "c09a0468-af0e-4bc8-ab56-0dd8df494364",
+          "kind": "home",
+          "title": "Home"
+        },
+        "madeBy": null,
+        "question": null,
+        "closeNote": null,
+        "links": [],
+        "version": 2,
+        "lastEventId": "e3",
+        "othersLastEventId": "e3",
+        "snoozedUntil": null,
+        "lastActivityAt": 1795400000001,
+        "createdAt": 1795400000000,
+        "updatedAt": 1795400000001,
+        "closedAt": null
+      }
+    ],
+    "counts": {
+      "needs_you": 1,
+      "in_progress": 1,
+      "planned": 1
+    }
+  }
+}

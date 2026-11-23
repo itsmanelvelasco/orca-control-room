@@ -1,0 +1,6 @@
+node:internal/modules/cjs/loader:1575
+  throw err;
+  ^
+
+Error: Cannot find module 'C:\Program Files\Orca\bot'
+{"ok": tru

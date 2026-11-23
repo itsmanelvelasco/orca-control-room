@@ -1,0 +1,11 @@
+{
+  "id": "5902d628-6366-4bd2-a5fa-6b6db93d3425",
+  "ok": false,
+  "error": {
+    "code": "invalid_argument",
+    "message": "Name the bot with --bot, or run this from the bot’s chat."
+  },
+  "_meta": {
+    "runtimeId": "8c0be6c2-30f7-481a-a4bc-2292dc8b2e88"
+  }
+}

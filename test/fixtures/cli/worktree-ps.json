@@ -1,0 +1,582 @@
+{
+  "id": "225a0dcb-d0ae-49ae-a9fe-4e4475446b65",
+  "ok": true,
+  "result": {
+    "worktrees": [
+      {
+        "workspaceKind": "git",
+        "worktreeId": "9442e26d-e6b6-44a3-a0ad-653058dcc667::/home/alex/work/sample-app/7e575c",
+        "repoId": "9442e26d-e6b6-44a3-a0ad-653058dcc667",
+        "hostId": "local",
+        "terminalPlatform": "win32",
+        "repo": "sample-app",
+        "path": "/home/alex/work/sample-app/b8dc4b",
+        "branch": "",
+        "isArchived": false,
+        "isMainWorktree": true,
+        "hasHostSidebarActivity": true,
+        "defaultBranch": false,
+        "worktreeInstanceId": "45586d77-bf63-4580-a87f-654ef59496d7",
+        "parentWorktreeId": null,
+        "childWorktreeIds": [],
+        "workspaceLineage": null,
+        "displayName": "Fix the flaky import test (displayName 1)",
+        "workspaceStatus": "in-progress",
+        "sortOrder": 1795437361007,
+        "lastActivityAt": 1795441461240,
+        "linkedIssue": null,
+        "linkedPR": null,
+        "linkedLinearIssue": null,
+        "linkedGitLabMR": null,
+        "linkedGitLabIssue": null,
+        "linkedItems": [],
+        "comment": "",
+        "isPinned": false,
+        "isActive": true,
+        "unread": true,
+        "liveTerminalCount": 4,
+        "hasAttachedPty": true,
+        "unverifiableTerminalCount": 0,
+        "lastOutputAt": 1795441410743,
+        "preview": "Add a dark theme to settings (preview 2)",
+        "status": "working",
+        "agents": [
+          {
+            "paneKey": "paneKey-686b5669e5ed",
+            "address": "term_45c2b7b3-a185-427d-ab10-fcddbc5ac3ab",
+            "orcaSessionId": "2cd27c1a-5b70-48ee-a973-2e1d1982a647",
+            "parentPaneKey": null,
+            "state": "done",
+            "agentType": "claude",
+            "prompt": "Rename the export command (prompt 3)",
+            "taskTitle": null,
+            "displayName": null,
+            "conversationName": "Check the nightly backup (conversationName 4)",
+            "lastAssistantMessage": "Write the onboarding page (lastAssistantMessage 5)",
+            "toolName": "Speed up the search index (toolName 6)",
+            "toolInput": "Review the billing copy (toolInput 7)",
+            "interrupted": false,
+            "mainAgent": {
+              "state": "done",
+              "stateStartedAt": 1795350262034
+            },
+            "stateStartedAt": 1795350262035,
+            "updatedAt": 1795350262035,
+            "hasLivePty": true,
+            "activity": {
+              "listed": true,
+              "status": "done",
+              "unread": false,
+              "clearable": true,
+              "sortAt": 1795350262035,
+              "title": "Tidy the release notes (title 8)"
+            }
+          },
+          {
+            "paneKey": "paneKey-4f3fb1957a27",
+            "address": "term_e5e6e8e0-b37d-47ea-a083-6bbaa692a1f6",
+            "orcaSessionId": "b7d9d3b6-8924-42c8-aa53-7fd34d996d62",
+            "parentPaneKey": null,
+            "state": "working",
+            "workingMode": "monitoring",
+            "agentType": "claude",
+            "prompt": "Fix the flaky import test (prompt 9)",
+            "taskTitle": null,
+            "displayName": null,
+            "conversationName": "Add a dark theme to settings (conversationName 10)",
+            "lastAssistantMessage": "Rename the export command (lastAssistantMessage 11)",
+            "toolName": "Speed up the search index (toolName 6)",
+            "toolInput": "Check the nightly backup (toolInput 12)",
+            "interrupted": false,
+            "mainAgent": {
+              "state": "done",
+              "stateStartedAt": 1795441226889
+            },
+            "stateStartedAt": 1795394036879,
+            "updatedAt": 1795441410574,
+            "hasLivePty": true,
+            "programStatus": {
+              "state": "done",
+              "observedAt": 1795441227610
+            },
+            "activity": {
+              "listed": true,
+              "status": "monitoring",
+              "unread": false,
+              "clearable": false,
+              "sortAt": 1795394036879,
+              "title": "Write the onboarding page (title 13)"
+            }
+          }
+        ],
+        "workingMode": "monitoring",
+        "sidebarStatus": "monitoring",
+        "terminalVerdict": "live",
+        "environment": {
+          "id": "Speed up the search index (id 14)",
+          "name": "Bot 2cb0"
+        },
+        "parent": null,
+        "address": {
+          "environment": "environment-2cb0704e4558",
+          "worktree": "Review the billing copy (worktree 15)",
+          "line": "Tidy the release notes (line 16)"
+        }
+      },
+      {
+        "workspaceKind": "folder-workspace",
+        "worktreeId": "b8d366fb-daa5-4d3b-ad49-f472a00f1eb8::/home/alex/work/sample-app/b8d366",
+        "repoId": "sample-app",
+        "hostId": "local",
+        "repo": "sample-app",
+        "path": "/home/alex/work/sample-app/5bbdbb",
+        "branch": "",
+        "isArchived": false,
+        "isMainWorktree": false,
+        "hasHostSidebarActivity": true,
+        "defaultBranch": false,
+        "bot": "Lookout",
+        "botHome": true,
+        "parentWorktreeId": null,
+        "childWorktreeIds": [],
+        "displayName": "Fix the flaky import test (displayName 17)",
+        "workspaceStatus": "in-progress",
+        "sortOrder": 1795441043523,
+        "lastActivityAt": 1795441067987,
+        "createdAt": 1795441043523,
+        "creatorProvenance": {
+          "kind": "host"
+        },
+        "linkedIssue": null,
+        "linkedPR": null,
+        "linkedLinearIssue": null,
+        "linkedGitLabMR": null,
+        "linkedGitLabIssue": null,
+        "linkedItems": [],
+        "comment": "",
+        "isPinned": false,
+        "isActive": false,
+        "unread": true,
+        "liveTerminalCount": 0,
+        "hasAttachedPty": false,
+        "unverifiableTerminalCount": 0,
+        "lastOutputAt": null,
+        "preview": "",
+        "status": "inactive",
+        "agents": [
+          {
+            "paneKey": "paneKey-ce243c3f62e8",
+            "address": "address-965b1316acd6",
+            "orcaSessionId": "acdcf009-e09e-4510-a3c9-add5de9fbacb",
+            "parentPaneKey": null,
+            "state": "done",
+            "agentType": "claude",
+            "prompt": "Add a dark theme to settings (prompt 18)",
+            "taskTitle": null,
+            "displayName": null,
+            "conversationName": "Rename the export command (conversationName 19)",
+            "lastAssistantMessage": "Check the nightly backup (lastAssistantMessage 20)",
+            "toolName": null,
+            "toolInput": null,
+            "interrupted": false,
+            "mainAgent": {
+              "state": "done",
+              "outcome": "success",
+              "stateStartedAt": 1795441444854
+            },
+            "stateStartedAt": 1795441444854,
+            "updatedAt": 1795441444855,
+            "children": [],
+            "structuredHostOwned": true,
+            "subagentObservation": "Write the onboarding page (subagentObservation 21)",
+            "activity": {
+              "listed": true,
+              "status": "done",
+              "unread": true,
+              "clearable": true,
+              "sortAt": 1795441444854,
+              "title": "Speed up the search index (title 22)"
+            }
+          }
+        ],
+        "sidebarStatus": "done",
+        "terminalVerdict": "none",
+        "environment": {
+          "id": "Speed up the search index (id 14)",
+          "name": "Bot 2cb0"
+        },
+        "parent": null,
+        "address": {
+          "environment": "environment-2cb0704e4558",
+          "worktree": "Review the billing copy (worktree 23)",
+          "line": "Tidy the release notes (line 24)"
+        }
+      },
+      {
+        "workspaceKind": "folder-workspace",
+        "worktreeId": "42f45e01-01a6-4509-a250-96df711f1cec::/home/alex/work/sample-app/42f45e",
+        "repoId": "sample-app",
+        "hostId": "local",
+        "repo": "sample-app",
+        "path": "/home/alex/work/sample-app/213712",
+        "branch": "",
+        "isArchived": false,
+        "isMainWorktree": false,
+        "hasHostSidebarActivity": true,
+        "defaultBranch": false,
+        "bot": "Stream",
+        "botHome": true,
+        "parentWorktreeId": null,
+        "childWorktreeIds": [],
+        "displayName": "Fix the flaky import test (displayName 25)",
+        "workspaceStatus": "in-progress",
+        "sortOrder": 1795350460912,
+        "lastActivityAt": 1795350489647,
+        "createdAt": 1795350460912,
+        "creatorProvenance": {
+          "kind": "host"
+        },
+        "linkedIssue": null,
+        "linkedPR": null,
+        "linkedLinearIssue": null,
+        "linkedGitLabMR": null,
+        "linkedGitLabIssue": null,
+        "linkedItems": [],
+        "comment": "",
+        "isPinned": false,
+        "isActive": false,
+        "unread": true,
+        "liveTerminalCount": 0,
+        "hasAttachedPty": false,
+        "unverifiableTerminalCount": 0,
+        "lastOutputAt": null,
+        "preview": "",
+        "status": "inactive",
+        "agents": [
+          {
+            "paneKey": "paneKey-1c5c5579995d",
+            "address": "address-b634aa628e92",
+            "orcaSessionId": "a9f41b14-c8fd-4100-a791-c3ad46008130",
+            "parentPaneKey": null,
+            "state": "done",
+            "agentType": "claude",
+            "prompt": "Add a dark theme to settings (prompt 26)",
+            "taskTitle": null,
+            "displayName": null,
+            "conversationName": "Rename the export command (conversationName 27)",
+            "lastAssistantMessage": "Check the nightly backup (lastAssistantMessage 28)",
+            "toolName": null,
+            "toolInput": null,
+            "interrupted": false,
+            "mainAgent": {
+              "state": "done",
+              "outcome": "success",
+              "stateStartedAt": 1795350489560
+            },
+            "stateStartedAt": 1795350489560,
+            "updatedAt": 1795350489560,
+            "children": [],
+            "subagentObservation": "Write the onboarding page (subagentObservation 29)",
+            "activity": {
+              "listed": true,
+              "status": "done",
+              "unread": true,
+              "clearable": true,
+              "sortAt": 1795350489560,
+              "title": "Speed up the search index (title 22)"
+            }
+          }
+        ],
+        "sidebarStatus": "inactive",
+        "terminalVerdict": "none",
+        "environment": {
+          "id": "Speed up the search index (id 14)",
+          "name": "Bot 2cb0"
+        },
+        "parent": null,
+        "address": {
+          "environment": "environment-2cb0704e4558",
+          "worktree": "Speed up the search index (worktree 30)",
+          "line": "Review the billing copy (line 31)"
+        }
+      },
+      {
+        "workspaceKind": "folder-workspace",
+        "worktreeId": "7b6685c1-711a-43c4-a143-2743c4055544::/home/alex/work/sample-app/7b6685",
+        "repoId": "sample-app",
+        "hostId": "local",
+        "repo": "sample-app",
+        "path": "/home/alex/work/sample-app/48b6ec",
+        "branch": "",
+        "isArchived": false,
+        "isMainWorktree": false,
+        "hasHostSidebarActivity": true,
+        "defaultBranch": false,
+        "bot": "Keeper",
+        "botHome": true,
+        "parentWorktreeId": null,
+        "childWorktreeIds": [],
+        "displayName": "Tidy the release notes (displayName 32)",
+        "workspaceStatus": "in-progress",
+        "sortOrder": 1795350416697,
+        "lastActivityAt": 1795350429473,
+        "createdAt": 1795350416697,
+        "creatorProvenance": {
+          "kind": "host"
+        },
+        "linkedIssue": null,
+        "linkedPR": null,
+        "linkedLinearIssue": null,
+        "linkedGitLabMR": null,
+        "linkedGitLabIssue": null,
+        "linkedItems": [],
+        "comment": "",
+        "isPinned": false,
+        "isActive": false,
+        "unread": true,
+        "liveTerminalCount": 0,
+        "hasAttachedPty": false,
+        "unverifiableTerminalCount": 0,
+        "lastOutputAt": null,
+        "preview": "",
+        "status": "inactive",
+        "agents": [
+          {
+            "paneKey": "paneKey-27f1526ffe86",
+            "address": "address-6f672737a88f",
+            "orcaSessionId": "c3865ccb-fbe2-41a1-a6a0-2e612d7b3577",
+            "parentPaneKey": null,
+            "state": "done",
+            "agentType": "claude",
+            "prompt": "Add a dark theme to settings (prompt 26)",
+            "taskTitle": null,
+            "displayName": null,
+            "conversationName": "Fix the flaky import test (conversationName 33)",
+            "lastAssistantMessage": "Add a dark theme to settings (lastAssistantMessage 34)",
+            "toolName": null,
+            "toolInput": null,
+            "interrupted": false,
+            "mainAgent": {
+              "state": "done",
+              "outcome": "success",
+              "stateStartedAt": 1795350429435
+            },
+            "stateStartedAt": 1795350429435,
+            "updatedAt": 1795350429435,
+            "children": [],
+            "subagentObservation": "Write the onboarding page (subagentObservation 29)",
+            "activity": {
+              "listed": true,
+              "status": "done",
+              "unread": true,
+              "clearable": true,
+              "sortAt": 1795350429435,
+              "title": "Speed up the search index (title 22)"
+            }
+          }
+        ],
+        "sidebarStatus": "inactive",
+        "terminalVerdict": "none",
+        "environment": {
+          "id": "Speed up the search index (id 14)",
+          "name": "Bot 2cb0"
+        },
+        "parent": null,
+        "address": {
+          "environment": "environment-2cb0704e4558",
+          "worktree": "Rename the export command (worktree 35)",
+          "line": "Check the nightly backup (line 36)"
+        }
+      },
+      {
+        "workspaceKind": "folder-workspace",
+        "worktreeId": "278ee877-eba5-4c72-a6bc-b62e0f544354::/home/alex/work/sample-app/278ee8",
+        "repoId": "sample-app",
+        "hostId": "local",
+        "repo": "sample-app",
+        "path": "/home/alex/work/sample-app/3c77a4",
+        "branch": "",
+        "isArchived": false,
+        "isMainWorktree": false,
+        "hasHostSidebarActivity": true,
+        "defaultBranch": false,
+        "bot": "Scout",
+        "botHome": true,
+        "parentWorktreeId": null,
+        "childWorktreeIds": [],
+        "displayName": "Write the onboarding page (displayName 37)",
+        "workspaceStatus": "in-progress",
+        "sortOrder": 1795350467111,
+        "lastActivityAt": 1795437417935,
+        "createdAt": 1795350467111,
+        "creatorProvenance": {
+          "kind": "host"
+        },
+        "linkedIssue": null,
+        "linkedPR": null,
+        "linkedLinearIssue": null,
+        "linkedGitLabMR": null,
+        "linkedGitLabIssue": null,
+        "linkedItems": [],
+        "comment": "",
+        "isPinned": false,
+        "isActive": false,
+        "unread": true,
+        "liveTerminalCount": 0,
+        "hasAttachedPty": false,
+        "unverifiableTerminalCount": 0,
+        "lastOutputAt": null,
+        "preview": "",
+        "status": "inactive",
+        "agents": [
+          {
+            "paneKey": "paneKey-4a9a2e4044c3",
+            "address": "address-ad15b83c1499",
+            "orcaSessionId": "28224a6d-3a70-4a18-ad02-4b19132ac85a",
+            "parentPaneKey": null,
+            "state": "done",
+            "agentType": "claude",
+            "prompt": "Speed up the search index (prompt 38)",
+            "taskTitle": null,
+            "displayName": null,
+            "conversationName": "Review the billing copy (conversationName 39)",
+            "lastAssistantMessage": "Tidy the release notes (lastAssistantMessage 40)",
+            "toolName": null,
+            "toolInput": null,
+            "interrupted": false,
+            "mainAgent": {
+              "state": "done",
+              "outcome": "success",
+              "stateStartedAt": 1795437417892
+            },
+            "stateStartedAt": 1795437417892,
+            "updatedAt": 1795437417892,
+            "children": [],
+            "subagentObservation": "Write the onboarding page (subagentObservation 29)",
+            "activity": {
+              "listed": true,
+              "status": "done",
+              "unread": true,
+              "clearable": true,
+              "sortAt": 1795437417892,
+              "title": "Speed up the search index (title 22)"
+            }
+          }
+        ],
+        "sidebarStatus": "inactive",
+        "terminalVerdict": "none",
+        "environment": {
+          "id": "Speed up the search index (id 14)",
+          "name": "Bot 2cb0"
+        },
+        "parent": null,
+        "address": {
+          "environment": "environment-2cb0704e4558",
+          "worktree": "Fix the flaky import test (worktree 41)",
+          "line": "Add a dark theme to settings (line 42)"
+        }
+      },
+      {
+        "workspaceKind": "folder-workspace",
+        "worktreeId": "e9d6428c-5480-49ef-acaa-fa631041cb13::/home/alex/work/sample-app/e9d642",
+        "repoId": "sample-app",
+        "hostId": "local",
+        "repo": "sample-app",
+        "path": "/home/alex/work/sample-app/81c469",
+        "branch": "",
+        "isArchived": false,
+        "isMainWorktree": false,
+        "hasHostSidebarActivity": true,
+        "defaultBranch": false,
+        "bot": "Draft",
+        "botHome": true,
+        "parentWorktreeId": null,
+        "childWorktreeIds": [],
+        "displayName": "Rename the export command (displayName 43)",
+        "workspaceStatus": "in-progress",
+        "sortOrder": 1795396308325,
+        "lastActivityAt": 1795441162220,
+        "createdAt": 1795396308325,
+        "creatorProvenance": {
+          "kind": "host"
+        },
+        "linkedIssue": null,
+        "linkedPR": null,
+        "linkedLinearIssue": null,
+        "linkedGitLabMR": null,
+        "linkedGitLabIssue": null,
+        "linkedItems": [],
+        "comment": "",
+        "isPinned": false,
+        "isActive": false,
+        "unread": true,
+        "liveTerminalCount": 0,
+        "hasAttachedPty": false,
+        "unverifiableTerminalCount": 0,
+        "lastOutputAt": null,
+        "preview": "",
+        "status": "inactive",
+        "agents": [
+          {
+            "paneKey": "paneKey-8b5814990ebe",
+            "address": "address-fe336ccea140",
+            "orcaSessionId": "f0468f44-e939-4f56-a5ae-66183e3e10b7",
+            "parentPaneKey": null,
+            "state": "done",
+            "agentType": "claude",
+            "prompt": "Check the nightly backup (prompt 44)",
+            "taskTitle": null,
+            "displayName": null,
+            "conversationName": "Write the onboarding page (conversationName 45)",
+            "lastAssistantMessage": "Speed up the search index (lastAssistantMessage 46)",
+            "toolName": null,
+            "toolInput": null,
+            "interrupted": false,
+            "mainAgent": {
+              "state": "done",
+              "outcome": "success",
+              "stateStartedAt": 1795441436701
+            },
+            "stateStartedAt": 1795441436701,
+            "updatedAt": 1795441436702,
+            "children": [],
+            "structuredHostOwned": true,
+            "subagentObservation": "Write the onboarding page (subagentObservation 21)",
+            "activity": {
+              "listed": true,
+              "status": "done",
+              "unread": true,
+              "clearable": true,
+              "sortAt": 1795441436701,
+              "title": "Speed up the search index (title 22)"
+            }
+          }
+        ],
+        "sidebarStatus": "done",
+        "terminalVerdict": "none",
+        "environment": {
+          "id": "Speed up the search index (id 14)",
+          "name": "Bot 2cb0"
+        },
+        "parent": null,
+        "address": {
+          "environment": "environment-2cb0704e4558",
+          "worktree": "Review the billing copy (worktree 47)",
+          "line": "Tidy the release notes (line 48)"
+        }
+      }
+    ],
+    "hostScope": {
+      "hostIds": [
+        "Fix the flaky import test (hostIds 49)"
+      ],
+      "omittedHostIds": []
+    },
+    "totalCount": 19,
+    "truncated": false,
+    "installationId": "cd94f325-38b2-41af-a9db-133819d32ecd"
+  },
+  "_meta": {
+    "runtimeId": "c95d9b3b-8bbb-4dc9-a288-640b42abd341"
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "about": "Live R5 record, Orca 1.4.271 on Windows, 23/11/2026: Claude Code at its folder-trust prompt. The plugin event says waiting with no reason; worktree ps names the prompt.",
+  "agentStatusChanged": [
+    {
+      "workspaceId": "c61f1dc7-b6f0-4104-a0ea-de076b403c11::/home/alex/work/sample-app/trust-check",
+      "workspaceListId": "identity:wt2:local:2da64f0a-f569-4a3c-aa94-8c716ace4e7d",
+      "paneKey": "6a90b2ba-2e2c-4eb1-a19e-de5bfd4e9eed:e128817a-007d-4fbd-a742-fc9b3bc01e28",
+      "terminalId": "term_7291498c-cd05-44be-a8fc-8de963d40e56",
+      "title": "claude",
+      "state": "waiting",
+      "receivedAt": 1795442851449
+    },
+    {
+      "workspaceId": "c61f1dc7-b6f0-4104-a0ea-de076b403c11::/home/alex/work/sample-app/trust-check",
+      "workspaceListId": "identity:wt2:local:2da64f0a-f569-4a3c-aa94-8c716ace4e7d",
+      "paneKey": "6a90b2ba-2e2c-4eb1-a19e-de5bfd4e9eed:e128817a-007d-4fbd-a742-fc9b3bc01e28",
+      "terminalId": "term_7291498c-cd05-44be-a8fc-8de963d40e56",
+      "title": "claude",
+      "state": "waiting",
+      "receivedAt": 1795442851658,
+      "mainAgent": {
+        "state": "waiting",
+        "stateStartedAt": 1795442851656
+      }
+    }
+  ],
+  "worktreePsAgentWait": {
+    "ok": true,
+    "result": {
+      "worktrees": [
+        {
+          "worktreeId": "c61f1dc7-b6f0-4104-a0ea-de076b403c11::/home/alex/work/sample-app/trust-check",
+          "repo": "sample-app",
+          "path": "/home/alex/work/sample-app/trust-check",
+          "branch": "alex/trust-check",
+          "displayName": "trust-check",
+          "isArchived": false,
+          "lastActivityAt": 1795442851658,
+          "agents": [
+            {
+              "paneKey": "6a90b2ba-2e2c-4eb1-a19e-de5bfd4e9eed:e128817a-007d-4fbd-a742-fc9b3bc01e28",
+              "address": "term_7291498c-cd05-44be-a8fc-8de963d40e56",
+              "parentPaneKey": null,
+              "state": "waiting",
+              "agentType": "claude",
+              "prompt": "",
+              "taskTitle": null,
+              "displayName": null,
+              "conversationName": "Trust check",
+              "lastAssistantMessage": null,
+              "toolName": null,
+              "toolInput": "trust this folder",
+              "interrupted": false,
+              "mainAgent": {
+                "state": "waiting",
+                "stateStartedAt": 1795442851656
+              },
+              "stateStartedAt": 1795442851449,
+              "updatedAt": 1795442851658,
+              "hasLivePty": true,
+              "programStatus": {
+                "state": "blocked",
+                "kind": "permission",
+                "message": "trust this folder",
+                "observedAt": 1795442851656
+              },
+              "activity": {
+                "listed": true,
+                "status": "waiting",
+                "unread": true,
+                "clearable": false,
+                "sortAt": 1795442851449,
+                "title": "Trust check"
+              },
+              "agentWait": {
+                "source": "prompt-text",
+                "reason": "agent-trust-workspace"
+              }
+            }
+          ]
+        }
+      ],
+      "totalCount": 1,
+      "truncated": false
+    }
+  },
+  "worktreePsPlain": {
+    "ok": true,
+    "result": {
+      "worktrees": [
+        {
+          "worktreeId": "c61f1dc7-b6f0-4104-a0ea-de076b403c11::/home/alex/work/sample-app/trust-check",
+          "repo": "sample-app",
+          "path": "/home/alex/work/sample-app/trust-check",
+          "branch": "alex/trust-check",
+          "displayName": "trust-check",
+          "isArchived": false,
+          "lastActivityAt": 1795442851658,
+          "agents": [
+            {
+              "paneKey": "6a90b2ba-2e2c-4eb1-a19e-de5bfd4e9eed:e128817a-007d-4fbd-a742-fc9b3bc01e28",
+              "address": "term_7291498c-cd05-44be-a8fc-8de963d40e56",
+              "parentPaneKey": null,
+              "state": "waiting",
+              "agentType": "claude",
+              "prompt": "",
+              "taskTitle": null,
+              "displayName": null,
+              "conversationName": "Trust check",
+              "lastAssistantMessage": null,
+              "toolName": null,
+              "toolInput": "trust this folder",
+              "interrupted": false,
+              "mainAgent": {
+                "state": "waiting",
+                "stateStartedAt": 1795442851656
+              },
+              "stateStartedAt": 1795442851449,
+              "updatedAt": 1795442851658,
+              "hasLivePty": true,
+              "programStatus": {
+                "state": "blocked",
+                "kind": "permission",
+                "message": "trust this folder",
+                "observedAt": 1795442851656
+              },
+              "activity": {
+                "listed": true,
+                "status": "waiting",
+                "unread": true,
+                "clearable": false,
+                "sortAt": 1795442851449,
+                "title": "Trust check"
+              }
+            }
+          ]
+        }
+      ],
+      "totalCount": 1,
+      "truncated": false
+    }
+  }
+}

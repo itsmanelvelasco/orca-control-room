@@ -1,0 +1,43 @@
+{
+  "manifestVersion": 2,
+  "id": "control-room",
+  "name": "Control Room",
+  "version": "0.1.0",
+  "description": "One panel for what waits on you and where each piece of work stands: bot items, gates, Runs, tasks, workers and agents. Read only.",
+  "author": {
+    "name": "Manel Velasco"
+  },
+  "repository": "https://github.com/itsmanelvelasco/orca-control-room",
+  "license": "MIT",
+  "engines": {
+    "orca": ">=1.4.248"
+  },
+  "execution": "trusted-worker",
+  "pluginApi": 1,
+  "main": "src/worker.ts",
+  "contributes": {
+    "events": [
+      {
+        "on": "agent.status.changed"
+      }
+    ],
+    "settings": [
+      {
+        "key": "orcaCli",
+        "title": "Orca CLI path",
+        "description": "Full path to the orca CLI. Leave empty: Control Room finds it next to Orca, in the default install folder, or on PATH.",
+        "type": "string",
+        "default": "",
+        "placeholder": "Found automatically"
+      }
+    ]
+  },
+  "capabilities": [
+    { "kind": "workspace:read" },
+    { "kind": "agent:read" },
+    { "kind": "workspace:write" },
+    { "kind": "notifications:show" },
+    { "kind": "storage:own" },
+    { "kind": "settings:own" }
+  ]
+}

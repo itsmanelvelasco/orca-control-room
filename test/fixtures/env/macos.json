@@ -1,0 +1,26 @@
+{
+  "about": "Orca plugin worker env on macOS, hand-made: Orca in /Applications, ELECTRON_RUN_AS_NODE set, HOME missing (the case R2 covers). Values invented.",
+  "platform": "darwin",
+  "execPath": "/Applications/Orca.app/Contents/MacOS/Orca",
+  "cwd": "/",
+  "homedir": "/Users/alex",
+  "env": {
+    "ELECTRON_RUN_AS_NODE": "1",
+    "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+    "USER": "alex",
+    "LOGNAME": "alex",
+    "SHELL": "/bin/zsh",
+    "TMPDIR": "/var/folders/xy/abc123/T/",
+    "__CFBundleIdentifier": "com.stablyai.orca"
+  },
+  "files": [
+    "/Applications/Orca.app/Contents/MacOS/Orca",
+    "/Applications/Orca.app/Contents/Resources/bin/orca"
+  ],
+  "expect": {
+    "cliPath": "/Applications/Orca.app/Contents/Resources/bin/orca",
+    "source": "app",
+    "envAdded": { "HOME": "/Users/alex" },
+    "envRemoved": ["ELECTRON_RUN_AS_NODE"]
+  }
+}

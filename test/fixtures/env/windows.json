@@ -1,0 +1,41 @@
+{
+  "about": "Orca plugin worker env on Windows. Keys as logged live by this plugin on Orca 1.4.271 (23/11/2026); facts from the probe plugin: ELECTRON_RUN_AS_NODE=1, no APPDATA or LOCALAPPDATA, cwd = Orca's app folder, Orca's bin folder not on PATH. Values invented.",
+  "platform": "win32",
+  "execPath": "C:\\Users\\alex\\AppData\\Local\\Programs\\orca\\Orca.exe",
+  "cwd": "C:\\Users\\alex\\AppData\\Local\\Programs\\orca",
+  "homedir": "C:\\Users\\alex",
+  "env": {
+    "COMSPEC": "C:\\Windows\\system32\\cmd.exe",
+    "ELECTRON_RUN_AS_NODE": "1",
+    "GIT_TERMINAL_PROMPT": "0",
+    "HOMEDRIVE": "C:",
+    "HOMEPATH": "\\Users\\alex",
+    "LOGONSERVER": "\\\\SAMPLE-PC",
+    "NUMBER_OF_PROCESSORS": "8",
+    "PATH": "C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Program Files\\Git\\cmd;.\\bin",
+    "PATHEXT": ".COM;.EXE;.BAT;.CMD",
+    "PROCESSOR_ARCHITECTURE": "AMD64",
+    "SYSTEMDRIVE": "C:",
+    "SystemRoot": "C:\\Windows",
+    "TEMP": "C:\\Users\\alex\\AppData\\Local\\Temp",
+    "TMP": "C:\\Users\\alex\\AppData\\Local\\Temp",
+    "USERDOMAIN": "SAMPLE-PC",
+    "USERNAME": "alex",
+    "USERPROFILE": "C:\\Users\\alex",
+    "WINDIR": "C:\\Windows"
+  },
+  "files": [
+    "C:\\Users\\alex\\AppData\\Local\\Programs\\orca\\Orca.exe",
+    "C:\\Users\\alex\\AppData\\Local\\Programs\\orca\\resources\\bin\\orca.exe",
+    "C:\\Users\\alex\\AppData\\Local\\Programs\\orca\\resources\\bin\\orca.cmd"
+  ],
+  "expect": {
+    "cliPath": "C:\\Users\\alex\\AppData\\Local\\Programs\\orca\\resources\\bin\\orca.exe",
+    "source": "app",
+    "envAdded": {
+      "APPDATA": "C:\\Users\\alex\\AppData\\Roaming",
+      "LOCALAPPDATA": "C:\\Users\\alex\\AppData\\Local"
+    },
+    "envRemoved": ["ELECTRON_RUN_AS_NODE"]
+  }
+}

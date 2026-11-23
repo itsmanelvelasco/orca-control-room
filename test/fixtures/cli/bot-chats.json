@@ -1,0 +1,52 @@
+{
+  "id": "376a515a-4322-48dd-ad0a-6f494bf5787b",
+  "ok": true,
+  "result": {
+    "bot": "Captain",
+    "chats": [
+      {
+        "id": "b9428faf-497c-4860-aef8-f6506376187c",
+        "title": "Fix the flaky import test (title 1)",
+        "lastActivityAt": 1795440728667,
+        "lastAsked": "Add a dark theme to settings (lastAsked 2)",
+        "lastSaid": null,
+        "home": false,
+        "self": false,
+        "closed": false
+      },
+      {
+        "id": "4975ed4c-330e-4f2f-aac1-be239fd9c0c0",
+        "title": "Rename the export command (title 3)",
+        "lastActivityAt": 1795438927779,
+        "lastAsked": "Add a dark theme to settings (lastAsked 2)",
+        "lastSaid": null,
+        "home": false,
+        "self": false,
+        "closed": false
+      },
+      {
+        "id": "0df8a090-a16d-40ad-a056-43fcb4845047",
+        "title": "Check the nightly backup (title 4)",
+        "lastActivityAt": 1795437065638,
+        "lastAsked": "Add a dark theme to settings (lastAsked 2)",
+        "lastSaid": null,
+        "home": false,
+        "self": false,
+        "closed": false
+      },
+      {
+        "id": "61ea0698-f4f5-481a-aa8f-f064297be4a2",
+        "title": "Write the onboarding page (title 5)",
+        "lastActivityAt": 1795435475068,
+        "lastAsked": "Add a dark theme to settings (lastAsked 2)",
+        "lastSaid": "Speed up the search index (lastSaid 6)",
+        "home": false,
+        "self": false,
+        "closed": false
+      }
+    ]
+  },
+  "_meta": {
+    "runtimeId": "c95d9b3b-8bbb-4dc9-a288-640b42abd341"
+  }
+}

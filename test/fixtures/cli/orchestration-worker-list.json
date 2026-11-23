@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "result": {
+    "workers": [
+      {
+        "dispatchId": "ctx_5483f04e1268",
+        "taskId": "task_f75da82f6cab",
+        "state": "ready",
+        "outcome": "in_progress",
+        "liveness": "live",
+        "agent": "claude/claude-opus-5-5",
+        "terminal": "term_2bc720f4-6cc9-4469-abae-98b76f4fbf78",
+        "terminalState": "retained",
+        "workspace": "10a2c956-4b74-449b-aa8f-9a1759664f19::/home/alex/work/sample-app/9675c2",
+        "host": "local"
+      }
+    ],
+    "scope": {
+      "run": "run_b858fe7792de",
+      "source": "flag"
+    }
+  }
+}
