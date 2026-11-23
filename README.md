@@ -2,11 +2,7 @@
 
 One [Orca](https://github.com/stablyai/orca) panel that answers two questions: **what waits on me**, and **where does each piece of work stand**. It works on Windows, macOS and Linux with no setup, and it is read only.
 
-| Shipping line | Agents |
-| --- | --- |
-| ![The Shipping line tab: a Run with four tasks, workers, gates and a pull request](assets/line-dark.png) | ![The Agents tab: every agent by project, with its state and how long](assets/agents-dark.png) |
-
-The screenshots show invented test data, not a real account.
+Screenshots go in `assets/` (light and dark, one per tab: Waits, Shipping line, Agents) once Orca's `plugin shot --scenario` captures the panel again: it now captures Orca's own sidebar instead. They will show invented test data from `src/views/room/panel.check.ts`, not a real account.
 
 ## What it shows
 
