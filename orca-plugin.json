@@ -16,6 +16,15 @@
   "pluginApi": 1,
   "main": "src/worker.ts",
   "contributes": {
+    "panels": [
+      {
+        "id": "line",
+        "title": "Shipping line",
+        "icon": "rocket",
+        "entry": "src/views/line/panel.tsx",
+        "ui": "components"
+      }
+    ],
     "events": [
       {
         "on": "agent.status.changed"
