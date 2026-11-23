@@ -10,11 +10,12 @@ import { buildRunLine, cleanText, emptySnapshot, hasLine, indexPrs, type LineSna
 
 export const DEFAULT_REFRESH_SECONDS = 20
 /**
- * A refresh counts as due this much before `refreshSeconds` has passed since the last one ended,
- * so a panel tick that lands a little early is not answered with old data (which made the real
- * interval about twice the setting).
+ * A refresh counts as due this much before `refreshSeconds` has passed since the last one
+ * started, so a panel tick (every 1 s) that lands a little early still refreshes.
  */
-export const SLACK_MS = 2_000
+export const SLACK_MS = 1_000
+/** At least this long between the end of one refresh and the start of the next. */
+export const MIN_GAP_MS = 2_000
 /** PRD 5: lists cap at 50 per group; the same cap keeps the CLI calls per turn bounded. */
 export const MAX_RUNS = 50
 export const MAX_BOTS = 50
@@ -22,7 +23,7 @@ export const MAX_BOTS = 50
 export type LineCli = { run(request: CliRequest): Promise<CliResult> }
 
 export type LineRefresher = {
-  /** What the panel shows now. */
+  /** What the panel shows now; `version` rises after each refresh. */
   snapshot(): LineSnapshot
   /**
    * Starts a refresh when one is due (or `force`) and none is running. Resolves when that
@@ -41,9 +42,17 @@ export function createLineRefresher(opts: { cli: LineCli; refreshSeconds?: numbe
   const now = opts.now ?? Date.now
   const refreshSeconds = opts.refreshSeconds ?? DEFAULT_REFRESH_SECONDS
   let snap = emptySnapshot(refreshSeconds)
-  /** When the last refresh ended; the next is due `refreshSeconds` later, less the slack. */
+  /** When the last refresh started and ended. */
+  let lastStart = -Infinity
   let lastEnd = -Infinity
+  let version = 0
   let running: Promise<LineSnapshot> | null = null
+  /**
+   * Due `refreshSeconds` (less the slack) after the last refresh STARTED, so a slow refresh does
+   * not stretch the interval; `running` prevents overlap, and MIN_GAP_MS keeps a refresh longer
+   * than the interval from being followed at once by the next.
+   */
+  const due = (): boolean => now() - lastStart >= refreshSeconds * 1000 - SLACK_MS && now() - lastEnd >= MIN_GAP_MS
   /** The last good lists per Run and the last good PR index: what a failed call falls back to. */
   let lastInputs = new Map<string, RunInput>()
   let lastPrs = new Map<string, PullRequest>()
@@ -132,15 +141,17 @@ export function createLineRefresher(opts: { cli: LineCli; refreshSeconds?: numbe
     snapshot: () => snap,
     refresh(force = false) {
       if (running) return running
-      if (!force && now() - lastEnd < refreshSeconds * 1000 - SLACK_MS) return Promise.resolve(snap)
+      if (!force && !due()) return Promise.resolve(snap)
+      lastStart = now()
       running = cycle()
         .catch((e: unknown) => {
           snap = { ...snap, status: snap.updatedAt === null ? 'error' : snap.status, error: { kind: 'internal', message: cleanText(String(e), 200), tried: [] } }
           return snap
         })
-        .then((s) => {
-          // Measured from the end, so a refresh that takes long is not followed at once by the next.
+        .then((done) => {
           lastEnd = now()
+          snap = { ...done, version: ++version }
+          const s = snap
           running = null
           // A throw here (e.g. a panel closed mid-refresh) must never become an unhandled rejection.
           try {

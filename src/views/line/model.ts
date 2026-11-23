@@ -169,6 +169,8 @@ export type LineSnapshot = {
   /** Calls that failed in the last refresh outside a Run (PR links); the last good data stays. One line each. */
   notes: string[]
   refreshSeconds: number
+  /** Rises with every change, so a panel can ask often and get `null` when it already has this one. */
+  version?: number
 }
 
 export function emptySnapshot(refreshSeconds: number): LineSnapshot {

@@ -17,8 +17,8 @@ declare module 'orca' {
         error: { kind: string; message: string; code?: string } | null
       }
     }
-    /** The shipping line (R6). Answers at once with what the worker holds and starts a refresh when it is older than the interval, or at once with `force`. */
-    'line.snapshot': { input?: { force?: boolean }; output: LineSnapshot }
+    /** The shipping line (R6). Starts a refresh when one is due (or at once with `force`) and answers at once with what the worker holds, or `null` when the panel already has that `version`. */
+    'line.snapshot': { input?: { force?: boolean; version?: number }; output: LineSnapshot | null }
   }
   interface PluginPanelEvents {
     /** Posted after each shipping-line refresh. */

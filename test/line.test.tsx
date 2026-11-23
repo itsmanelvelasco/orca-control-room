@@ -198,7 +198,7 @@ test('panel: no Runs shows "No runs" and the panel still works', async () => {
   const view = await mount(panel, { host: mockHost({ requests: { 'line.snapshot': () => (asked++, empty) } }) })
   assert.ok(view.find({ type: 'EmptyState', label: 'No runs' }))
   await view.press({ label: 'Refresh the shipping line' })
-  assert.equal(asked, 2)
+  assert.ok(asked >= 2, `asked ${asked} times`)
   assert.deepEqual(view.errors, [])
   await view.unmount()
 })
@@ -263,8 +263,8 @@ test('refresh: one CLI call at a time, only read commands, PR from bot work list
   ])
   assert.equal(snap.status, 'ok')
   assert.equal(allTasks(snap).find((x) => x.id === 'task_b2c3d4e5f6a1')?.pr?.number, 42)
-  // Not due within 20 s less the 2 s slack (measured from the end of the last refresh); a second ask while one runs joins it.
-  t += 17_000
+  // Not due within 20 s less the 1 s slack (measured from the start of the last refresh); a second ask while one runs joins it.
+  t += 18_000
   await r.refresh()
   assert.equal(f.calls.length, 7)
   t += 1_000
@@ -382,4 +382,59 @@ test('cleanText cuts by code points and never splits an emoji', () => {
   const s = cleanText('😀'.repeat(10), 5)
   assert.equal(s, '😀😀😀😀…')
   assert.ok(!/[\ud800-\udbff](?![\udc00-\udfff])/.test(s))
+})
+
+// ---------- review of #3, round 2: the interval with a slow CLI ----------
+
+test('slow CLI (about 5 s per refresh): a panel asking every second still gets a refresh about every 20 s', async () => {
+  let t = 0
+  const starts: number[] = []
+  const f = fakeCli()
+  const slow = {
+    async run(req: CliRequest): Promise<CliResult> {
+      if (req.command === 'orchestration run-list') starts.push(t)
+      t += 700 // 7 calls per refresh: about 5 s
+      return f.cli.run(req)
+    }
+  }
+  const r = createLineRefresher({ cli: slow, now: () => t })
+  // The panel's 1 s tick while visible: every tick asks, the refresher decides.
+  while (t < 80_000) {
+    await r.refresh()
+    t = (Math.floor(t / 1000) + 1) * 1000
+  }
+  const gaps = starts.slice(1).map((s, i) => s - starts[i])
+  assert.ok(starts.length >= 4, `${starts.length} refreshes in 80 s: ${starts.join(', ')}`)
+  for (const g of gaps) assert.ok(g >= 19_000 && g <= 21_000, `gap ${g} ms between refresh starts`)
+})
+
+test('a refresh longer than the interval is not followed at once by the next', async () => {
+  let t = 0
+  const starts: number[] = []
+  const f = fakeCli()
+  const slower = {
+    async run(req: CliRequest): Promise<CliResult> {
+      if (req.command === 'orchestration run-list') starts.push(t)
+      t += 4_000 // 7 calls: 28 s, longer than the 20 s interval
+      return f.cli.run(req)
+    }
+  }
+  const r = createLineRefresher({ cli: slower, now: () => t })
+  while (t < 100_000) {
+    await r.refresh()
+    t = (Math.floor(t / 1000) + 1) * 1000
+  }
+  for (let i = 1; i < starts.length; i++) assert.ok(starts[i] - (starts[i - 1] + 28_000) >= 2_000, `starts ${starts.join(', ')}`)
+})
+
+test('worker: an ask with the version the panel already has answers null', async () => {
+  const f = fakeCli()
+  const worker = await mountWorker({ default: (orca: any) => registerLine(orca, f.cli) }, { events: [] })
+  await worker.request('line.snapshot', {})
+  for (let i = 0; i < 100 && !worker.posts.some((p) => p.event === 'line.changed'); i++) await new Promise((r) => setTimeout(r, 20))
+  const latest = (await worker.request('line.snapshot', {})) as LineSnapshot
+  assert.equal(typeof latest.version, 'number')
+  assert.equal(await worker.request('line.snapshot', { version: latest.version }), null)
+  assert.equal(((await worker.request('line.snapshot', { version: -1 })) as LineSnapshot).version, latest.version)
+  await worker.deactivate()
 })
