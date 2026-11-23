@@ -10,7 +10,7 @@
   "repository": "https://github.com/itsmanelvelasco/orca-control-room",
   "license": "MIT",
   "engines": {
-    "orca": ">=1.4.248"
+    "orca": ">=1.4.260"
   },
   "execution": "trusted-worker",
   "pluginApi": 1,
@@ -29,6 +29,13 @@
         "title": "Shipping line",
         "icon": "rocket",
         "entry": "src/views/line/panel.tsx",
+        "ui": "components"
+      },
+      {
+        "id": "agents",
+        "title": "Agents",
+        "icon": "agent",
+        "entry": "src/views/agents/panel.tsx",
         "ui": "components"
       }
     ],

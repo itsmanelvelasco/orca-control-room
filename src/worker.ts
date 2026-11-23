@@ -1,9 +1,11 @@
 // Control Room worker. Slice 1: the CLI bridge. Slice 2: waits on you. Slice 3: the shipping line.
+// Slice 4: the Agents view.
 // - `cli.status`: the CLI path and one timed `bot list` (slice 1's live check).
 // - Waits on you (R4, R5, R9): refreshes every 4 s and on each agent event, answers `waits.get`,
 //   posts `waits.changed`, opens a wait's place on `waits.open`, notifies new waits once, and
 //   keeps the status bar count.
 // - The shipping line (R6): src/views/line.
+// - The Agents view (R7): src/views/agents, no CLI.
 import type { OrcaWorkerApi } from 'orca/worker'
 import './protocol.ts'
 import { createHostCliRunner } from './cli/index.ts'
@@ -11,6 +13,7 @@ import { parseBotList, type AgentStatusEvent } from './model/index.ts'
 import { createNotifier, NOTIFIED_KEY, NOTIFY_SETTING, STATUS_ITEM, statusBarOf } from './notify.ts'
 import { createWaitsRefresher, FAST_MS, SLOW_EVERY, type WaitsSnapshot } from './views/waits/refresh.ts'
 import { registerLine } from './views/line/worker.ts'
+import { registerAgents } from './views/agents/worker.ts'
 
 export const ORCA_CLI_SETTING = 'orcaCli'
 /** Gate id -> when this plugin first saw it, so a restart keeps "since". */
@@ -59,6 +62,7 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
     return out
   }
   orca.panels.handle('cli.status', status)
+  registerAgents(orca)
 
   registerLine(orca, cli)
 

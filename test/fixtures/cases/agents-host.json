@@ -1,0 +1,44 @@
+{
+  "_about": "Hand-made, invented names. What Orca's plugin API answers for the Agents view (R7): workspace.list with status, agents.list per workspace id (\"error\" = the call rejects), and agent.status.changed events after the first read. Times are ms since epoch around now = 1795430000000.",
+  "now": 1795430000000,
+  "workspaceList": {
+    "workspaces": [
+      { "id": "wt-sample-main", "kind": "worktree", "name": "sample-app main", "project": "sample-app", "projectId": "proj-sample", "path": "/home/alex/code/sample-app", "branch": "main", "hostId": "local", "status": { "state": "working", "unread": false, "terminalCount": 2, "lastActivityAt": 1795429990000 } },
+      { "id": "wt-sample-export", "kind": "worktree", "name": "export view", "project": "sample-app", "projectId": "proj-sample", "path": "/home/alex/code/sample-app-export", "branch": "alex/export-view", "hostId": "local", "status": { "state": "permission", "unread": true, "terminalCount": 1, "lastActivityAt": 1795429900000 } },
+      { "id": "wt-docs", "kind": "worktree", "name": "docs fixes", "project": "docs-site", "projectId": "proj-docs", "path": "/home/alex/code/docs-site", "branch": "alex/fixes", "hostId": "local", "status": { "state": "permission", "unread": true, "terminalCount": 1, "lastActivityAt": 1795429000000 } },
+      { "id": "wt-idle", "kind": "worktree", "name": "idle branch", "project": "docs-site", "projectId": "proj-docs", "path": "/home/alex/code/docs-site-idle", "branch": "alex/idle", "hostId": "local", "status": { "state": "inactive", "unread": false, "terminalCount": 0, "lastActivityAt": 1795000000000 } },
+      { "id": "folder-notes", "kind": "folder", "name": "notes", "project": null, "projectId": null, "path": "/home/alex/notes", "branch": null, "hostId": null, "status": { "state": "done", "unread": false, "terminalCount": 1, "lastActivityAt": 1795420000000 } },
+      { "id": "wt-ssh-api", "kind": "worktree", "name": "api on build box", "project": "sample-api", "projectId": "proj-api", "path": "/srv/sample-api", "branch": "main", "hostId": "ssh:build-box", "status": { "state": "working", "unread": false, "terminalCount": 1, "lastActivityAt": 1795429950000 } },
+      { "id": "wt-paired-ml", "kind": "worktree", "name": "ml trainer", "project": "sample-ml", "projectId": "proj-ml", "path": "/srv/sample-ml", "branch": "main", "hostId": "runtime:paired-01", "status": { "state": "working", "unread": false, "terminalCount": 1, "lastActivityAt": 1795429800000 } },
+      { "id": "wt-broken", "kind": "worktree", "name": "unreachable", "project": "sample-api", "projectId": "proj-api", "path": "/srv/sample-api-2", "branch": "alex/x", "hostId": "ssh:build-box", "status": { "state": "active", "unread": false, "terminalCount": 1, "lastActivityAt": 1795429000000 } }
+    ],
+    "truncated": false
+  },
+  "agentsList": {
+    "wt-sample-main": { "agents": [
+      { "terminalId": "term_main_1", "title": "Refactor the export module", "agent": "claude", "state": "working", "stateStartedAt": 1795429700000, "sessionId": "sess-1", "task": null },
+      { "terminalId": "term_main_2", "title": "Write release notes", "agent": "codex", "state": "done", "stateStartedAt": 1795428000000, "sessionId": "sess-2", "task": null }
+    ] },
+    "wt-sample-export": { "agents": [
+      { "terminalId": "term_export_1", "title": "Slice 2: export view", "agent": "claude", "state": "waiting", "stateStartedAt": 1795429880000, "sessionId": "sess-3", "task": { "title": "Slice 2: export view" } }
+    ] },
+    "wt-docs": { "agents": [
+      { "terminalId": "term_docs_1", "title": "<img src=x onerror=alert(1)> Fix links\nsecond line that must not show", "agent": "claude", "state": "blocked", "stateStartedAt": 1795429000000, "sessionId": "sess-4", "task": null }
+    ] },
+    "wt-idle": "never asked: terminalCount is 0",
+    "folder-notes": { "agents": [
+      { "terminalId": "term_notes_1", "title": null, "agent": "gemini", "state": "done", "stateStartedAt": 1795420000000, "sessionId": null, "task": null }
+    ] },
+    "wt-ssh-api": { "agents": [
+      { "terminalId": "term_api_1", "title": "Load test", "agent": "codex", "state": "working", "stateStartedAt": 1795429500000, "sessionId": "sess-5", "task": null }
+    ] },
+    "wt-paired-ml": { "agents": [
+      { "terminalId": "term_ml_1", "title": "Tune the trainer", "agent": "claude", "state": "working", "stateStartedAt": 1795429100000, "sessionId": "sess-6", "task": null }
+    ] },
+    "wt-broken": "error"
+  },
+  "events": [
+    { "workspaceId": "ws-internal-main", "workspaceListId": "wt-sample-main", "paneKey": "tab-main:1", "terminalId": "term_main_1", "title": "Refactor the export module", "state": "waiting", "receivedAt": 1795430001000, "mainAgent": { "state": "waiting", "stateStartedAt": 1795430000500 } },
+    { "workspaceId": "ws-internal-docs", "workspaceListId": "wt-docs", "paneKey": "tab-docs:2", "title": "Review the glossary", "state": "working", "receivedAt": 1795430002000 }
+  ]
+}
