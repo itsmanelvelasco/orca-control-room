@@ -2,7 +2,7 @@
 // and the env the CLI gets is fixed the way the PRD says.
 import { assert, test } from 'orca/testing'
 import { buildCliEnv } from '../src/cli/env.ts'
-import { cliCandidates, resolveCli } from '../src/cli/resolve.ts'
+import { cliCandidates, isWinAbsolute, resolveCli } from '../src/cli/resolve.ts'
 import { fixture } from './helpers.ts'
 
 type EnvFixture = {
@@ -86,6 +86,29 @@ test('not found: lists every path tried', () => {
   assert.equal(r.ok, false)
   assert.ok(r.tried.some((c) => c.path === '/opt/Orca/resources/bin/orca'))
   assert.ok(r.tried.some((c) => c.path === '/usr/bin/orca' && c.source === 'path'))
+})
+
+test('windows: only X:\\ and UNC paths count as absolute', () => {
+  for (const ok of ['C:\\a\\orca.exe', 'c:/a/orca.exe', '\\\\server\\share\\orca.exe']) assert.equal(isWinAbsolute(ok), true, ok)
+  for (const bad of ['\\AppData\\Local\\orca.exe', '/AppData/orca.exe', 'C:orca.exe', 'orca.exe', '.\\bin\\orca.exe', '\\\\server']) assert.equal(isWinAbsolute(bad), false, bad)
+})
+
+test('windows: no profile folder known: no root-relative OS-default candidate', () => {
+  const list = cliCandidates({ platform: 'win32', execPath: '', env: { PATH: '\\tools;C:\\bin' }, homedir: '', isFile: () => true })
+  assert.deepEqual(list, [{ path: 'C:\\bin\\orca.exe', source: 'path' }])
+})
+
+test('windows: a .cmd or .bat setting is skipped and the next candidate is used', () => {
+  const f = fixture<EnvFixture>('env/windows.json')
+  const files = new Set([...f.files, 'D:\\tools\\orca.cmd', 'D:\\tools\\orca.exe'])
+  const host = (setting: string) => ({ platform: 'win32', execPath: f.execPath, env: f.env, homedir: f.homedir, setting, isFile: (p: string) => files.has(p) })
+  for (const s of ['D:\\tools\\orca.cmd', 'D:\\tools\\orca.bat', 'D:\\tools\\orca']) {
+    const r = resolveCli(host(s))
+    assert.equal(r.ok && r.path, f.expect.cliPath, s)
+    assert.equal(r.tried.some((c) => c.source === 'setting'), false)
+  }
+  const exe = resolveCli(host('"D:\\tools\\orca.exe"'))
+  assert.equal(exe.ok && exe.path, 'D:\\tools\\orca.exe', 'quoted .exe setting')
 })
 
 test('macOS: falls back to ~/Applications when Orca is not in /Applications', () => {

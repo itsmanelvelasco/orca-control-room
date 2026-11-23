@@ -1,7 +1,7 @@
 // Typed models parsed from the recorded --json of the 12 commands and the hand-made cases.
 import { assert, test } from 'orca/testing'
 import {
-  agentFromEvent, agentWaits, allAgents, buildOrder, isWorkerFailed, itemNeedsYou, parseAutomations, parseBotChats,
+  agentFromEvent, agentFromListRow, agentWaits, allAgents, buildOrder, mergeAgents, sameAgent, type Agent, type AgentsListRow, isWorkerFailed, itemNeedsYou, parseAutomations, parseBotChats,
   parseBotItemList, parseBotList, parseBotWorkList, parseEnvelope, parseGateList, parseInbox, parseRunList, parseRunShow,
   parseTaskList, parseWorkerList, parseWorktreePs, type AgentStatusEvent
 } from '../src/model/index.ts'
@@ -145,8 +145,65 @@ test('trust-blocked agent (live R5 record): event says waiting, worktree ps name
     assert.equal(a.state, 'waiting')
     assert.equal(a.trustPrompt, true, key)
     assert.equal(a.waitMessage, 'trust this folder')
-    assert.equal(a.key, c.agentStatusChanged[0].paneKey, 'same pane key as the event, so the rows merge')
+    assert.equal(a.key, c.agentStatusChanged[0].paneKey, 'same pane key as the event')
+    assert.equal(a.terminalId, c.agentStatusChanged[0].terminalId, 'terminal id read from `address`, as agents.list names it')
   }
+})
+
+const trustSources = () => {
+  const c = fixture('cases/trust-blocked-agent.json')
+  const list = (c.agentsList.agents as AgentsListRow[]).map((r) => agentFromListRow(r, c.agentsList.workspaceId)).filter((a): a is Agent => a !== null)
+  const events = (c.agentStatusChanged as AgentStatusEvent[]).map(agentFromEvent)
+  const ps = allAgents(parseWorktreePs(c.worktreePsAgentWait.result))
+  return { c, list, events, ps }
+}
+
+test('merge: the trust-prompt agent from all 3 sources is 1 row with trustPrompt', () => {
+  const { c, list, events, ps } = trustSources()
+  assert.equal(list[0].key, list[0].terminalId, 'agents.list alone keys on the terminal id')
+  for (const order of [[list, events, ps], [ps, list, events], [events, ps, list], [list, ps]] as Agent[][][]) {
+    const merged = mergeAgents(...order)
+    assert.equal(merged.length, 1, `orders: ${order.map((o) => o[0].source).join(', ')}`)
+    const [a] = merged
+    assert.equal(a.key, c.agentStatusChanged[0].paneKey)
+    assert.equal(a.paneKey, c.agentStatusChanged[0].paneKey)
+    assert.equal(a.terminalId, c.agentStatusChanged[0].terminalId)
+    assert.equal(a.state, 'waiting')
+    assert.equal(a.trustPrompt, true)
+    assert.equal(a.waitMessage, 'trust this folder')
+    assert.equal(a.agentKind, 'claude')
+    assert.equal(agentWaits(a), true)
+  }
+})
+
+test('merge: a list row and an event row with no common id join through the ps row', () => {
+  const { list, events, ps } = trustSources()
+  assert.equal(sameAgent(list[0], events[0]), true, 'same terminal id')
+  const eventNoTerminal = { ...events[1], terminalId: null }
+  assert.equal(sameAgent(list[0], eventNoTerminal), false)
+  assert.equal(mergeAgents([list[0]], [eventNoTerminal]).length, 2, 'no shared id: two rows')
+  assert.equal(mergeAgents([list[0]], [eventNoTerminal], ps).length, 1, 'ps row links them')
+})
+
+test('merge: an answered trust prompt drops trustPrompt; a newer wait does not inherit it', () => {
+  const { events, ps } = trustSources()
+  const t = ps[0].stateStartedAt as number
+  const working = agentFromEvent({ ...(events[1] as AgentStatusEvent), state: 'working', receivedAt: t + 5_000, mainAgent: { state: 'working', stateStartedAt: t + 5_000 } })
+  const [a] = mergeAgents(ps, [working])
+  assert.equal(a.state, 'working')
+  assert.equal(a.trustPrompt, false)
+  assert.equal(a.waitMessage, null)
+  const laterWait = agentFromEvent({ ...(events[1] as AgentStatusEvent), state: 'waiting', receivedAt: t + 60_000, mainAgent: { state: 'waiting', stateStartedAt: t + 60_000 } })
+  const [b] = mergeAgents(ps, [laterWait])
+  assert.equal(b.state, 'waiting')
+  assert.equal(b.trustPrompt, false, 'stale ps row')
+})
+
+test('merge: different agents stay apart; recorded worktree ps keeps its row count', () => {
+  const ps = allAgents(parseWorktreePs(resultOf('cli/worktree-ps.json')))
+  assert.ok(ps.every((a) => a.terminalId === null || a.terminalId.startsWith('term_')))
+  assert.equal(mergeAgents(ps).length, ps.length)
+  assert.equal(mergeAgents(ps, ps).length, ps.length, 'the same rows twice collapse')
 })
 
 test('malformed JSON and error envelopes', () => {
