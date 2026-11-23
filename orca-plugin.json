@@ -18,11 +18,26 @@
   "contributes": {
     "panels": [
       {
+        "id": "waits",
+        "title": "Waits on you",
+        "icon": "bell",
+        "entry": "src/views/waits/panel.tsx",
+        "ui": "components"
+      },
+      {
         "id": "line",
         "title": "Shipping line",
         "icon": "rocket",
         "entry": "src/views/line/panel.tsx",
         "ui": "components"
+      }
+    ],
+    "statusBarItems": [
+      {
+        "id": "waits",
+        "text": "No waits",
+        "tooltip": "Control Room: what waits on you",
+        "icon": "bell"
       }
     ],
     "events": [
@@ -38,6 +53,13 @@
         "type": "string",
         "default": "",
         "placeholder": "Found automatically"
+      },
+      {
+        "key": "notifyNewWaits",
+        "title": "Notify new waits",
+        "description": "Show one desktop notification when something new waits on you. Each wait notifies once.",
+        "type": "boolean",
+        "default": true
       }
     ]
   },
