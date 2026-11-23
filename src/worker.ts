@@ -114,19 +114,36 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
     }
   })
 
-  // Every 4 s; every 5th cycle (20 s) also re-reads bots and Runs. A cycle never starts while one runs.
-  let tick = 0
-  let running: Promise<void> | null = null
-  const cycle = (slow: boolean): Promise<void> => {
-    if (running) return running
-    running = refresher.cycle(slow).catch((e: unknown) => orca.log(`waits cycle failed: ${String((e as Error)?.message ?? e).slice(0, 200)}`)).finally(() => {
-      running = null
+  // Two loops, every 4 s each, that never wait on each other (R5: a trust label within 10 s even
+  // when item and gate calls are slow). The agent loop reads `worktree ps` only; the item loop
+  // reads items and gates, and every 5th tick (20 s) bots and Runs too. A loop never starts while
+  // its last pass runs; a slow tick it skips is taken by its next pass.
+  const log = (e: unknown): void => orca.log(`waits cycle failed: ${String((e as Error)?.message ?? e).slice(0, 200)}`)
+  let agentRun: Promise<void> | null = null
+  const agentCycle = (): Promise<void> => {
+    if (agentRun) return agentRun
+    agentRun = refresher.agentCycle().catch(log).finally(() => {
+      agentRun = null
     })
-    return running
+    return agentRun
   }
+  let itemRun: Promise<void> | null = null
+  let slowDue = false
+  const itemCycle = (slow: boolean): Promise<void> => {
+    slowDue ||= slow
+    if (itemRun) return itemRun
+    const full = slowDue
+    slowDue = false
+    itemRun = refresher.itemCycle(full).catch(log).finally(() => {
+      itemRun = null
+    })
+    return itemRun
+  }
+  let tick = 0
   const timer = runtime.setInterval(() => {
     tick++
-    void cycle(tick % SLOW_EVERY === 0)
+    void agentCycle()
+    void itemCycle(tick % SLOW_EVERY === 0)
   }, FAST_MS)
   // After an agent event: update at once from the event, then read `worktree ps` soon after.
   let soon: ReturnType<typeof setTimeout> | null = null
@@ -135,7 +152,7 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
     if (!soon) {
       soon = runtime.setTimeout(() => {
         soon = null
-        void cycle(false)
+        void agentCycle()
       }, 500)
     }
   })
@@ -143,7 +160,8 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
     clearInterval(timer)
     if (soon) clearTimeout(soon)
   }
-  void cycle(true)
+  void agentCycle()
+  void itemCycle(true)
 }
 
 export function deactivate(): void {
