@@ -1,10 +1,11 @@
-// Control Room worker. Slice 1: the CLI bridge only, no views.
+// Control Room worker. Slice 1: the CLI bridge. Slice 3: the shipping line (src/views/line).
 // - Answers `cli.status` (CLI path + one timed `bot list`), used by the live checks.
 // - Logs each `agent.status.changed` payload, for the R5 folder-trust check.
 import type { OrcaWorkerApi } from 'orca/worker'
 import './protocol.ts'
 import { createHostCliRunner } from './cli/index.ts'
 import { parseBotList } from './model/index.ts'
+import { registerLine } from './views/line/worker.ts'
 
 export const ORCA_CLI_SETTING = 'orcaCli'
 
@@ -43,6 +44,8 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
     return out
   }
   orca.panels.handle('cli.status', status)
+
+  registerLine(orca, cli)
 
   // One timed `bot list` at start: finds the path for the footer early and leaves a line in
   // `orca plugin logs` that shows the CLI answers from this worker (installed plugins take no dev request).
