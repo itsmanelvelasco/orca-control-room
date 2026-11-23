@@ -25,7 +25,7 @@
       {
         "key": "orcaCli",
         "title": "Orca CLI path",
-        "description": "Full path to the orca CLI. Leave empty: Control Room finds it next to Orca, in the default install folder, or on PATH.",
+        "description": "Full path to the orca CLI (on Windows, orca.exe; a .cmd file is skipped). Leave empty: Control Room finds it next to Orca, in the default install folder, or on PATH.",
         "type": "string",
         "default": "",
         "placeholder": "Found automatically"

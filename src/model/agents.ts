@@ -2,6 +2,7 @@
 // - the plugin API: `agents.list` and the `agent.status.changed` event (no CLI needed, R7);
 // - `orca worktree ps --json`: every workspace with its open agents (the R5 fallback).
 // Both map to one `Agent` type, so views do not care where a row came from.
+// The same agent can come from all three sources; `mergeAgents` makes it one row.
 
 import { bool, isRecord, numOrNull, oneOf, rows, str, strOrNull, type JsonRecord } from './envelope.ts'
 
@@ -23,7 +24,10 @@ export const TRUST_MESSAGE = 'trust this folder'
 export type AgentSource = 'agents.list' | 'agent.status.changed' | 'worktree ps'
 
 export type Agent = {
-  /** Stable key: the pane key when known, else the terminal id. */
+  /**
+   * Stable key: the pane key when known, else the terminal id. One source alone may know only one
+   * of them (`agents.list` has no pane key), so use `mergeAgents` before keying rows from several sources.
+   */
   key: string
   paneKey: string | null
   terminalId: string | null
@@ -111,10 +115,13 @@ function agentFromPs(a: JsonRecord, worktreeId: string): Agent | null {
   const reason = str(wait.reason) ?? str(a.blockedReason)
   const waitMessage = program.state === 'blocked' ? strOrNull(program.message) : null
   const trust = (reason !== undefined && TRUST_REASONS.includes(reason)) || waitMessage === TRUST_MESSAGE
+  // `address` is the terminal handle (`term_…`) that agents.list and the event call terminalId.
+  // An agent "open, no handle yet" has none.
+  const address = str(a.address)
   return {
     key: paneKey,
     paneKey,
-    terminalId: null,
+    terminalId: address && address.startsWith('term_') ? address : null,
     workspaceId: worktreeId,
     title: strOrNull(a.conversationName) ?? strOrNull(a.displayName),
     agentKind: strOrNull(a.agentType),
@@ -154,6 +161,79 @@ export const allAgents = (ps: WorktreePs): Agent[] => ps.worktrees.flatMap((w) =
 
 /** True for an agent that waits on the user. */
 export const agentWaits = (a: Agent): boolean => a.state === 'blocked' || a.state === 'waiting' || a.trustPrompt
+
+// ---------- one row per agent ----------
+
+/** True when two rows are the same agent: same pane key, or same terminal id. */
+export function sameAgent(a: Agent, b: Agent): boolean {
+  return (a.paneKey !== null && a.paneKey === b.paneKey) || (a.terminalId !== null && a.terminalId === b.terminalId)
+}
+
+/**
+ * How much earlier than the merged state a `worktree ps` trust row may start and still count. The
+ * event without `mainAgent` dates the state by when it arrived, a few hundred ms after Orca saw it.
+ */
+export const TRUST_SLACK_MS = 2_000
+
+/** When two rows disagree on state and start at the same time, the live source wins. */
+const SOURCE_RANK: Readonly<Record<AgentSource, number>> = { 'agent.status.changed': 3, 'agents.list': 2, 'worktree ps': 1 }
+
+function fold(rowsOfOne: Agent[]): Agent {
+  // State: the row that entered its state last (ties: event, then agents.list, then worktree ps).
+  const latest = [...rowsOfOne].sort((x, y) => (y.stateStartedAt ?? -1) - (x.stateStartedAt ?? -1) || SOURCE_RANK[y.source] - SOURCE_RANK[x.source])[0]
+  const first = <K extends keyof Agent>(k: K): Agent[K] => {
+    for (const r of [latest, ...rowsOfOne]) if (r[k] !== null) return r[k]
+    return latest[k]
+  }
+  const paneKey = first('paneKey')
+  const terminalId = first('terminalId')
+  const waiting = latest.state === 'waiting' || latest.state === 'blocked'
+  // A trust prompt counts while the agent still waits in the same spell: a newer state (the prompt
+  // was answered, then a later wait) drops it until the next `worktree ps` says so again.
+  const current = (r: Agent): boolean => waiting && (r.stateStartedAt ?? 0) >= (latest.stateStartedAt ?? 0) - TRUST_SLACK_MS
+  const trustPrompt = rowsOfOne.some((r) => r.trustPrompt && current(r))
+  const waitMessage = rowsOfOne.find((r) => r.waitMessage !== null && current(r))?.waitMessage ?? null
+  return {
+    key: paneKey ?? terminalId ?? latest.key,
+    paneKey,
+    terminalId,
+    workspaceId: first('workspaceId'),
+    title: first('title'),
+    agentKind: first('agentKind'),
+    state: latest.state,
+    stateStartedAt: latest.stateStartedAt,
+    taskTitle: first('taskTitle'),
+    trustPrompt,
+    waitMessage,
+    source: latest.source
+  }
+}
+
+/**
+ * One row per agent from any mix of `agents.list`, `agent.status.changed` and `worktree ps` rows.
+ * Rows are the same agent when they share a pane key or a terminal id (transitively: a list row
+ * that matches a ps row by terminal id joins the event row that matches that ps row by pane key).
+ * The merged row takes its state from the row that entered its state last, ids and labels from any
+ * row that has them, and `trustPrompt` from `worktree ps` while the agent still waits or is blocked.
+ * Its `key` is the pane key when any row knows it, else the terminal id. Order: first seen.
+ */
+export function mergeAgents(...sources: readonly (readonly Agent[])[]): Agent[] {
+  const groups: Agent[][] = []
+  for (const row of sources.flat()) {
+    const hits = groups.filter((g) => g.some((r) => sameAgent(r, row)))
+    if (hits.length === 0) {
+      groups.push([row])
+      continue
+    }
+    const [into, ...rest] = hits
+    into.push(row)
+    for (const g of rest) {
+      into.push(...g)
+      groups.splice(groups.indexOf(g), 1)
+    }
+  }
+  return groups.map(fold)
+}
 
 // ---------- automations list ----------
 

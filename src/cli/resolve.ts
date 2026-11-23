@@ -29,14 +29,23 @@ export type Resolution =
   | { ok: true; path: string; source: CliSource; tried: CliCandidate[] }
   | { ok: false; tried: CliCandidate[] }
 
+/**
+ * A fully qualified Windows path: `X:\…` or a UNC path `\\server\share\…`. Root-relative (`\Users\…`)
+ * and drive-relative (`C:Users\…`) paths are refused, though `path.win32.isAbsolute` accepts the first.
+ */
+export function isWinAbsolute(path: string): boolean {
+  return /^[A-Za-z]:[\\/]/.test(path) || /^[\\/]{2}[^\\/]+[\\/]+[^\\/]+/.test(path)
+}
+
 /** Every path the resolver would try, in order, without touching the disk. Duplicates removed. */
 export function cliCandidates(host: ResolveHost): CliCandidate[] {
   const win = host.platform === 'win32'
   const p = win ? win32 : posix
   const exe = win ? 'orca.exe' : 'orca'
+  const absolute = win ? isWinAbsolute : (path: string) => path.startsWith('/')
   const out: CliCandidate[] = []
   const add = (path: string | undefined | null, source: CliSource): void => {
-    if (!path || !p.isAbsolute(path)) return
+    if (!path || !absolute(path)) return
     const norm = p.normalize(path)
     const key = win ? norm.toLowerCase() : norm
     if (out.some((c) => (win ? c.path.toLowerCase() : c.path) === key)) return
@@ -44,12 +53,14 @@ export function cliCandidates(host: ResolveHost): CliCandidate[] {
   }
 
   // 1. The setting. Only an absolute path counts: a bare name would be looked up from Orca's cwd.
-  const setting = (host.setting ?? '').trim()
-  if (setting) add(setting, 'setting')
+  //    On Windows only an .exe counts: execFile runs no .cmd/.bat shim without a shell, so such a
+  //    setting would fail on every call instead of falling back to the next candidate.
+  const setting = (host.setting ?? '').trim().replace(/^"(.*)"$/, '$1')
+  if (setting && (!win || /\.exe$/i.test(setting))) add(setting, 'setting')
 
   // 2. Orca's own bin folder, next to the running app. Covers custom install folders and the
   //    Linux AppImage mount, whose path changes on every run.
-  if (host.execPath && p.isAbsolute(host.execPath)) {
+  if (host.execPath && absolute(host.execPath)) {
     const appDir = p.dirname(host.execPath)
     add(p.join(appDir, 'resources', 'bin', exe), 'app')
     if (host.platform === 'darwin') add(p.join(appDir, '..', 'Resources', 'bin', exe), 'app')
@@ -57,8 +68,10 @@ export function cliCandidates(host: ResolveHost): CliCandidate[] {
 
   // 3. The OS default install path.
   if (win) {
-    const local = envGet(host.env, 'LOCALAPPDATA', 'win32') || (envGet(host.env, 'USERPROFILE', 'win32') || host.homedir) + '\\AppData\\Local'
-    add(win32.join(local, 'Programs', 'Orca', 'resources', 'bin', exe), 'os-default')
+    // Skipped when no profile folder is known: '' + '\AppData\Local' would be root-relative.
+    const profile = envGet(host.env, 'USERPROFILE', 'win32') || host.homedir
+    const local = envGet(host.env, 'LOCALAPPDATA', 'win32') || (profile ? win32.join(profile, 'AppData', 'Local') : '')
+    if (local) add(win32.join(local, 'Programs', 'Orca', 'resources', 'bin', exe), 'os-default')
   } else if (host.platform === 'darwin') {
     add('/Applications/Orca.app/Contents/Resources/bin/orca', 'os-default')
     if (host.homedir) add(posix.join(host.homedir, 'Applications', 'Orca.app', 'Contents', 'Resources', 'bin', 'orca'), 'os-default')

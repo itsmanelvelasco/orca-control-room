@@ -1,5 +1,5 @@
 {
-  "about": "Live R5 record, Orca 1.4.271 on Windows, 23/11/2026: Claude Code at its folder-trust prompt. The plugin event says waiting with no reason; worktree ps names the prompt.",
+  "about": "Live R5 record, Orca 1.4.271 on Windows, 23/11/2026: Claude Code at its folder-trust prompt. The plugin event says waiting with no reason; worktree ps names the prompt. agentsList: the same pane as an agents.list row would show it (shape from the plugin API typings; not recorded live).",
   "agentStatusChanged": [
     {
       "workspaceId": "c61f1dc7-b6f0-4104-a0ea-de076b403c11::/home/alex/work/sample-app/trust-check",
@@ -24,6 +24,20 @@
       }
     }
   ],
+  "agentsList": {
+    "workspaceId": "c61f1dc7-b6f0-4104-a0ea-de076b403c11::/home/alex/work/sample-app/trust-check",
+    "agents": [
+      {
+        "terminalId": "term_7291498c-cd05-44be-a8fc-8de963d40e56",
+        "title": "claude",
+        "agent": "claude",
+        "state": "waiting",
+        "stateStartedAt": 1795442851656,
+        "sessionId": null,
+        "task": null
+      }
+    ]
+  },
   "worktreePsAgentWait": {
     "ok": true,
     "result": {
