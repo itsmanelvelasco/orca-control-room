@@ -1,7 +1,7 @@
 // Bots, their items, their work and their chats.
 // Sources: `bot list`, `bot item list --bot <id>`, `bot work list --bot <id>`, `bot chats --bot <id>`.
 
-import { bool, isRecord, numOrNull, oneOf, rows, str, strOrNull, type JsonRecord } from './envelope.ts'
+import { bool, isRecord, numOrNull, oneOf, rows, str, strOrNull, stringList, type JsonRecord } from './envelope.ts'
 
 // ---------- bot list ----------
 
@@ -106,8 +106,8 @@ export type BotItem = {
   description: string | null
   doneMeans: string | null
   status: BotItemStatus
-  /** The open question when status is `needs_you`. Untrusted text. */
-  question: { eventId: string; text: string } | null
+  /** The open question when status is `needs_you`, with the answers it offers (if any). Untrusted text. */
+  question: { eventId: string; text: string; options: string[] } | null
   /** The chat the item lives in; open it to answer. */
   chat: { id: string; kind: 'home' | 'chat' | 'thread' | 'automation'; title: string | null }
   links: BotItemLink[]
@@ -132,7 +132,7 @@ export function parseBotItemList(result: unknown): BotItemPage {
     if (!uid || title === undefined || number === null) return null
     const owner = isRecord(i.owner) ? i.owner : {}
     const chat = isRecord(i.chat) ? i.chat : {}
-    const q = isRecord(i.question) && typeof i.question.text === 'string' ? { eventId: str(i.question.eventId) ?? '', text: i.question.text } : null
+    const q = isRecord(i.question) && typeof i.question.text === 'string' ? { eventId: str(i.question.eventId) ?? '', text: i.question.text, options: stringList(i.question.options) } : null
     return {
       uid,
       number,
