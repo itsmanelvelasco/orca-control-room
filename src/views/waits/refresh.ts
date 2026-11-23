@@ -1,8 +1,12 @@
-// R9: keeps the waits current. Every 4 s (and soon after each agent event) it reads items,
-// gates and `worktree ps`; every 20 s it also reads the lists those depend on (bots, Runs, and
-// the tasks and workers of each Run). Calls of one kind never overlap: each command name is a
-// lane, a lane runs its calls one after another, and a cycle skips a lane that is still busy.
-// A failed call keeps the last good data of that source.
+// R9: keeps the waits current, in two loops that never wait on each other:
+// - the agent loop (`agentCycle`): `worktree ps` only (agent states and trust reasons), every 4 s
+//   and soon after each agent event, so a trust prompt gets its label within 10 s even when the
+//   other calls are slow;
+// - the item loop (`itemCycle`): bot items and gates every 4 s; every 20 s also the lists those
+//   depend on (bots, Runs, and the tasks and workers of each Run).
+// Calls of one kind never overlap: each command name is a lane, a lane runs its calls one after
+// another, and a cycle skips a lane that is still busy. A failed call keeps the last good data of
+// that source.
 
 import type { CliRequest } from '../../cli/commands.ts'
 import type { CliFailure, CliResult } from '../../cli/run.ts'
@@ -42,12 +46,19 @@ export type RunCli = (request: CliRequest) => Promise<CliResult>
 export type SeenStore = { load(): Promise<unknown>; save(seen: Record<string, number>): Promise<unknown> }
 
 export type WaitsRefresher = {
-  /** One cycle; `slow` also re-reads bots, Runs, tasks and workers. Resolves when every lane it started is done. */
+  /** Both loops once, side by side; `slow` also re-reads bots, Runs, tasks and workers. */
   cycle(slow: boolean): Promise<void>
+  /** The agent loop once: `worktree ps` only. */
+  agentCycle(): Promise<void>
+  /** The item loop once: bot items and gates; `slow` also re-reads bots, Runs, tasks and workers. */
+  itemCycle(slow: boolean): Promise<void>
   /** An `agent.status.changed` payload: updates the list at once, no CLI call. */
   onAgentEvent(e: AgentStatusEvent): void
   snapshot(): WaitsSnapshot
 }
+
+/** One pass of one loop: whether a call failed, a backoff-class failure stops it, a call answered. */
+type Pass = { failed: boolean; backoff: boolean; answered: boolean }
 
 const isBackoff = (e: CliFailure): boolean => e.kind === 'not_found' || e.kind === 'spawn' || (e.kind === 'cli_error' && e.code === 'runtime_unavailable')
 
@@ -69,8 +80,11 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
   let seenSaved = ''
   const spells = new Map<string, AgentSpell>()
   let banner: WaitsBanner | null = null
-  let cycleFailed = false
-  let cycleBackoff = false
+  /** Whether the last pass of each loop read without a failure; null before its first. */
+  let agentsClean: boolean | null = null
+  let itemsClean: boolean | null = null
+  /** A full item pass (bots and Runs too) has read without a failure. */
+  let fullClean = false
   let backoffUntil = 0
   let backoff: number = BACKOFF_MS.first
   let updatedAt: number | null = null
@@ -95,13 +109,16 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
 
   /**
    * Runs one call; on failure records the banner and returns null. After a backoff-class failure
-   * (CLI missing or Orca not answering) the rest of the cycle makes no more calls.
+   * (CLI missing or Orca not answering) the rest of the pass makes no more calls.
    */
-  const call = async (request: CliRequest): Promise<unknown | null> => {
-    if (cycleBackoff) return null
+  const call = async (request: CliRequest, pass: Pass): Promise<unknown | null> => {
+    if (pass.backoff) return null
     const r = await deps.run(request)
-    if (r.ok) return r.result
-    cycleFailed = true
+    if (r.ok) {
+      pass.answered = true
+      return r.result
+    }
+    pass.failed = true
     const e = r.error
     banner = {
       kind: e.kind,
@@ -109,7 +126,7 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
       ...(e.code ? { code: clean(e.code, MAX.who) } : {}),
       ...(e.tried ? { tried: e.tried.map((t) => clean(t.path, MAX_PATH)) } : {})
     }
-    if (isBackoff(e)) cycleBackoff = true
+    if (isBackoff(e)) pass.backoff = true
     return null
   }
 
@@ -130,19 +147,19 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
   }
   const liveRuns = (): Run[] => runs.filter((r) => !r.legacy && !r.unbound)
 
-  const readTasks = async (run: string): Promise<void> => {
-    const r = await call({ command: 'orchestration task-list', run })
+  const readTasks = async (run: string, pass: Pass): Promise<void> => {
+    const r = await call({ command: 'orchestration task-list', run }, pass)
     if (r !== null) tasks.set(run, parseTaskList(r))
   }
-  const readWorkers = async (run: string): Promise<void> => {
-    const r = await call({ command: 'orchestration worker-list', run })
+  const readWorkers = async (run: string, pass: Pass): Promise<void> => {
+    const r = await call({ command: 'orchestration worker-list', run }, pass)
     if (r !== null) workers.set(run, parseWorkerList(r))
   }
 
-  const slowLanes = async (): Promise<void> => {
+  const slowLanes = async (pass: Pass): Promise<void> => {
     await Promise.all([
       lane('bot list', async () => {
-        const r = await call({ command: 'bot list' })
+        const r = await call({ command: 'bot list' }, pass)
         if (r !== null) {
           bots = parseBotList(r)
           // A paused bot is not read, so its old questions would stay: drop them with the bot.
@@ -150,7 +167,7 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
         }
       }),
       lane('orchestration run-list', async () => {
-        const r = await call({ command: 'orchestration run-list' })
+        const r = await call({ command: 'orchestration run-list' }, pass)
         if (r !== null) {
           runs = parseRunList(r)
           const ids = liveRuns().map((x) => x.id)
@@ -160,13 +177,13 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
         }
       })
     ])
-    if (cycleBackoff) return
+    if (pass.backoff) return
     await Promise.all([
       lane('orchestration task-list', async () => {
-        for (const run of liveRuns()) await readTasks(run.id)
+        for (const run of liveRuns()) await readTasks(run.id, pass)
       }),
       lane('orchestration worker-list', async () => {
-        for (const run of liveRuns()) await readWorkers(run.id)
+        for (const run of liveRuns()) await readWorkers(run.id, pass)
       })
     ])
   }
@@ -186,34 +203,36 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
     }
   }
 
-  const fastLanes = async (): Promise<void> => {
+  const agentLane = (pass: Pass): Promise<void> =>
+    lane('worktree ps', async () => {
+      const readFrom = seq
+      const r = await call({ command: 'worktree ps', agentWait: true }, pass)
+      if (r === null) return
+      const ps = parseWorktreePs(r)
+      worktrees = ps.worktrees
+      // A cut list does not say an agent is gone.
+      if (!ps.truncated) dropClosed(readFrom)
+    })
+
+  const itemLanes = async (pass: Pass): Promise<void> => {
     await Promise.all([
-      lane('worktree ps', async () => {
-        const readFrom = seq
-        const r = await call({ command: 'worktree ps', agentWait: true })
-        if (r === null) return
-        const ps = parseWorktreePs(r)
-        worktrees = ps.worktrees
-        // A cut list does not say an agent is gone.
-        if (!ps.truncated) dropClosed(readFrom)
-      }),
       lane('bot item list', async () => {
         for (const bot of bots) {
           if (bot.paused) continue
-          const r = await call({ command: 'bot item list', bot: bot.id })
+          const r = await call({ command: 'bot item list', bot: bot.id }, pass)
           if (r !== null) items.set(bot.id, parseBotItemList(r).items)
         }
       }),
       lane('orchestration gate-list', async () => {
         for (const run of liveRuns()) {
-          const r = await call({ command: 'orchestration gate-list', run: run.id })
+          const r = await call({ command: 'orchestration gate-list', run: run.id }, pass)
           if (r === null) continue
           const list = parseGateList(r)
           // A gate on a task not read yet would show apart from its item and worker agent until
           // the next slow read: read that Run's tasks and workers first, then show the gates.
           const known = new Set((tasks.get(run.id) ?? []).map((t) => t.id))
           if (list.some((g) => g.status === 'pending' && !known.has(g.taskId))) {
-            await Promise.all([lane('orchestration task-list', () => readTasks(run.id)), lane('orchestration worker-list', () => readWorkers(run.id))])
+            await Promise.all([lane('orchestration task-list', () => readTasks(run.id, pass)), lane('orchestration worker-list', () => readWorkers(run.id, pass))])
           }
           gates.set(run.id, list)
         }
@@ -245,30 +264,58 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
     void deps.seen.save(out).catch(() => undefined)
   }
 
-  return {
-    async cycle(slow) {
-      if (now() < backoffUntil) return
-      await loadSeen()
-      cycleFailed = false
-      cycleBackoff = false
-      const full = slow || updatedAt === null
-      if (full) await slowLanes()
-      if (!cycleBackoff) await fastLanes()
-      if (cycleBackoff) {
-        // Once per cycle, however many calls failed: 4, 8, 16 ... 60 s.
+  /** Ends a pass of either loop: backoff, banner, primed, then the new list. */
+  const finish = (pass: Pass): void => {
+    if (pass.backoff) {
+      // Once per window, however many calls or loops failed: 4, 8, 16 ... 60 s.
+      if (now() >= backoffUntil) {
         backoffUntil = now() + backoff
         backoff = Math.min(backoff * 2, BACKOFF_MS.max)
-      } else {
-        backoff = BACKOFF_MS.first
       }
-      if (!cycleFailed) {
-        banner = null
-        if (full) primed = true
-      }
-      updatedAt = now()
-      recompute()
-      if (!cycleFailed) saveSeen()
+    } else if (!pass.failed && pass.answered) {
+      // Only a pass that reached the CLI ends the backoff; one with nothing to read does not.
+      backoff = BACKOFF_MS.first
+    }
+    // The banner goes once both loops last read clean.
+    if (agentsClean !== false && itemsClean !== false) banner = null
+    if (fullClean && agentsClean === true) primed = true
+    updatedAt = now()
+    recompute()
+  }
+
+  const agentCycle = async (): Promise<void> => {
+    if (now() < backoffUntil) return
+    const pass: Pass = { failed: false, backoff: false, answered: false }
+    await agentLane(pass)
+    agentsClean = !pass.failed
+    // Before the first item pass the gates are unknown, so a gated task's worker agent would show
+    // as a row of its own for a moment: keep the read and let the item pass post it.
+    if (itemsClean === null && !pass.backoff) return
+    finish(pass)
+  }
+
+  /** Has any item pass started: the first one reads bots and Runs too. */
+  let itemsStarted = false
+  const itemCycle = async (slow: boolean): Promise<void> => {
+    if (now() < backoffUntil) return
+    await loadSeen()
+    const pass: Pass = { failed: false, backoff: false, answered: false }
+    const full = slow || !itemsStarted
+    itemsStarted = true
+    if (full) await slowLanes(pass)
+    if (!pass.backoff) await itemLanes(pass)
+    itemsClean = !pass.failed
+    if (full && !pass.failed) fullClean = true
+    finish(pass)
+    if (!pass.failed) saveSeen()
+  }
+
+  return {
+    async cycle(slow) {
+      await Promise.all([agentCycle(), itemCycle(slow)])
     },
+    agentCycle,
+    itemCycle,
     onAgentEvent(e) {
       const a = agentFromEvent(e)
       events.delete(a.key)

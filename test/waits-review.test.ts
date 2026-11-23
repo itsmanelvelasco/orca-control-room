@@ -188,7 +188,9 @@ test('review 5: backoff doubles per failed cycle, not per call; the first pause 
   }
   const r = createWaitsRefresher({ run, now: () => now })
   await r.cycle(true)
-  assert.ok(calls.length <= 2, `the cycle stops after the first failure (${calls.length} calls)`)
+  // Each loop stops at its first failure: `worktree ps` (agent loop), and `bot list` and
+  // `run-list` side by side (item loop).
+  assert.ok(calls.length <= 3, `the cycle stops after the first failure (${calls.length} calls)`)
   const runsAfter = async (ms: number): Promise<boolean> => {
     now += ms
     const n = calls.length

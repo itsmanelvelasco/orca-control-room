@@ -1,6 +1,7 @@
 // R6. Draws a LineSnapshot. Pure: no host calls, so tests mount it with any snapshot.
 // All CLI text arrives cut by model.ts and is drawn as text children, never as Markdown or HTML.
-import { Badge, Box, Callout, Card, Collapsible, EmptyState, Heading, IconButton, Link, RelativeTime, Row, Skeleton, Stack, Text, type Tone } from 'orca'
+import { Badge, Box, Callout, Card, Collapsible, EmptyState, Heading, IconButton, Link, Row, Skeleton, Stack, Text, type Tone } from 'orca'
+import { agoNow } from '../time.ts'
 import type { GateLine, LineSnapshot, PrLine, RunLine, TaskLine, WorkerLine } from './model.ts'
 
 const TASK_TONE: Record<string, Tone> = { completed: 'success', failed: 'danger', circuit_broken: 'danger', blocked: 'warning', dispatched: 'accent', ready: 'neutral', pending: 'neutral' }
@@ -161,7 +162,7 @@ export function LineView({ snap, onRefresh }: { snap: LineSnapshot; onRefresh?: 
             ) : null}
             {snap.updatedAt !== null ? (
               <Text size="xs" muted>
-                Showing data from <RelativeTime at={snap.updatedAt} />.
+                {`Showing data from ${agoNow(snap.updatedAt, 'long')}.`}
               </Text>
             ) : null}
           </Stack>
@@ -189,7 +190,7 @@ export function LineView({ snap, onRefresh }: { snap: LineSnapshot; onRefresh?: 
       ) : null}
       {snap.updatedAt !== null ? (
         <Text size="xs" muted>
-          Updated <RelativeTime at={snap.updatedAt} format="short" /> · every {snap.refreshSeconds} s
+          {`Updated ${agoNow(snap.updatedAt)} · every ${snap.refreshSeconds} s`}
         </Text>
       ) : null}
     </Stack>

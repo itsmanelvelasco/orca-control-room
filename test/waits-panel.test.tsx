@@ -9,7 +9,7 @@ test('panel: one row per wait, newest first, labels and options; HTML shown as t
   const host = mockHost({ requests: { 'waits.get': snap, 'waits.open': ({ key }: { key: string }) => (opened.push(key), { opened: true }) } })
   const view = await mount(panel, { host })
   assert.ok(view.find({ text: 'Waits on you' }))
-  assert.ok(view.find({ text: String(snap.waits.length) }))
+  assert.ok(!view.find({ text: String(snap.waits.length) }), 'the count is on the tab, not repeated by the heading')
   assert.ok(view.find({ text: 'Ship <b>v2</b> today, or wait for the review?' }), 'literal text, not HTML')
   assert.equal(view.findAll({ text: 'trust this folder' }).length, 2)
   assert.ok(view.find({ text: 'CSV' }))
