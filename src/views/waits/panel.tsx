@@ -10,7 +10,7 @@ import type { Wait, WaitsSnapshot } from '../../protocol.ts'
 import { clean, MAX } from './text.ts'
 
 /** The worker's last snapshot; null until it answers. */
-const snapshot = atom<WaitsSnapshot | null>(null)
+export const snapshot = atom<WaitsSnapshot | null>(null)
 /** A row whose place could not be opened, for one line under it. */
 const notOpened = atom<string | null>(null)
 

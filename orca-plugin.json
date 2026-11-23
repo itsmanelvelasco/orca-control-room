@@ -18,24 +18,10 @@
   "contributes": {
     "panels": [
       {
-        "id": "waits",
-        "title": "Waits on you",
+        "id": "control-room",
+        "title": "Control Room",
         "icon": "bell",
-        "entry": "src/views/waits/panel.tsx",
-        "ui": "components"
-      },
-      {
-        "id": "line",
-        "title": "Shipping line",
-        "icon": "rocket",
-        "entry": "src/views/line/panel.tsx",
-        "ui": "components"
-      },
-      {
-        "id": "agents",
-        "title": "Agents",
-        "icon": "agent",
-        "entry": "src/views/agents/panel.tsx",
+        "entry": "src/views/room/panel.tsx",
         "ui": "components"
       }
     ],
