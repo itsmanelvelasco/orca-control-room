@@ -26,7 +26,7 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
     void readSetting().then(() => cli.reset())
   })
 
-  orca.panels.handle('cli.status', async () => {
+  const status = async () => {
     const r = await cli.run({ command: 'bot list' })
     const res = cli.lastResolution()
     const cur = cli.current()
@@ -41,7 +41,12 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
     }
     orca.log(`cli.status ${JSON.stringify(out)}`)
     return out
-  })
+  }
+  orca.panels.handle('cli.status', status)
+
+  // One timed `bot list` at start: finds the path for the footer early and leaves a line in
+  // `orca plugin logs` that shows the CLI answers from this worker (installed plugins take no dev request).
+  void status()
 
   orca.events.on('agent.status.changed', (e) => {
     orca.log(`agent.status.changed ${JSON.stringify(e)}`)
