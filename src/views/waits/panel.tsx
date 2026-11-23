@@ -2,12 +2,13 @@
 // open or focus the wait's place, by row key. Text comes cleaned from the worker and is drawn as
 // text (Orca components never render HTML).
 import {
-  atom, Badge, Box, Button, Callout, EmptyState, Heading, plugin, read, RelativeTime, Row, set, Skeleton, Stack, Text,
+  atom, Badge, Box, Button, Callout, EmptyState, Heading, plugin, read, Row, set, Skeleton, Stack, Text,
   type PanelContext, type Tone
 } from 'orca'
 import '../../protocol.ts'
 import type { Wait, WaitsSnapshot } from '../../protocol.ts'
 import { clean, MAX } from './text.ts'
+import { agoNow } from '../time.ts'
 
 /** The worker's last snapshot; null until it answers. */
 export const snapshot = atom<WaitsSnapshot | null>(null)
@@ -40,7 +41,7 @@ function WaitRow({ wait }: { wait: Wait }) {
           <Badge tone={TONE[wait.label] ?? 'neutral'}>{wait.label}</Badge>
           <Text weight="semibold" truncate>{wait.who}</Text>
         </Row>
-        {wait.since !== null ? <RelativeTime at={wait.since} format="short" muted /> : null}
+        {wait.since !== null ? <Text muted size="sm">{agoNow(wait.since)}</Text> : null}
       </Row>
       <Text>{wait.what}</Text>
       {wait.options.length > 0 ? (
@@ -82,10 +83,8 @@ export default function Panel() {
   const waits = snap?.waits ?? []
   return (
     <Stack gap="md">
-      <Row justify="between">
-        <Heading level={2}>Waits on you</Heading>
-        <Badge tone={waits.length ? 'warning' : 'neutral'}>{waits.length}</Badge>
-      </Row>
+      {/* The count is on the tab ("Waits (8)"), so the heading does not repeat it. */}
+      <Heading level={2}>Waits on you</Heading>
       {snap ? <Banner snap={snap} /> : null}
       {!snap || snap.updatedAt === null ? (
         <Skeleton shape="text" lines={3} label="Reading waits" />
@@ -101,7 +100,7 @@ export default function Panel() {
           <Text muted size="xs" truncate>CLI: {snap.cliPath ?? 'not found yet'}</Text>
           {snap.updatedAt !== null ? (
             <Text muted size="xs">
-              Updated <RelativeTime at={snap.updatedAt} format="short" muted />
+              {`Updated ${agoNow(snap.updatedAt)}`}
             </Text>
           ) : null}
         </Row>

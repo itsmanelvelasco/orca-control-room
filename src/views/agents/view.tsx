@@ -1,6 +1,7 @@
 // R7. Draws an AgentsSnapshot. Pure: no host calls, so tests mount it with any snapshot.
 // Every text arrives cut by model.ts and is drawn as text, never as Markdown or HTML.
-import { Badge, Button, Callout, EmptyState, Heading, IconButton, RelativeTime, Row, Skeleton, Stack, Table, Text, type TableRow, type Tone } from 'orca'
+import { Badge, Button, Callout, EmptyState, Heading, IconButton, Row, Skeleton, Stack, Table, Text, type TableRow, type Tone } from 'orca'
+import { agoNow, durationNow } from '../time.ts'
 import { GROUP_CAP, type AgentGroup, type AgentRow, type AgentsSnapshot } from './model.ts'
 
 const STATE_LABEL: Record<AgentRow['state'], string> = { blocked: 'blocked', waiting: 'waiting', working: 'working', done: 'done' }
@@ -19,7 +20,7 @@ function tableRow(r: AgentRow): TableRow {
     cells: {
       agent,
       state: STATE_LABEL[r.state],
-      time: r.since !== null ? { type: 'relative', at: r.since, format: 'duration' } : '',
+      time: r.since !== null ? durationNow(r.since) : '',
       workspace: r.workspace ?? ''
     },
     disabled: !r.canOpen
@@ -70,10 +71,7 @@ export function AgentsView({ snap, expanded, onShowAll, onOpen, onRefresh, notic
           <Text size="xs" muted>
             {snap.total === 0 ? 'No agents' : `${snap.total} ${snap.total === 1 ? 'agent' : 'agents'} in ${projects} ${projects === 1 ? 'project' : 'projects'}`}
             {snap.updatedAt !== null ? (
-              <>
-                {' · read '}
-                <RelativeTime at={snap.updatedAt} format="short" muted />
-              </>
+              ` · read ${agoNow(snap.updatedAt)}`
             ) : null}
           </Text>
         </Stack>
