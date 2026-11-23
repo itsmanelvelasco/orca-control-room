@@ -16,7 +16,9 @@ export function cleanText(text: string, max = MAX_TEXT): string {
   const one = firstLine(text.replace(/[\u0000-\u0008\u000b-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩]/g, ''))
     .replace(/\s+/g, ' ')
     .trim()
-  return one.length > max ? `${one.slice(0, max - 1).trimEnd()}…` : one
+  // Cut by code points, so an emoji or other astral character is never split in half.
+  const chars = Array.from(one)
+  return chars.length > max ? `${chars.slice(0, max - 1).join("").trimEnd()}…` : one
 }
 
 /** Gate A: an open question. Gate B: merge one PR. */
@@ -89,7 +91,7 @@ export type PrIndex = ReadonlyMap<string, PullRequest>
 const isHttps = (url: string): boolean => /^https:\/\/[^\s"'<>]+$/i.test(url)
 
 function prLine(pr: PullRequest): PrLine {
-  return { ref: cleanText(pr.ref, 80), number: pr.number, url: isHttps(pr.url) ? pr.url : null, state: pr.state, checks: pr.checks, review: pr.review }
+  return { ref: cleanText(pr.ref, 80), number: pr.number, url: isHttps(pr.url) ? pr.url : null, state: pr.state, checks: pr.checks ? cleanText(pr.checks, 30) : null, review: pr.review ? cleanText(pr.review, 30) : null }
 }
 
 function gateLine(g: Gate): GateLine {
@@ -97,7 +99,7 @@ function gateLine(g: Gate): GateLine {
 }
 
 function workerLine(w: Worker, current: boolean): WorkerLine {
-  return { dispatchId: w.dispatchId, agent: w.agent ? cleanText(w.agent, 60) : null, state: w.state, outcome: w.outcome, liveness: w.liveness, failed: w.state === 'failed' || w.outcome === 'failed', current }
+  return { dispatchId: cleanText(w.dispatchId, 60), agent: w.agent ? cleanText(w.agent, 60) : null, state: w.state, outcome: w.outcome, liveness: w.liveness, failed: w.state === 'failed' || w.outcome === 'failed', current }
 }
 
 /** One Run's line. */
@@ -162,11 +164,15 @@ export type LineSnapshot = {
   runs: RunLine[]
   /** Legacy Runs: listed by name, never a line. */
   legacy: { id: string; objective: string }[]
+  /** Runs past the cap of 50, not shown. */
+  hiddenRuns: number
+  /** Calls that failed in the last refresh outside a Run (PR links); the last good data stays. One line each. */
+  notes: string[]
   refreshSeconds: number
 }
 
 export function emptySnapshot(refreshSeconds: number): LineSnapshot {
-  return { status: 'loading', updatedAt: null, error: null, runs: [], legacy: [], refreshSeconds }
+  return { status: 'loading', updatedAt: null, error: null, runs: [], legacy: [], hiddenRuns: 0, notes: [], refreshSeconds }
 }
 
 /** Every PR any bot's worker opened, keyed by Dispatch id. */

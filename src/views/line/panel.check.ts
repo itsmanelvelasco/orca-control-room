@@ -20,9 +20,11 @@ export default defineCheck({
       'line.snapshot': {
         status: 'error',
         updatedAt: null,
-        error: { kind: 'not_found', message: 'No Orca CLI on any path.', tried: ['C:\Users\alex\AppData\Local\Programs\Orca\resources\bin\orca.exe', 'orca (PATH)'] },
+        error: { kind: 'not_found', message: 'No Orca CLI on any path.', tried: [String.raw`C:\Users\alex\AppData\Local\Programs\Orca\resources\bin\orca.exe`, 'orca (PATH)'] },
         runs: [],
         legacy: [],
+        hiddenRuns: 0,
+        notes: [],
         refreshSeconds: 20
       }
     }

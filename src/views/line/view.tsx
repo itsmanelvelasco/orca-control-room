@@ -9,6 +9,9 @@ const TASK_LABEL: Record<string, string> = { circuit_broken: 'stopped', dispatch
 const WORKER_TONE: Record<string, Tone> = { failed: 'danger', succeeded: 'success', ready: 'accent', starting: 'accent', stopping: 'neutral', stopped: 'neutral', abandoned: 'neutral', start_unknown: 'warning', stop_unknown: 'warning' }
 const WORKER_LABEL: Record<string, string> = { ready: 'running', start_unknown: 'start unknown', stop_unknown: 'stop unknown' }
 
+/** The error banner's title by failure kind; any other kind is a CLI that did not answer. */
+const ERROR_TITLE: Record<string, string> = { not_found: 'CLI not found', worker: 'The plugin worker did not answer', internal: 'The shipping line failed to load', refused: 'A CLI call was refused' }
+
 const PR_TONE: Record<string, Tone> = { open: 'accent', draft: 'neutral', merged: 'success', closed: 'neutral' }
 
 function workerLabel(w: WorkerLine): string {
@@ -148,7 +151,7 @@ export function LineView({ snap, onRefresh }: { snap: LineSnapshot; onRefresh?: 
         {onRefresh ? <IconButton icon="refresh" label="Refresh the shipping line" variant="ghost" size="sm" onPress={onRefresh} /> : null}
       </Row>
       {snap.error ? (
-        <Callout key="line-error" tone={snap.updatedAt === null ? 'danger' : 'warning'} title={snap.error.kind === 'not_found' ? 'CLI not found' : 'The Orca CLI did not answer'}>
+        <Callout key="line-error" tone={snap.updatedAt === null ? 'danger' : 'warning'} title={ERROR_TITLE[snap.error.kind] ?? 'The Orca CLI did not answer'}>
           <Stack gap="xs">
             <Text size="sm">{snap.error.message}</Text>
             {snap.error.tried.length > 0 ? (
@@ -164,11 +167,21 @@ export function LineView({ snap, onRefresh }: { snap: LineSnapshot; onRefresh?: 
           </Stack>
         </Callout>
       ) : null}
+      {snap.notes.map((n, i) => (
+        <Text key={`note:${i}`} size="xs" tone="warning">
+          {n}
+        </Text>
+      ))}
       {snap.status === 'loading' ? <Skeleton lines={3} label="Loading the shipping line" /> : null}
       {snap.status === 'ok' && snap.runs.length === 0 ? <EmptyState key="no-runs" icon="rocket" title="No runs" description="Runs that Orca orchestration starts show here." /> : null}
       {snap.runs.map((r) => (
         <RunCard key={`run:${r.id}`} run={r} />
       ))}
+      {snap.hiddenRuns > 0 ? (
+        <Text key="hidden-runs" size="xs" muted>
+          {`+${snap.hiddenRuns} more Run${snap.hiddenRuns === 1 ? '' : 's'} not shown (the first 50 are)`}
+        </Text>
+      ) : null}
       {snap.legacy.length > 0 ? (
         <Text size="xs" muted>
           Legacy runs, read only: {snap.legacy.map((r) => r.objective).join('; ')}

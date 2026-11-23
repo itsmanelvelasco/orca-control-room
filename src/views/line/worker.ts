@@ -7,7 +7,13 @@ import { createLineRefresher, type LineCli } from './refresh.ts'
 export function registerLine(orca: OrcaWorkerApi, cli: LineCli): void {
   const line = createLineRefresher({
     cli,
-    onChange: (s) => orca.panels.post('line.changed', s)
+    onChange: (s) => {
+      try {
+        orca.panels.post('line.changed', s)
+      } catch (e) {
+        orca.log(`line.changed post failed: ${String(e).split(/\r?\n/, 1)[0].slice(0, 200)}`)
+      }
+    }
   })
   orca.panels.handle('line.snapshot', (input) => {
     void line.refresh(input?.force === true)

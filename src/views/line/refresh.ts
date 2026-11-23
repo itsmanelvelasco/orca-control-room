@@ -1,13 +1,20 @@
 // Reads the shipping line from the CLI in turns: one call at a time, never two of the same kind
-// (R9), at most once per `refreshSeconds` (default 20 s). A failed refresh keeps the last good
-// data and says why (PRD 5). Read only: every call is an allow-listed read (src/cli/commands.ts).
+// (R9), about every `refreshSeconds` (default 20 s). A failed call keeps the last good data for
+// what it would have read and says why (PRD 5). Read only: every call is an allow-listed read
+// (src/cli/commands.ts).
 
 import type { CliFailure, CliRequest, CliResult } from '../../cli/index.ts'
 import { isBotId } from '../../cli/index.ts'
-import { parseBotList, parseBotWorkList, parseGateList, parseRunList, parseRunShow, parseTaskList, parseWorkerList, type BotWork } from '../../model/index.ts'
+import { parseBotList, parseBotWorkList, parseGateList, parseRunList, parseRunShow, parseTaskList, parseWorkerList, type PullRequest } from '../../model/index.ts'
 import { buildRunLine, cleanText, emptySnapshot, hasLine, indexPrs, type LineSnapshot, type RunInput } from './model.ts'
 
 export const DEFAULT_REFRESH_SECONDS = 20
+/**
+ * A refresh counts as due this much before `refreshSeconds` has passed since the last one ended,
+ * so a panel tick that lands a little early is not answered with old data (which made the real
+ * interval about twice the setting).
+ */
+export const SLACK_MS = 2_000
 /** PRD 5: lists cap at 50 per group; the same cap keeps the CLI calls per turn bounded. */
 export const MAX_RUNS = 50
 export const MAX_BOTS = 50
@@ -18,8 +25,8 @@ export type LineRefresher = {
   /** What the panel shows now. */
   snapshot(): LineSnapshot
   /**
-   * Starts a refresh when the data is older than the interval (or `force`) and none is running.
-   * Resolves when that refresh (or the one already running) ends.
+   * Starts a refresh when one is due (or `force`) and none is running. Resolves when that
+   * refresh (or the one already running) ends. Never rejects.
    */
   refresh(force?: boolean): Promise<LineSnapshot>
 }
@@ -28,12 +35,18 @@ function failure(e: CliFailure): NonNullable<LineSnapshot['error']> {
   return { kind: e.kind, message: cleanText(e.message, 200), tried: (e.tried ?? []).map((t) => t.path).slice(0, 8) }
 }
 
+const short = (command: string): string => command.replace('orchestration ', '')
+
 export function createLineRefresher(opts: { cli: LineCli; refreshSeconds?: number; now?: () => number; onChange?: (s: LineSnapshot) => void }): LineRefresher {
   const now = opts.now ?? Date.now
   const refreshSeconds = opts.refreshSeconds ?? DEFAULT_REFRESH_SECONDS
   let snap = emptySnapshot(refreshSeconds)
-  let lastTry = -Infinity
+  /** When the last refresh ended; the next is due `refreshSeconds` later, less the slack. */
+  let lastEnd = -Infinity
   let running: Promise<LineSnapshot> | null = null
+  /** The last good lists per Run and the last good PR index: what a failed call falls back to. */
+  let lastInputs = new Map<string, RunInput>()
+  let lastPrs = new Map<string, PullRequest>()
 
   const one = async (request: CliRequest): Promise<{ ok: true; result: unknown } | { ok: false; error: CliFailure }> => {
     const r = await opts.cli.run(request)
@@ -48,42 +61,68 @@ export function createLineRefresher(opts: { cli: LineCli; refreshSeconds?: numbe
       return snap
     }
     const all = parseRunList(list.result)
-    const live = all.filter(hasLine).slice(0, MAX_RUNS)
+    const withLine = all.filter(hasLine)
+    const live = withLine.slice(0, MAX_RUNS)
     const inputs: RunInput[] = []
     for (const run of live) {
+      const before = lastInputs.get(run.id)
       const errors: string[] = []
-      const get = async <T>(req: CliRequest, parse: (r: unknown) => T, empty: T): Promise<T> => {
+      // A failed call keeps that list as the last good refresh read it (empty for a new Run).
+      const get = async <T>(req: CliRequest, parse: (r: unknown) => T, last: T): Promise<T> => {
         const r = await one(req)
         if (r.ok) return parse(r.result)
-        errors.push(`${req.command.replace('orchestration ', '')}: ${r.error.message}`)
-        return empty
+        errors.push(`${short(req.command)}: ${cleanText(r.error.message, 120)}`)
+        return last
       }
-      const detail = await get({ command: 'orchestration run-show', run: run.id }, parseRunShow, null)
-      const tasks = await get({ command: 'orchestration task-list', run: run.id }, parseTaskList, [])
-      const workers = await get({ command: 'orchestration worker-list', run: run.id }, parseWorkerList, [])
-      const gates = await get({ command: 'orchestration gate-list', run: run.id }, parseGateList, [])
-      inputs.push({ run, detail, tasks, workers, gates, error: errors[0] ?? null })
+      const detail = await get({ command: 'orchestration run-show', run: run.id }, parseRunShow, before?.detail ?? null)
+      const tasks = await get({ command: 'orchestration task-list', run: run.id }, parseTaskList, before?.tasks ?? [])
+      const workers = await get({ command: 'orchestration worker-list', run: run.id }, parseWorkerList, before?.workers ?? [])
+      const gates = await get({ command: 'orchestration gate-list', run: run.id }, parseGateList, before?.gates ?? [])
+      const error = errors.length ? `${errors.join('; ')}${before ? ' (showing the last good data)' : ''}` : null
+      inputs.push({ run, detail, tasks, workers, gates, error })
     }
 
-    // PR links: `bot work list` ties a bot's workers (Dispatch ids) to their PRs. Only asked when a Run has workers.
-    let works: BotWork[] = []
+    // PR links: `bot work list` ties a bot's workers (Dispatch ids) to their PRs. Only asked when a
+    // Run has workers. A failed call keeps the PRs the last good refresh found.
+    const notes: string[] = []
+    let prs = lastPrs
     if (inputs.some((i) => i.workers.length > 0)) {
       const bots = await one({ command: 'bot list' })
-      if (bots.ok) {
+      if (!bots.ok) {
+        notes.push(`PR links: bot list: ${cleanText(bots.error.message, 120)} (showing the last good links)`)
+      } else {
+        const found = new Map<string, PullRequest>()
+        let failed = 0
+        let firstError = ''
         for (const b of parseBotList(bots.result).slice(0, MAX_BOTS)) {
           if (!isBotId(b.id)) continue
           const w = await one({ command: 'bot work list', bot: b.id })
-          if (w.ok) works = works.concat(parseBotWorkList(w.result).items)
+          if (w.ok) {
+            for (const [k, v] of indexPrs(parseBotWorkList(w.result).items)) if (!found.has(k)) found.set(k, v)
+          } else {
+            failed++
+            firstError ||= cleanText(w.error.message, 120)
+          }
         }
+        if (failed > 0) {
+          // Some bots did not answer: their workers keep the PR links from last time.
+          for (const [k, v] of lastPrs) if (!found.has(k)) found.set(k, v)
+          notes.push(`PR links: bot work list failed for ${failed} bot${failed === 1 ? '' : 's'}: ${firstError} (showing the last good links)`)
+        }
+        prs = found
       }
     }
-    const prs = indexPrs(works)
+
+    lastInputs = new Map(inputs.map((i) => [i.run.id, i]))
+    lastPrs = prs
     snap = {
       status: 'ok',
       updatedAt: now(),
       error: null,
       runs: inputs.map((i) => buildRunLine(i, prs)),
       legacy: all.filter((r) => r.legacy).map((r) => ({ id: r.id, objective: cleanText(r.objective) || r.id })),
+      hiddenRuns: withLine.length - live.length,
+      notes,
       refreshSeconds
     }
     return snap
@@ -93,16 +132,23 @@ export function createLineRefresher(opts: { cli: LineCli; refreshSeconds?: numbe
     snapshot: () => snap,
     refresh(force = false) {
       if (running) return running
-      if (!force && now() - lastTry < refreshSeconds * 1000) return Promise.resolve(snap)
-      lastTry = now()
+      if (!force && now() - lastEnd < refreshSeconds * 1000 - SLACK_MS) return Promise.resolve(snap)
       running = cycle()
         .catch((e: unknown) => {
           snap = { ...snap, status: snap.updatedAt === null ? 'error' : snap.status, error: { kind: 'internal', message: cleanText(String(e), 200), tried: [] } }
           return snap
         })
-        .finally(() => {
+        .then((s) => {
+          // Measured from the end, so a refresh that takes long is not followed at once by the next.
+          lastEnd = now()
           running = null
-          opts.onChange?.(snap)
+          // A throw here (e.g. a panel closed mid-refresh) must never become an unhandled rejection.
+          try {
+            opts.onChange?.(s)
+          } catch {
+            /* the next refresh posts again */
+          }
+          return s
         })
       return running
     }

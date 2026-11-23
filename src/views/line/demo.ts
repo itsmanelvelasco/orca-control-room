@@ -26,6 +26,8 @@ export function lineFromCase(c: unknown, now = Date.UTC(2026, 10, 23, 12, 0, 0))
       return buildRunLine({ run, detail: detail?.id === run.id ? detail : null, tasks: mine ? tasks : [], workers: mine ? workers : [], gates: mine ? gates : [] }, prs)
     }),
     legacy: runs.filter((r) => r.legacy).map((r) => ({ id: r.id, objective: r.objective })),
+    hiddenRuns: 0,
+    notes: [],
     refreshSeconds: 20
   }
 }

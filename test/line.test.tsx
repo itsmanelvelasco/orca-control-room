@@ -204,7 +204,7 @@ test('panel: no Runs shows "No runs" and the panel still works', async () => {
 })
 
 test('panel: CLI missing shows one banner with the paths tried', async () => {
-  const snap: LineSnapshot = { status: 'error', updatedAt: null, error: { kind: 'not_found', message: 'No Orca CLI on any path.', tried: ['/opt/Orca/resources/bin/orca', 'orca (PATH)'] }, runs: [], legacy: [], refreshSeconds: 20 }
+  const snap: LineSnapshot = { status: 'error', updatedAt: null, error: { kind: 'not_found', message: 'No Orca CLI on any path.', tried: ['/opt/Orca/resources/bin/orca', 'orca (PATH)'] }, runs: [], legacy: [], hiddenRuns: 0, notes: [], refreshSeconds: 20 }
   const view = await mount(() => <LineView snap={snap} />)
   assert.equal(view.findAll({ type: 'Callout' }).length, 1)
   assert.match(view.find({ type: 'Callout' })?.text ?? '', /CLI not found.*\/opt\/Orca\/resources\/bin\/orca/)
@@ -249,7 +249,7 @@ function fakeCli(over: Partial<Record<string, CliResult>> = {}) {
       return over[req.command] ?? { ok: true, result: answers[req.command], ms: 1, cliPath: '/opt/Orca/resources/bin/orca' }
     }
   }
-  return { cli, calls, maxActive: () => maxActive }
+  return { cli, calls, maxActive: () => maxActive, over }
 }
 
 test('refresh: one CLI call at a time, only read commands, PR from bot work list', async () => {
@@ -263,8 +263,8 @@ test('refresh: one CLI call at a time, only read commands, PR from bot work list
   ])
   assert.equal(snap.status, 'ok')
   assert.equal(allTasks(snap).find((x) => x.id === 'task_b2c3d4e5f6a1')?.pr?.number, 42)
-  // Within 20 s no new calls; a second ask while one runs joins it.
-  t += 19_000
+  // Not due within 20 s less the 2 s slack (measured from the end of the last refresh); a second ask while one runs joins it.
+  t += 17_000
   await r.refresh()
   assert.equal(f.calls.length, 7)
   t += 1_000
@@ -307,4 +307,79 @@ test('worker: line.snapshot answers at once and posts line.changed after the ref
   assert.equal((posted[0].payload as LineSnapshot).runs.length, 1)
   assert.deepEqual(worker.refusals, [])
   await worker.deactivate()
+})
+
+// ---------- review of #3 ----------
+
+const fail = (message: string): CliResult => ({ ok: false, error: { kind: 'timeout', message }, ms: 10_000, cliPath: null })
+
+test('a failed per-Run call keeps that list from the last good refresh and shows every error', async () => {
+  const f = fakeCli()
+  let t = 0
+  const r = createLineRefresher({ cli: f.cli, now: () => t })
+  const good = (await r.refresh()).runs[0]
+  f.over['orchestration task-list'] = fail('No answer in 10 s')
+  f.over['orchestration gate-list'] = fail('gates timed out\nstack line')
+  t += 20_000
+  const run = (await r.refresh()).runs[0]
+  // The tasks, their workers and gates stay where they were; nothing moves to "Not on a listed task".
+  assert.deepEqual([...run.tasks, ...run.done].map((x) => x.id), [...good.tasks, ...good.done].map((x) => x.id))
+  assert.deepEqual(run.tasks.map((x) => x.workers.map((w) => w.dispatchId)), good.tasks.map((x) => x.workers.map((w) => w.dispatchId)))
+  assert.deepEqual(run.tasks.map((x) => [...x.gates.a, ...x.gates.b].map((g) => g.id)), good.tasks.map((x) => [...x.gates.a, ...x.gates.b].map((g) => g.id)))
+  assert.equal(run.loose.workers.length + run.loose.gates.length, 0)
+  assert.equal(run.error, 'task-list: No answer in 10 s; gate-list: gates timed out (showing the last good data)')
+})
+
+test('failed PR calls keep the last good PR links and say why', async () => {
+  const f = fakeCli()
+  let t = 0
+  const r = createLineRefresher({ cli: f.cli, now: () => t })
+  const prOf = (s: LineSnapshot) => allTasks(s).find((x) => x.id === 'task_b2c3d4e5f6a1')?.pr?.number
+  assert.equal(prOf(await r.refresh()), 42)
+  f.over['bot work list'] = fail('No answer in 10 s')
+  t += 20_000
+  let s = await r.refresh()
+  assert.equal(prOf(s), 42)
+  assert.match(s.notes[0], /^PR links: bot work list failed for 1 bot: No answer in 10 s/)
+  f.over['bot list'] = fail('runtime_unavailable')
+  t += 20_000
+  s = await r.refresh()
+  assert.equal(prOf(s), 42)
+  assert.match(s.notes[0], /^PR links: bot list: runtime_unavailable/)
+  delete f.over['bot list']
+  delete f.over['bot work list']
+  t += 20_000
+  assert.deepEqual((await r.refresh()).notes, [])
+})
+
+test('a throw in onChange (post to a closed panel) never rejects the refresh', async () => {
+  const r = createLineRefresher({ cli: fakeCli().cli, onChange: () => { throw new Error('panel closed') } })
+  const s = await r.refresh()
+  assert.equal(s.status, 'ok')
+})
+
+test('more than 50 Runs: the first 50 get a line and the panel says how many are not shown', async () => {
+  const runs = Array.from({ length: 53 }, (_, i) => ({ id: `run_r${i}`, objective: `Run ${i}` }))
+  const f = fakeCli({ 'orchestration run-list': { ok: true, result: { runs }, ms: 1, cliPath: 'x' }, 'orchestration task-list': { ok: true, result: { tasks: [] }, ms: 1, cliPath: 'x' }, 'orchestration worker-list': { ok: true, result: { workers: [] }, ms: 1, cliPath: 'x' } })
+  const s = await createLineRefresher({ cli: f.cli }).refresh()
+  assert.equal(s.runs.length, 50)
+  assert.equal(s.hiddenRuns, 3)
+  const view = await mount(() => <LineView snap={s} />)
+  assert.ok(view.find({ text: '+3 more Runs not shown (the first 50 are)' }))
+  await view.unmount()
+})
+
+test('error banner title follows the failure kind', async () => {
+  const base: LineSnapshot = { status: 'error', updatedAt: null, error: { kind: 'worker', message: 'x', tried: [] }, runs: [], legacy: [], hiddenRuns: 0, notes: [], refreshSeconds: 20 }
+  for (const [kind, title] of [['worker', 'The plugin worker did not answer'], ['internal', 'The shipping line failed to load'], ['timeout', 'The Orca CLI did not answer'], ['not_found', 'CLI not found']]) {
+    const view = await mount(() => <LineView snap={{ ...base, error: { ...base.error!, kind } }} />)
+    assert.equal(view.find({ type: 'Callout' })?.props.title, title)
+    await view.unmount()
+  }
+})
+
+test('cleanText cuts by code points and never splits an emoji', () => {
+  const s = cleanText('😀'.repeat(10), 5)
+  assert.equal(s, '😀😀😀😀…')
+  assert.ok(!/[\ud800-\udbff](?![\udc00-\udfff])/.test(s))
 })
