@@ -1,0 +1,25 @@
+{
+  "about": "Hand-labelled answers for today.json: the live data of 24/11/2026 (8 open items of 2 bots, 6 PR links over 4 PRs, 3 Runs plus the unbound and legacy ones) with every name, id, path and URL swapped. Read with the 12 allowed CLI commands. Labelled by reading the data, not by running the model.",
+  "now": 1795510000000,
+  "pieces": {
+    "item:062efd04-c72c-4d66-81de-0afbbed1d31a": { "stage": "execution", "amber": false, "why": "1 worker working", "note": "Atlas #29: its worker is the dispatched task of the third Run" },
+    "item:86fa2a24-198a-4a9a-88ae-7d79579a40d4": { "stage": "execution", "amber": false, "why": "1 PR open", "note": "Atlas #6: PR 545 seen three times (two dispatches and a pr link)" },
+    "item:8ddec225-c395-4a27-849d-ddfc210ceca0": { "stage": "execution", "amber": true, "failed": ["ctx_ef2404557ba3"], "note": "Atlas #4: PR 550 open; its worker failed and nothing replaced it" },
+    "item:a05ce8c9-45b2-4ac2-86f7-96ddb4e7856c": { "stage": "execution", "amber": false },
+    "item:c764c824-3857-4cf7-8f5f-2e5fe933b65c": { "stage": "planning", "amber": false, "prd": "https://claude.ai/artifact/Prd80ca6e237a06adf5", "prdFrom": "description", "why": "PRD found in description" },
+    "item:8f268c45-bffc-421b-820f-aeeeffc774e9": { "stage": "execution", "amber": false },
+    "item:9a1a5f47-b0ab-4b27-86b4-b4e6fa367ac8": { "stage": "execution", "amber": false, "prd": "https://claude.ai/artifact/Prd8961466c001fcadf", "prdFrom": "run", "runIds": ["run_2d8204d2bc7c"], "note": "Lantern #26: the funnel Run joins it by its dispatch" },
+    "item:62010b70-06f4-4fb6-85b7-3954476d26b6": { "stage": "ideation", "amber": false, "note": "Lantern #28: no link at all" },
+    "run:run_b3d5e8f75b01": { "stage": "planning", "amber": true, "prd": "https://claude.ai/artifact/Prdc9c6f24a6226917d", "prdFrom": "run", "failed": ["ctx_360c332ae60d"], "note": "The v1 Run: no item names it. Its PRs are not in the data (bot work list is empty), so Planning, not Shipping. One failed task was never retried." },
+    "run:run_d6706d8168ae": { "stage": "planning", "amber": true, "runIds": ["run_d6706d8168ae"], "failed": ["ctx_3ad5ce26a597", "ctx_abd15301f014", "ctx_08c9d1cd52e7", "ctx_fd56ac056ff9"], "why": "Run started", "note": "Tasks point at five Atlas items, so the Run splits; its own tasks keep four failed workers on blocked or failed tasks" }
+  },
+  "left": [
+    { "key": "run:run_unbound", "reason": "unbound" },
+    { "key": "run:run_legacy_local", "reason": "legacy" }
+  ],
+  "prds": {
+    "item:c764c824-3857-4cf7-8f5f-2e5fe933b65c": "https://claude.ai/artifact/Prd80ca6e237a06adf5",
+    "item:9a1a5f47-b0ab-4b27-86b4-b4e6fa367ac8": "https://claude.ai/artifact/Prd8961466c001fcadf",
+    "run:run_b3d5e8f75b01": "https://claude.ai/artifact/Prdc9c6f24a6226917d"
+  }
+}

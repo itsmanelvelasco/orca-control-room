@@ -1,0 +1,225 @@
+{
+  "about": "Funnel slice 1: one case per stage rule (PRD R3) and per edge case (PRD section 5), each with its hand-labelled answer. Items, Runs and workers use the CLI's --json shapes; test/funnel.test.ts fills the fields a case leaves out. `now` is 2026-11-24 13:20 UTC. Names are invented.",
+  "now": 1795500000000,
+  "cases": [
+    {
+      "name": "Ideation: open item with no PRD, Run, worker or PR",
+      "items": [{ "uid": "it-idea", "title": "Add a dark theme to settings", "status": "planned" }],
+      "expect": { "pieces": { "item:it-idea": { "stage": "ideation", "amber": false, "prd": null } } }
+    },
+    {
+      "name": "Planning: PRD stored as an item link",
+      "items": [{ "uid": "it-link", "status": "planned", "links": [{ "kind": "url", "ref": "https://claude.ai/artifact/PrdLinkAaaa1" }] }],
+      "expect": { "pieces": { "item:it-link": { "stage": "planning", "prd": "https://claude.ai/artifact/PrdLinkAaaa1", "prdFrom": "link", "why": "PRD linked" } } }
+    },
+    {
+      "name": "Planning: PRD only in the description; two PRDs, the last is the item's",
+      "items": [{ "uid": "it-desc", "status": "working", "description": "Old PRD https://claude.ai/artifact/PrdOldBbbb1, now per https://claude.ai/code/artifact/0b1c2d3e-4f50-4617-8899-aabbccddeeff." }],
+      "expect": { "pieces": { "item:it-desc": { "stage": "planning", "prd": "https://claude.ai/code/artifact/0b1c2d3e-4f50-4617-8899-aabbccddeeff", "prdFrom": "description", "prds": ["https://claude.ai/artifact/PrdOldBbbb1", "https://claude.ai/code/artifact/0b1c2d3e-4f50-4617-8899-aabbccddeeff"], "why": "PRD found in description" } } }
+    },
+    {
+      "name": "A link wins over the description",
+      "items": [{ "uid": "it-both", "status": "planned", "description": "https://claude.ai/artifact/PrdTextCccc1", "links": [{ "kind": "url", "ref": "https://www.claude.ai/artifact/PrdLinkCccc2?x=1" }] }],
+      "expect": { "pieces": { "item:it-both": { "stage": "planning", "prd": "https://claude.ai/artifact/PrdLinkCccc2", "prdFrom": "link" } } }
+    },
+    {
+      "name": "Run joins the one item with the same PRD",
+      "items": [{ "uid": "it-prdrun", "status": "planned", "description": "per https://claude.ai/artifact/PrdJoinDddd1" }],
+      "runs": [{ "id": "run_prdjoin", "objective": "Build it per PRD https://claude.ai/artifact/PrdJoinDddd1", "tasks": [{ "id": "task_pj1", "status": "pending" }] }],
+      "expect": { "pieces": { "item:it-prdrun": { "stage": "planning", "runIds": ["run_prdjoin"], "taskIds": ["task_pj1"], "prdFrom": "description" } } }
+    },
+    {
+      "name": "Run joins by dispatch; the item takes the PRD from the Run's objective",
+      "items": [{ "uid": "it-runprd", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_rp0000000001", "state": "completed" }] }],
+      "runs": [{ "id": "run_runprd", "objective": "Slice 1 per PRD https://claude.ai/artifact/PrdRunEeee1", "tasks": [{ "id": "task_rp1", "status": "completed", "dispatchId": "ctx_rp0000000001" }, { "id": "task_rp2", "status": "pending" }], "workers": [{ "dispatchId": "ctx_rp0000000001", "taskId": "task_rp1", "state": "succeeded" }] }],
+      "expect": { "pieces": { "item:it-runprd": { "stage": "planning", "prd": "https://claude.ai/artifact/PrdRunEeee1", "prdFrom": "run", "runIds": ["run_runprd"], "taskIds": ["task_rp1", "task_rp2"], "why": "PRD found in the Run's objective" } } }
+    },
+    {
+      "name": "Execution: an open PR",
+      "items": [{ "uid": "it-open", "status": "working", "links": [{ "kind": "pr", "ref": "example-org/sample-app#11", "pr": { "number": 11, "state": "open" } }] }],
+      "expect": { "pieces": { "item:it-open": { "stage": "execution", "why": "1 PR open" } } }
+    },
+    {
+      "name": "Execution: a draft PR",
+      "items": [{ "uid": "it-draft", "status": "working", "links": [{ "kind": "pr", "ref": "example-org/sample-app#12", "pr": { "number": 12, "state": "draft" } }] }],
+      "expect": { "pieces": { "item:it-draft": { "stage": "execution" } } }
+    },
+    {
+      "name": "Execution: a worker working, no PR yet",
+      "items": [{ "uid": "it-work", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_wk0000000001", "state": "working" }] }],
+      "expect": { "pieces": { "item:it-work": { "stage": "execution", "why": "1 worker working" } } }
+    },
+    {
+      "name": "Many PRs, some merged, one open: Execution, 3 of 4 merged",
+      "items": [{ "uid": "it-many", "status": "working", "links": [
+        { "kind": "pr", "ref": "example-org/sample-app#21", "pr": { "number": 21, "state": "merged" } },
+        { "kind": "pr", "ref": "example-org/sample-app#22", "pr": { "number": 22, "state": "merged" } },
+        { "kind": "pr", "ref": "example-org/sample-app#23", "pr": { "number": 23, "state": "merged" } },
+        { "kind": "pr", "ref": "example-org/sample-app#24", "pr": { "number": 24, "state": "open" } },
+        { "kind": "dispatch", "ref": "ctx_mn0000000001", "state": "completed", "pr": { "number": 24, "state": "open" } }
+      ] }],
+      "expect": { "pieces": { "item:it-many": { "stage": "execution", "why": "3 of 4 merged", "prCount": { "open": 1, "merged": 3, "closed": 0 } } } }
+    },
+    {
+      "name": "Shipping: every PR merged or closed, one merged",
+      "items": [{ "uid": "it-ship", "status": "working", "links": [
+        { "kind": "pr", "ref": "example-org/sample-app#31", "pr": { "number": 31, "state": "merged" } },
+        { "kind": "pr", "ref": "example-org/sample-app#32", "pr": { "number": 32, "state": "closed" } }
+      ] }],
+      "expect": { "pieces": { "item:it-ship": { "stage": "shipping", "why": "1 merged", "prClosed": false } } }
+    },
+    {
+      "name": "PR reopened after merge: back to Execution",
+      "items": [{ "uid": "it-reopen", "status": "working", "links": [{ "kind": "pr", "ref": "example-org/sample-app#33", "pr": { "number": 33, "state": "open" } }, { "kind": "pr", "ref": "example-org/sample-app#34", "pr": { "number": 34, "state": "merged" } }] }],
+      "expect": { "pieces": { "item:it-reopen": { "stage": "execution", "why": "1 of 2 merged" } } }
+    },
+    {
+      "name": "PR closed without merge, none merged: back to Planning, marked PR closed",
+      "items": [{ "uid": "it-closed", "status": "working", "links": [{ "kind": "pr", "ref": "example-org/sample-app#41", "pr": { "number": 41, "state": "closed" } }] }],
+      "expect": { "pieces": { "item:it-closed": { "stage": "planning", "prClosed": true, "why": "PR closed" } } }
+    },
+    {
+      "name": "Done item: Shipping for 7 days, then it leaves; a canceled item leaves at once",
+      "items": [
+        { "uid": "it-done", "status": "done", "closedAt": 1795413600000, "links": [{ "kind": "pr", "ref": "example-org/sample-app#51", "pr": { "number": 51, "state": "merged" } }] },
+        { "uid": "it-done-noPr", "status": "done", "closedAt": 1795413600000 },
+        { "uid": "it-old", "status": "done", "closedAt": 1794808800000 },
+        { "uid": "it-cancel", "status": "canceled" }
+      ],
+      "expect": {
+        "pieces": { "item:it-done": { "stage": "shipping", "why": "Done, 1 merged" }, "item:it-done-noPr": { "stage": "shipping", "why": "Done" } },
+        "left": [{ "key": "item:it-old", "reason": "done-over-7-days" }, { "key": "item:it-cancel", "reason": "canceled" }]
+      }
+    },
+    {
+      "name": "Run with no item: its own piece, keyed by Run id, titled by its objective",
+      "runs": [
+        { "id": "run_byhand", "objective": "Fix failing unit tests on main\nsecond line", "tasks": [{ "id": "task_bh1", "status": "dispatched", "dispatchId": "ctx_bh0000000001" }], "workers": [{ "dispatchId": "ctx_bh0000000001", "taskId": "task_bh1", "state": "ready", "outcome": "in_progress" }] },
+        { "id": "run_unbound", "objective": "Mail from terminals in no Run" },
+        { "id": "run_legacy_local", "objective": "Legacy", "legacy": true }
+      ],
+      "expect": {
+        "pieces": { "run:run_byhand": { "stage": "execution", "title": "Fix failing unit tests on main", "taskIds": ["task_bh1"] } },
+        "left": [{ "key": "run:run_unbound", "reason": "unbound" }, { "key": "run:run_legacy_local", "reason": "legacy" }]
+      }
+    },
+    {
+      "name": "Run whose tasks point at two items splits: tasks go to their items, the rest stays the Run's piece",
+      "items": [
+        { "uid": "it-split-a", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_sa0000000001", "state": "completed", "pr": { "number": 61, "state": "open" } }] },
+        { "uid": "it-split-b", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_sb0000000001", "state": "completed", "pr": { "number": 62, "state": "merged" } }] }
+      ],
+      "runs": [{ "id": "run_split", "objective": "Gate four PRs", "tasks": [
+        { "id": "task_sa1", "status": "completed" },
+        { "id": "task_sb1", "status": "completed" },
+        { "id": "task_sc1", "status": "completed" }
+      ], "workers": [
+        { "dispatchId": "ctx_sa0000000001", "taskId": "task_sa1", "state": "succeeded" },
+        { "dispatchId": "ctx_sb0000000001", "taskId": "task_sb1", "state": "succeeded" },
+        { "dispatchId": "ctx_sc0000000001", "taskId": "task_sc1", "state": "succeeded" }
+      ] }],
+      "expect": { "pieces": {
+        "item:it-split-a": { "stage": "execution", "taskIds": ["task_sa1"], "runIds": [] },
+        "item:it-split-b": { "stage": "shipping", "taskIds": ["task_sb1"], "runIds": [] },
+        "run:run_split": { "stage": "planning", "taskIds": ["task_sc1"], "runIds": ["run_split"], "why": "Run started" }
+      } }
+    },
+    {
+      "name": "One PRD shared by three items stays three pieces; the Run naming it stays on its own",
+      "items": [
+        { "uid": "it-feat-1", "status": "planned", "description": "PRD https://claude.ai/artifact/PrdSharedFfff1" },
+        { "uid": "it-feat-2", "status": "planned", "description": "PRD https://claude.ai/artifact/PrdSharedFfff1" },
+        { "uid": "it-feat-3", "status": "planned", "description": "PRD https://claude.ai/artifact/PrdSharedFfff1" }
+      ],
+      "runs": [{ "id": "run_shared", "objective": "Features per https://claude.ai/artifact/PrdSharedFfff1", "tasks": [] }],
+      "expect": { "pieces": {
+        "item:it-feat-1": { "stage": "planning", "runIds": [] },
+        "item:it-feat-2": { "stage": "planning", "runIds": [] },
+        "item:it-feat-3": { "stage": "planning", "runIds": [] },
+        "run:run_shared": { "stage": "planning", "prdFrom": "run" }
+      } }
+    },
+    {
+      "name": "Item in an automation chat is shown",
+      "items": [{ "uid": "it-auto", "status": "planned", "chat": { "id": "chat-auto", "kind": "automation" } }],
+      "expect": { "pieces": { "item:it-auto": { "stage": "ideation", "chatKind": "automation" } } }
+    },
+    {
+      "name": "Failed worker is amber until another worker on the task succeeds",
+      "items": [{ "uid": "it-fail", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_fl0000000001", "state": "failed", "startedAt": 1795400000000 }] }],
+      "runs": [{ "id": "run_fail", "objective": "Two tasks", "tasks": [
+        { "id": "task_fl1", "status": "failed", "dispatchId": "ctx_fl0000000001" },
+        { "id": "task_fl2", "status": "completed" }
+      ], "workers": [
+        { "dispatchId": "ctx_fl0000000001", "taskId": "task_fl1", "state": "failed" },
+        { "dispatchId": "ctx_fl0000000002", "taskId": "task_fl2", "state": "failed" },
+        { "dispatchId": "ctx_fl0000000003", "taskId": "task_fl2", "state": "succeeded" }
+      ] }],
+      "expect": { "pieces": { "item:it-fail": { "stage": "planning", "amber": true, "failed": ["ctx_fl0000000001"] } } }
+    },
+    {
+      "name": "A failed item link replaced by a later worker is not amber",
+      "items": [{ "uid": "it-retry", "status": "working", "links": [
+        { "kind": "dispatch", "ref": "ctx_rt0000000001", "state": "failed", "startedAt": 1795400000000 },
+        { "kind": "dispatch", "ref": "ctx_rt0000000002", "state": "working", "startedAt": 1795403600000 }
+      ] }],
+      "expect": { "pieces": { "item:it-retry": { "stage": "execution", "amber": false, "failed": [] } } }
+    },
+    {
+      "name": "Waits: each v1 wait on exactly one piece, or in Unlinked waits",
+      "items": [
+        { "uid": "it-ask", "status": "needs_you", "question": { "eventId": "e1", "text": "Ship today?", "options": ["Yes", "No"] } },
+        { "uid": "it-gated", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_gt0000000001", "state": "working" }] }
+      ],
+      "runs": [{ "id": "run_waits", "objective": "Waits", "tasks": [
+        { "id": "task_gt1", "status": "dispatched", "dispatchId": "ctx_gt0000000001", "assignee": "term_gt1" },
+        { "id": "task_gt2", "status": "pending" }
+      ], "workers": [
+        { "dispatchId": "ctx_gt0000000001", "taskId": "task_gt1", "state": "ready", "terminal": "term_gt1", "workspace": "repo1::/home/alex/work/sample-app/gt" }
+      ], "gates": [{ "id": "gate_gt1", "taskId": "task_gt2", "status": "pending", "question": "Gate A: CSV or JSON?" }] }],
+      "works": [
+        { "id": "w-shared-1", "dispatchId": "ctx_sh0000000001", "title": "Shared one", "state": "working", "workspace": "repo1::/home/alex/work/sample-app/shared", "pr": { "number": 71, "state": "open" } },
+        { "id": "w-shared-2", "dispatchId": "ctx_sh0000000002", "title": "Shared two", "state": "working", "workspace": "repo1::/home/alex/work/sample-app/shared", "pr": { "number": 72, "state": "open" } }
+      ],
+      "waits": [
+        { "key": "item:it-ask", "kind": "question" },
+        { "key": "task:task_gt2", "kind": "gate", "target": null },
+        { "key": "agent:term_gt1", "kind": "agent", "target": { "kind": "terminal", "terminalId": "term_gt1" } },
+        { "key": "agent:pane-ws", "kind": "agent", "target": { "kind": "workspace", "workspaceId": "repo1::/home/alex/work/sample-app/gt" } },
+        { "key": "agent:pane-shared", "kind": "agent", "target": { "kind": "workspace", "workspaceId": "repo1::/home/alex/work/sample-app/shared" } },
+        { "key": "agent:term_nowhere", "kind": "agent", "target": { "kind": "terminal", "terminalId": "term_nowhere" } }
+      ],
+      "expect": {
+        "pieces": {
+          "item:it-ask": { "stage": "ideation", "amber": true, "waits": ["item:it-ask"] },
+          "item:it-gated": { "stage": "execution", "amber": true, "waits": ["task:task_gt2", "agent:term_gt1", "agent:pane-ws"] },
+          "work:w-shared-1": { "stage": "execution", "amber": false },
+          "work:w-shared-2": { "stage": "execution", "amber": false }
+        },
+        "unlinked": ["agent:pane-shared", "agent:term_nowhere"]
+      }
+    },
+    {
+      "name": "Bot workers: a matched one gives its PR to the item; an unmatched one with a PR is its own piece; without a PR it is loose",
+      "items": [{ "uid": "it-bw", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_bw0000000001", "state": "completed" }] }],
+      "works": [
+        { "id": "w-1", "dispatchId": "ctx_bw0000000001", "title": "Slice", "state": "completed", "pr": { "number": 81, "state": "merged" } },
+        { "id": "w-2", "dispatchId": "ctx_bw0000000002", "title": "Lone PR", "state": "completed", "pr": { "number": 82, "state": "open" } },
+        { "id": "w-3", "dispatchId": "ctx_bw0000000003", "title": "Lone worker", "state": "completed" }
+      ],
+      "expect": {
+        "pieces": { "item:it-bw": { "stage": "shipping", "why": "1 merged" }, "work:w-2": { "stage": "execution", "title": "Lone PR" } },
+        "looseWorks": ["w-3"]
+      }
+    },
+    {
+      "name": "Untrusted title: first line only, kept as text, never HTML",
+      "items": [{ "uid": "it-html", "status": "planned", "title": "<img src=x onerror=alert(1)> Ship\nsecond line" }],
+      "expect": { "pieces": { "item:it-html": { "stage": "ideation", "title": "<img src=x onerror=alert(1)> Ship" } } }
+    },
+    {
+      "name": "0 bots or 0 items: four empty columns",
+      "expect": { "pieces": {} }
+    }
+  ]
+}

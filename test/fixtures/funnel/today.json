@@ -1,0 +1,1144 @@
+{
+  "readAt": "2026-11-24",
+  "items": {
+    "dcd1dfe7-64cf-4853-8e24-446d46d4fac1": {
+      "botId": "dcd1dfe7-64cf-4853-8e24-446d46d4fac1",
+      "botName": "Atlas",
+      "counts": {
+        "done": 3,
+        "planned": 1,
+        "in_progress": 5
+      },
+      "items": [
+        {
+          "uid": "062efd04-c72c-4d66-81de-0afbbed1d31a",
+          "number": 29,
+          "owner": {
+            "botId": "dcd1dfe7-64cf-4853-8e24-446d46d4fac1",
+            "name": "Atlas"
+          },
+          "title": "Add a dark theme to settings (title 1)",
+          "description": null,
+          "doneMeans": "Fix the flaky import test (doneMeans 2)",
+          "status": "in_progress",
+          "chat": {
+            "id": "824c5908-8619-477f-8d5d-f16a19dbe9a5",
+            "kind": "home",
+            "title": "Rename the export command (chat 3)"
+          },
+          "question": null,
+          "links": [
+            {
+              "kind": "dispatch",
+              "ref": "ctx_ba574a031299",
+              "title": "Write the onboarding page (dispatch 4)",
+              "state": "working",
+              "startedAt": 1795509071000,
+              "settledAt": null,
+              "report": null,
+              "pr": null
+            }
+          ],
+          "snoozedUntil": null,
+          "lastActivityAt": 1795509071978,
+          "createdAt": 1795509068364,
+          "updatedAt": 1795509071978,
+          "closedAt": null
+        },
+        {
+          "uid": "86fa2a24-198a-4a9a-88ae-7d79579a40d4",
+          "number": 6,
+          "owner": {
+            "botId": "dcd1dfe7-64cf-4853-8e24-446d46d4fac1",
+            "name": "Atlas"
+          },
+          "title": "Speed up the search index (title 5)",
+          "description": "Check the nightly backup (description 6)",
+          "doneMeans": "Split the settings screen (doneMeans 7)",
+          "status": "in_progress",
+          "chat": {
+            "id": "824c5908-8619-477f-8d5d-f16a19dbe9a5",
+            "kind": "home",
+            "title": "Rename the export command (chat 3)"
+          },
+          "question": null,
+          "links": [
+            {
+              "kind": "dispatch",
+              "ref": "ctx_fab73af3bffd",
+              "title": "Clean up old feature flags (dispatch 8)",
+              "state": "stopped",
+              "startedAt": 1795448511000,
+              "settledAt": 1795448598624,
+              "report": null,
+              "pr": {
+                "shown": true,
+                "ref": "example-org/sample-app#545",
+                "number": 545,
+                "url": "https://github.com/example-org/sample-app/pull/545",
+                "state": "open",
+                "checks": "neutral",
+                "review": null,
+                "title": "Add a dark theme to settings (pr title 9)"
+              }
+            },
+            {
+              "kind": "pr",
+              "ref": "example-org/sample-app#545",
+              "pr": {
+                "shown": true,
+                "ref": "example-org/sample-app#545",
+                "number": 545,
+                "url": "https://github.com/example-org/sample-app/pull/545",
+                "state": "open",
+                "checks": "neutral",
+                "review": null,
+                "title": "Add a dark theme to settings (pr title 9)"
+              }
+            },
+            {
+              "kind": "dispatch",
+              "ref": "ctx_4bebf5cc99b1",
+              "title": "Fix the flaky import test (dispatch 10)",
+              "state": "completed",
+              "startedAt": 1795448601000,
+              "settledAt": 1795450089022,
+              "report": {
+                "subject": "Rename the export command (report 11)",
+                "body": null
+              },
+              "pr": {
+                "shown": true,
+                "ref": "example-org/sample-app#545",
+                "number": 545,
+                "url": "https://github.com/example-org/sample-app/pull/545",
+                "state": "open",
+                "checks": "neutral",
+                "review": null,
+                "title": "Add a dark theme to settings (pr title 9)"
+              }
+            }
+          ],
+          "snoozedUntil": null,
+          "lastActivityAt": 1795450166150,
+          "createdAt": 1795397503322,
+          "updatedAt": 1795450166150,
+          "closedAt": null
+        },
+        {
+          "uid": "8ddec225-c395-4a27-849d-ddfc210ceca0",
+          "number": 4,
+          "owner": {
+            "botId": "dcd1dfe7-64cf-4853-8e24-446d46d4fac1",
+            "name": "Atlas"
+          },
+          "title": "Write the onboarding page (title 12)",
+          "description": "Speed up the search index (description 13)",
+          "doneMeans": "Check the nightly backup (doneMeans 14)",
+          "status": "in_progress",
+          "chat": {
+            "id": "824c5908-8619-477f-8d5d-f16a19dbe9a5",
+            "kind": "home",
+            "title": "Rename the export command (chat 3)"
+          },
+          "question": null,
+          "links": [
+            {
+              "kind": "dispatch",
+              "ref": "ctx_ef2404557ba3",
+              "title": "Split the settings screen (dispatch 15)",
+              "state": "failed",
+              "startedAt": 1795446827000,
+              "settledAt": 1795449246487,
+              "report": {
+                "subject": "Clean up old feature flags (report 16)",
+                "body": null
+              },
+              "pr": {
+                "shown": true,
+                "ref": "example-org/sample-app#550",
+                "number": 550,
+                "url": "https://github.com/example-org/sample-app/pull/550",
+                "state": "open",
+                "checks": "neutral",
+                "review": null,
+                "title": "Add a dark theme to settings (pr title 17)"
+              }
+            },
+            {
+              "kind": "pr",
+              "ref": "example-org/sample-app#550",
+              "pr": {
+                "shown": true,
+                "ref": "example-org/sample-app#550",
+                "number": 550,
+                "url": "https://github.com/example-org/sample-app/pull/550",
+                "state": "open",
+                "checks": "neutral",
+                "review": null,
+                "title": "Add a dark theme to settings (pr title 17)"
+              }
+            }
+          ],
+          "snoozedUntil": null,
+          "lastActivityAt": 1795449256149,
+          "createdAt": 1795397501025,
+          "updatedAt": 1795449256149,
+          "closedAt": null
+        },
+        {
+          "uid": "a05ce8c9-45b2-4ac2-86f7-96ddb4e7856c",
+          "number": 5,
+          "owner": {
+            "botId": "dcd1dfe7-64cf-4853-8e24-446d46d4fac1",
+            "name": "Atlas"
+          },
+          "title": "Fix the flaky import test (title 18)",
+          "description": "Rename the export command (description 19)",
+          "doneMeans": "Write the onboarding page (doneMeans 20)",
+          "status": "in_progress",
+          "chat": {
+            "id": "824c5908-8619-477f-8d5d-f16a19dbe9a5",
+            "kind": "home",
+            "title": "Rename the export command (chat 3)"
+          },
+          "question": null,
+          "links": [
+            {
+              "kind": "dispatch",
+              "ref": "ctx_e39dbbccea0d",
+              "title": "Speed up the search index (dispatch 21)",
+              "state": "completed",
+              "startedAt": 1795446899000,
+              "settledAt": 1795448685931,
+              "report": {
+                "subject": "Check the nightly backup (report 22)",
+                "body": null
+              },
+              "pr": {
+                "shown": true,
+                "ref": "example-org/sample-app#551",
+                "number": 551,
+                "url": "https://github.com/example-org/sample-app/pull/551",
+                "state": "open",
+                "checks": "neutral",
+                "review": null,
+                "title": "Split the settings screen (pr title 23)"
+              }
+            },
+            {
+              "kind": "pr",
+              "ref": "example-org/sample-app#551",
+              "pr": {
+                "shown": true,
+                "ref": "example-org/sample-app#551",
+                "number": 551,
+                "url": "https://github.com/example-org/sample-app/pull/551",
+                "state": "open",
+                "checks": "neutral",
+                "review": null,
+                "title": "Split the settings screen (pr title 23)"
+              }
+            }
+          ],
+          "snoozedUntil": null,
+          "lastActivityAt": 1795448740032,
+          "createdAt": 1795397502219,
+          "updatedAt": 1795448740032,
+          "closedAt": null
+        },
+        {
+          "uid": "c764c824-3857-4cf7-8f5f-2e5fe933b65c",
+          "number": 20,
+          "owner": {
+            "botId": "dcd1dfe7-64cf-4853-8e24-446d46d4fac1",
+            "name": "Atlas"
+          },
+          "title": "Clean up old feature flags (title 24)",
+          "description": "Add a dark theme to settings (description 25) per PRD https://claude.ai/artifact/Prd80ca6e237a06adf5",
+          "doneMeans": "Fix the flaky import test (doneMeans 26)",
+          "status": "planned",
+          "chat": {
+            "id": "824c5908-8619-477f-8d5d-f16a19dbe9a5",
+            "kind": "home",
+            "title": "Rename the export command (chat 3)"
+          },
+          "question": null,
+          "links": [],
+          "snoozedUntil": null,
+          "lastActivityAt": 1795448094845,
+          "createdAt": 1795448094845,
+          "updatedAt": 1795448094845,
+          "closedAt": null
+        },
+        {
+          "uid": "8f268c45-bffc-421b-820f-aeeeffc774e9",
+          "number": 14,
+          "owner": {
+            "botId": "dcd1dfe7-64cf-4853-8e24-446d46d4fac1",
+            "name": "Atlas"
+          },
+          "title": "Rename the export command (title 27)",
+          "description": "Write the onboarding page (description 28)",
+          "doneMeans": "Speed up the search index (doneMeans 29)",
+          "status": "in_progress",
+          "chat": {
+            "id": "824c5908-8619-477f-8d5d-f16a19dbe9a5",
+            "kind": "home",
+            "title": "Rename the export command (chat 3)"
+          },
+          "question": null,
+          "links": [
+            {
+              "kind": "dispatch",
+              "ref": "ctx_61b1f53a630b",
+              "title": "Check the nightly backup (dispatch 30)",
+              "state": "completed",
+              "startedAt": 1795437071000,
+              "settledAt": 1795445160321,
+              "report": {
+                "subject": "Split the settings screen (report 31)",
+                "body": null
+              },
+              "pr": {
+                "shown": true,
+                "ref": "example-org/sample-app#547",
+                "number": 547,
+                "url": "https://github.com/example-org/sample-app/pull/547",
+                "state": "open",
+                "checks": "neutral",
+                "review": null,
+                "title": "Clean up old feature flags (pr title 32)"
+              }
+            },
+            {
+              "kind": "pr",
+              "ref": "example-org/sample-app#547",
+              "pr": {
+                "shown": true,
+                "ref": "example-org/sample-app#547",
+                "number": 547,
+                "url": "https://github.com/example-org/sample-app/pull/547",
+                "state": "open",
+                "checks": "neutral",
+                "review": null,
+                "title": "Clean up old feature flags (pr title 32)"
+              }
+            }
+          ],
+          "snoozedUntil": null,
+          "lastActivityAt": 1795445209419,
+          "createdAt": 1795445168110,
+          "updatedAt": 1795445209419,
+          "closedAt": null
+        }
+      ]
+    },
+    "6a6e8be3-c9e2-417d-8a8d-fe960d2efc59": {
+      "botId": "6a6e8be3-c9e2-417d-8a8d-fe960d2efc59",
+      "botName": "Lantern",
+      "counts": {
+        "done": 1,
+        "planned": 1,
+        "in_progress": 1
+      },
+      "items": [
+        {
+          "uid": "9a1a5f47-b0ab-4b27-86b4-b4e6fa367ac8",
+          "number": 26,
+          "owner": {
+            "botId": "6a6e8be3-c9e2-417d-8a8d-fe960d2efc59",
+            "name": "Lantern"
+          },
+          "title": "Add a dark theme to settings (title 33)",
+          "description": "Fix the flaky import test (description 34)",
+          "doneMeans": "Rename the export command (doneMeans 35)",
+          "status": "in_progress",
+          "chat": {
+            "id": "eb409678-de8f-47ca-808d-9474dc304487",
+            "kind": "home",
+            "title": "Rename the export command (chat 3)"
+          },
+          "question": null,
+          "links": [
+            {
+              "kind": "dispatch",
+              "ref": "ctx_15ea0b2c19ab",
+              "title": "Write the onboarding page (dispatch 36)",
+              "state": "working",
+              "startedAt": 1795509138000,
+              "settledAt": null,
+              "report": null,
+              "pr": null
+            }
+          ],
+          "snoozedUntil": null,
+          "lastActivityAt": 1795509196678,
+          "createdAt": 1795508317666,
+          "updatedAt": 1795509196678,
+          "closedAt": null
+        },
+        {
+          "uid": "62010b70-06f4-4fb6-85b7-3954476d26b6",
+          "number": 28,
+          "owner": {
+            "botId": "6a6e8be3-c9e2-417d-8a8d-fe960d2efc59",
+            "name": "Lantern"
+          },
+          "title": "Speed up the search index (title 37)",
+          "description": "Check the nightly backup (description 38)",
+          "doneMeans": "Split the settings screen (doneMeans 39)",
+          "status": "planned",
+          "chat": {
+            "id": "eb409678-de8f-47ca-808d-9474dc304487",
+            "kind": "home",
+            "title": "Rename the export command (chat 3)"
+          },
+          "question": null,
+          "links": [],
+          "snoozedUntil": null,
+          "lastActivityAt": 1795509000005,
+          "createdAt": 1795509000005,
+          "updatedAt": 1795509000005,
+          "closedAt": null
+        }
+      ]
+    }
+  },
+  "works": {},
+  "runList": {
+    "runs": [
+      {
+        "id": "run_2d8204d2bc7c",
+        "objective": "Clean up old feature flags (objective 40) per PRD https://claude.ai/artifact/Prd8961466c001fcadf"
+      },
+      {
+        "id": "run_b3d5e8f75b01",
+        "objective": "Add a dark theme to settings (objective 41) per PRD https://claude.ai/artifact/Prdc9c6f24a6226917d"
+      },
+      {
+        "id": "run_d6706d8168ae",
+        "objective": "Fix the flaky import test (objective 42)"
+      },
+      {
+        "id": "run_unbound",
+        "objective": "Mail from terminals in no Run"
+      },
+      {
+        "id": "run_legacy_local",
+        "objective": "Legacy orchestration state (inspect only)",
+        "legacy": true
+      }
+    ]
+  },
+  "runs": {
+    "run_2d8204d2bc7c": {
+      "tasks": {
+        "runId": "run_2d8204d2bc7c",
+        "tasks": [
+          {
+            "id": "task_938c95d55345",
+            "status": "dispatched",
+            "title": "Write the onboarding page (dispatch 36)",
+            "deps": [],
+            "dispatchId": "ctx_15ea0b2c19ab",
+            "assignee": "term_35207676-73e0-45d1-8a01-725ba29cac62"
+          },
+          {
+            "id": "task_c0902df81e36",
+            "status": "pending",
+            "title": "Rename the export command (task 43)",
+            "deps": [
+              "task_c3adc6c438e6"
+            ]
+          },
+          {
+            "id": "task_a3bab5c1a8a4",
+            "status": "pending",
+            "title": "Write the onboarding page (task 44)",
+            "deps": [
+              "task_ac6d5ac0fde2"
+            ]
+          },
+          {
+            "id": "task_71c93a3b6399",
+            "status": "pending",
+            "title": "Speed up the search index (task 45)",
+            "deps": [
+              "task_4b284f185341"
+            ]
+          },
+          {
+            "id": "task_bbc898bc8ac8",
+            "status": "pending",
+            "title": "Check the nightly backup (task 46)",
+            "deps": [
+              "task_5a7c8735c62b"
+            ]
+          }
+        ]
+      },
+      "workers": {
+        "runId": "run_2d8204d2bc7c",
+        "workers": [
+          {
+            "dispatchId": "ctx_15ea0b2c19ab",
+            "taskId": "task_938c95d55345",
+            "state": "ready",
+            "outcome": "in_progress",
+            "liveness": "live",
+            "agent": "claude/claude-opus-5-5",
+            "terminal": "term_35207676-73e0-45d1-8a01-725ba29cac62",
+            "terminalState": "retained",
+            "workspace": "99a7aa76-ffdd-4717-85fd-961010b2d86a::/home/alex/work/sample-app/3a344e",
+            "host": "local"
+          }
+        ]
+      },
+      "gates": {
+        "runId": "run_2d8204d2bc7c",
+        "gates": []
+      }
+    },
+    "run_b3d5e8f75b01": {
+      "tasks": {
+        "runId": "run_b3d5e8f75b01",
+        "tasks": [
+          {
+            "id": "task_ff3645673fbe",
+            "status": "completed",
+            "title": "Split the settings screen (task 47)",
+            "deps": []
+          },
+          {
+            "id": "task_0714ae088d23",
+            "status": "completed",
+            "title": "Clean up old feature flags (task 48)",
+            "deps": [
+              "task_6722134c032d"
+            ]
+          },
+          {
+            "id": "task_124fe37e3838",
+            "status": "completed",
+            "title": "Add a dark theme to settings (task 49)",
+            "deps": [
+              "task_6722134c032d"
+            ]
+          },
+          {
+            "id": "task_92d6b4caf924",
+            "status": "completed",
+            "title": "Fix the flaky import test (task 50)",
+            "deps": [
+              "task_6722134c032d"
+            ]
+          },
+          {
+            "id": "task_9a4120b5cf68",
+            "status": "completed",
+            "title": "Rename the export command (task 51)",
+            "deps": [
+              "task_92ad6923aa14",
+              "task_320309c70218",
+              "task_9bd8b88f7c09"
+            ]
+          },
+          {
+            "id": "task_9dd070ac0043",
+            "status": "completed",
+            "title": "Write the onboarding page (task 52)",
+            "deps": []
+          },
+          {
+            "id": "task_f193d576eb39",
+            "status": "failed",
+            "title": "Speed up the search index (task 53)",
+            "deps": []
+          },
+          {
+            "id": "task_04afbce63312",
+            "status": "completed",
+            "title": "Check the nightly backup (task 54)",
+            "deps": []
+          },
+          {
+            "id": "task_1d3090e94417",
+            "status": "completed",
+            "title": "Split the settings screen (task 55)",
+            "deps": []
+          },
+          {
+            "id": "task_25a1743a7568",
+            "status": "completed",
+            "title": "Clean up old feature flags (task 56)",
+            "deps": []
+          },
+          {
+            "id": "task_9be480b55c2a",
+            "status": "completed",
+            "title": "Add a dark theme to settings (task 57)",
+            "deps": []
+          },
+          {
+            "id": "task_842c02a7846a",
+            "status": "completed",
+            "title": "Fix the flaky import test (task 58)",
+            "deps": []
+          },
+          {
+            "id": "task_15f2de7a892c",
+            "status": "completed",
+            "title": "Rename the export command (task 59)",
+            "deps": []
+          },
+          {
+            "id": "task_3a3fa2ea51b2",
+            "status": "completed",
+            "title": "Write the onboarding page (task 60)",
+            "deps": []
+          },
+          {
+            "id": "task_f0be1af918ef",
+            "status": "completed",
+            "title": "Speed up the search index (task 61)",
+            "deps": []
+          },
+          {
+            "id": "task_15200f690992",
+            "status": "completed",
+            "title": "Check the nightly backup (task 62)",
+            "deps": []
+          }
+        ]
+      },
+      "workers": {
+        "runId": "run_b3d5e8f75b01",
+        "workers": [
+          {
+            "dispatchId": "ctx_4314fa533272",
+            "taskId": "task_15200f690992",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_37191f68-990d-43b0-8209-455220eabf6e",
+            "terminalState": "released",
+            "workspace": "4ff0c6df-8260-45e4-8cfd-a0b1c3d2e616::/home/alex/work/sample-app/700024",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_6b6fd6c6b08c",
+            "taskId": "task_f0be1af918ef",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_f36a567e-1431-4f1e-8048-c05a66503f2d",
+            "terminalState": "released",
+            "workspace": "4ff0c6df-8260-45e4-8cfd-a0b1c3d2e616::/home/alex/work/sample-app/700024",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_3eaa7aed283f",
+            "taskId": "task_f0be1af918ef",
+            "state": "failed",
+            "liveness": "exited",
+            "terminal": "term_406e171f-ef57-4989-8990-6a7291744f5a",
+            "terminalState": "released",
+            "workspace": "4ff0c6df-8260-45e4-8cfd-a0b1c3d2e616::/home/alex/work/sample-app/700024",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_c9ab30272d54",
+            "taskId": "task_3a3fa2ea51b2",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_1d09723c-cce0-4790-80ad-85f929507f67",
+            "terminalState": "released",
+            "workspace": "4ff0c6df-8260-45e4-8cfd-a0b1c3d2e616::/home/alex/work/sample-app/700024",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_b99bd0e0b2dc",
+            "taskId": "task_3a3fa2ea51b2",
+            "state": "failed",
+            "liveness": "exited",
+            "terminal": "term_e477c905-e93d-4667-8323-68890af5dccf",
+            "terminalState": "released",
+            "workspace": "4ff0c6df-8260-45e4-8cfd-a0b1c3d2e616::/home/alex/work/sample-app/700024",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_0afeeeb3629a",
+            "taskId": "task_9a4120b5cf68",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_df178bb1-4a1f-4487-85e1-79cb88c65ce9",
+            "terminalState": "released",
+            "workspace": "4ff0c6df-8260-45e4-8cfd-a0b1c3d2e616::/home/alex/work/sample-app/700024",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_25129f3660f2",
+            "taskId": "task_9a4120b5cf68",
+            "state": "stopped",
+            "outcome": "failed",
+            "liveness": "exited",
+            "terminal": "term_6faf0aee-544d-4039-84c4-0fd8443d9154",
+            "terminalState": "released",
+            "workspace": "799ac2ed-c57c-4323-875a-cd38c61c6970::/home/alex/work/sample-app/9b3df1",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_936aac3de230",
+            "taskId": "task_9a4120b5cf68",
+            "state": "stopped",
+            "outcome": "failed",
+            "liveness": "exited",
+            "terminal": "term_6fd2750f-2932-4b33-8c85-3d2f6d8323a9",
+            "terminalState": "retained",
+            "workspace": "799ac2ed-c57c-4323-875a-cd38c61c6970::/home/alex/work/sample-app/9b3df1",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_5cbb5b13c6cc",
+            "taskId": "task_15f2de7a892c",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_ac60061c-fa85-4041-8964-b972d46df736",
+            "terminalState": "released",
+            "workspace": "2f82b2c9-8e45-41e0-84f7-33c544486e74::/home/alex/work/sample-app/21eb56",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_1a5ce4221e16",
+            "taskId": "task_842c02a7846a",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_fc32ef9c-c880-4bf9-8565-e07a15f135a9",
+            "terminalState": "released",
+            "workspace": "aa2a88f8-cf6d-4e30-872d-93622ca6ce04::/home/alex/work/sample-app/bd5e7a",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_e8ab56e9eb7c",
+            "taskId": "task_9be480b55c2a",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_214b47b9-eeef-4f80-814c-38ec59912bdb",
+            "terminalState": "released",
+            "workspace": "2f82b2c9-8e45-41e0-84f7-33c544486e74::/home/alex/work/sample-app/21eb56",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_5f3706212e3c",
+            "taskId": "task_25a1743a7568",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_258e7b74-5e61-4536-8839-ae582f636267",
+            "terminalState": "released",
+            "workspace": "6003d167-9821-4c88-8947-ecf42ca0e74e::/home/alex/work/sample-app/8e0a5c",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_569b28aa46d9",
+            "taskId": "task_1d3090e94417",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_c36d5cac-48c6-4d17-8386-34654f587bb0",
+            "terminalState": "released",
+            "workspace": "aa2a88f8-cf6d-4e30-872d-93622ca6ce04::/home/alex/work/sample-app/bd5e7a",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_3b6c2d075a82",
+            "taskId": "task_1d3090e94417",
+            "state": "failed",
+            "liveness": "exited",
+            "terminal": "term_f7db6c7f-ca2b-4792-8368-7463fe797664",
+            "terminalState": "released",
+            "workspace": "aa2a88f8-cf6d-4e30-872d-93622ca6ce04::/home/alex/work/sample-app/bd5e7a",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_aa68e3dcc80f",
+            "taskId": "task_04afbce63312",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_11da74a2-bedf-490c-80f0-e515fdec2e82",
+            "terminalState": "released",
+            "workspace": "6003d167-9821-4c88-8947-ecf42ca0e74e::/home/alex/work/sample-app/8e0a5c",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_968e08c8ccf0",
+            "taskId": "task_92d6b4caf924",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_9c1c2a8a-1733-4819-8c70-52e93fcce27b",
+            "terminalState": "released",
+            "workspace": "2f82b2c9-8e45-41e0-84f7-33c544486e74::/home/alex/work/sample-app/21eb56",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_360c332ae60d",
+            "taskId": "task_f193d576eb39",
+            "state": "failed",
+            "liveness": "exited",
+            "terminal": "term_aa8ea62c-6f27-4a1c-8a40-024565b30240",
+            "terminalState": "released",
+            "workspace": "6003d167-9821-4c88-8947-ecf42ca0e74e::/home/alex/work/sample-app/8e0a5c",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_74264a257958",
+            "taskId": "task_9dd070ac0043",
+            "state": "succeeded",
+            "liveness": "unverifiable",
+            "agent": "claude/claude-opus-5-5",
+            "terminal": "term_8c89fb8b-67ca-4f0a-8b18-c493cbe22942",
+            "terminalState": "retained",
+            "workspace": "e2357fe4-8c8a-4adc-87d7-7647ce7e51a0::/home/alex/work/sample-app/a99658",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_3f5be29ea164",
+            "taskId": "task_92d6b4caf924",
+            "state": "failed",
+            "liveness": "exited",
+            "terminal": "term_59b50bda-f785-4ffd-830e-01ec81517185",
+            "terminalState": "released",
+            "workspace": "2f82b2c9-8e45-41e0-84f7-33c544486e74::/home/alex/work/sample-app/21eb56",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_51aaaf978411",
+            "taskId": "task_124fe37e3838",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_f739a08f-b9d1-41a4-8172-18e913459677",
+            "terminalState": "released",
+            "workspace": "6003d167-9821-4c88-8947-ecf42ca0e74e::/home/alex/work/sample-app/8e0a5c",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_f651029bc288",
+            "taskId": "task_0714ae088d23",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_10cd515f-27b6-442c-895c-bb4d32a7dc16",
+            "terminalState": "released",
+            "workspace": "aa2a88f8-cf6d-4e30-872d-93622ca6ce04::/home/alex/work/sample-app/bd5e7a",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_bea70f423fa2",
+            "taskId": "task_ff3645673fbe",
+            "state": "succeeded",
+            "liveness": "unverifiable",
+            "terminal": null,
+            "workspace": "e2357fe4-8c8a-4adc-87d7-7647ce7e51a0::/home/alex/work/sample-app/a99658",
+            "host": "local"
+          }
+        ]
+      },
+      "gates": {
+        "runId": "run_b3d5e8f75b01",
+        "gates": []
+      }
+    },
+    "run_d6706d8168ae": {
+      "tasks": {
+        "runId": "run_d6706d8168ae",
+        "tasks": [
+          {
+            "id": "task_992c3333ab82",
+            "status": "completed",
+            "title": "Fix the flaky import test (objective 42)",
+            "deps": []
+          },
+          {
+            "id": "task_7389b4d61d20",
+            "status": "completed",
+            "title": "Check the nightly backup (dispatch 30)",
+            "deps": []
+          },
+          {
+            "id": "task_72bb8600da71",
+            "status": "failed",
+            "title": "Split the settings screen (task 63)",
+            "deps": []
+          },
+          {
+            "id": "task_0882e7074008",
+            "status": "completed",
+            "title": "Clean up old feature flags (task 64)",
+            "deps": []
+          },
+          {
+            "id": "task_6d404c1056a6",
+            "status": "completed",
+            "title": "Add a dark theme to settings (task 65)",
+            "deps": []
+          },
+          {
+            "id": "task_030a4f33cb11",
+            "status": "completed",
+            "title": "Fix the flaky import test (task 66)",
+            "deps": []
+          },
+          {
+            "id": "task_569fc0f0864a",
+            "status": "blocked",
+            "title": "Rename the export command (task 67)",
+            "deps": []
+          },
+          {
+            "id": "task_56fcfa9413e2",
+            "status": "completed",
+            "title": "Rename the export command (task 67)",
+            "deps": []
+          },
+          {
+            "id": "task_8327779e9996",
+            "status": "failed",
+            "title": "Split the settings screen (dispatch 15)",
+            "deps": []
+          },
+          {
+            "id": "task_1f2061cff825",
+            "status": "completed",
+            "title": "Speed up the search index (dispatch 21)",
+            "deps": []
+          },
+          {
+            "id": "task_111762630ff7",
+            "status": "blocked",
+            "title": "Clean up old feature flags (dispatch 8)",
+            "deps": []
+          },
+          {
+            "id": "task_e9624a14eed1",
+            "status": "blocked",
+            "title": "Clean up old feature flags (dispatch 8)",
+            "deps": []
+          },
+          {
+            "id": "task_adb41415c816",
+            "status": "completed",
+            "title": "Fix the flaky import test (dispatch 10)",
+            "deps": []
+          },
+          {
+            "id": "task_eb25d1db7654",
+            "status": "completed",
+            "title": "Write the onboarding page (task 68)",
+            "deps": []
+          },
+          {
+            "id": "task_c1dbe090f77d",
+            "status": "completed",
+            "title": "Speed up the search index (task 69)",
+            "deps": []
+          },
+          {
+            "id": "task_388a1408d53a",
+            "status": "dispatched",
+            "title": "Write the onboarding page (dispatch 4)",
+            "deps": [],
+            "dispatchId": "ctx_ba574a031299",
+            "assignee": "term_3de977e4-2df2-4524-82cf-3b2b40345532"
+          }
+        ]
+      },
+      "workers": {
+        "runId": "run_d6706d8168ae",
+        "workers": [
+          {
+            "dispatchId": "ctx_ba574a031299",
+            "taskId": "task_388a1408d53a",
+            "state": "ready",
+            "outcome": "in_progress",
+            "liveness": "live",
+            "agent": "claude/claude-opus-5-5",
+            "terminal": "term_3de977e4-2df2-4524-82cf-3b2b40345532",
+            "terminalState": "retained",
+            "workspace": "f3c108db-3eb6-45d5-8a4d-69657fabdec6::/home/alex/work/sample-app/99eb54",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_3c7c61355bd4",
+            "taskId": "task_c1dbe090f77d",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_0c1b9e99-7deb-4930-8373-73e0b194c254",
+            "terminalState": "released",
+            "workspace": "e63ef350-b11f-4e0a-808f-0c0fb7f3def7::/home/alex/work/sample-app/3b4868",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_2a5ec01d95d6",
+            "taskId": "task_eb25d1db7654",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_d5bda07e-f11d-447e-8204-3713c0cf22fa",
+            "terminalState": "released",
+            "workspace": "e63ef350-b11f-4e0a-808f-0c0fb7f3def7::/home/alex/work/sample-app/3b4868",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_4bebf5cc99b1",
+            "taskId": "task_adb41415c816",
+            "state": "succeeded",
+            "liveness": "unverifiable",
+            "terminal": "term_17239dbb-896b-4b5a-8097-378d79ba1359",
+            "terminalState": "release_unknown",
+            "workspace": "8ccfa29e-15d6-484e-8555-3ed5bb4c3e12::/home/alex/work/sample-app/c2a244",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_08c9d1cd52e7",
+            "taskId": "task_e9624a14eed1",
+            "state": "stopped",
+            "outcome": "failed",
+            "liveness": "exited",
+            "terminal": "term_19c57673-f832-4de7-8329-c79502c255b2",
+            "terminalState": "released",
+            "workspace": "8ccfa29e-15d6-484e-8555-3ed5bb4c3e12::/home/alex/work/sample-app/c2a244",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_abd15301f014",
+            "taskId": "task_111762630ff7",
+            "state": "stopped",
+            "outcome": "failed",
+            "liveness": "exited",
+            "terminal": "term_7acf0a19-5303-4ed1-8624-143b23787d79",
+            "terminalState": "released",
+            "workspace": "8ccfa29e-15d6-484e-8555-3ed5bb4c3e12::/home/alex/work/sample-app/c2a244",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_f358242e0616",
+            "taskId": "task_1f2061cff825",
+            "state": "succeeded",
+            "liveness": "unverifiable",
+            "agent": "claude/claude-opus-5-5",
+            "terminal": "term_4243e0c8-3876-48ad-8348-5079e9d25723",
+            "terminalState": "retained",
+            "workspace": "3560cc15-7a13-48f0-8218-549362f594b6::/home/alex/work/sample-app/98b9c6",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_fd56ac056ff9",
+            "taskId": "task_8327779e9996",
+            "state": "failed",
+            "liveness": "unverifiable",
+            "agent": "claude/claude-opus-5-5",
+            "terminal": "term_7d1d5f7f-a7a5-4b0d-88e8-3d00c3aec064",
+            "terminalState": "retained",
+            "workspace": "86b3fbe2-b9e6-4ac7-867d-7b116fddc78c::/home/alex/work/sample-app/bebb05",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_aa0b7406d2ee",
+            "taskId": "task_56fcfa9413e2",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_4c1776ba-9880-4fbc-89e9-682be00182bb",
+            "terminalState": "released",
+            "workspace": "8ccfa29e-15d6-484e-8555-3ed5bb4c3e12::/home/alex/work/sample-app/c2a244",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_3ad5ce26a597",
+            "taskId": "task_569fc0f0864a",
+            "state": "stopped",
+            "outcome": "failed",
+            "liveness": "exited",
+            "terminal": "term_da09fdd2-9891-49d6-86ad-719826aad451",
+            "terminalState": "retained",
+            "workspace": "8ccfa29e-15d6-484e-8555-3ed5bb4c3e12::/home/alex/work/sample-app/c2a244",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_474d22975ce3",
+            "taskId": "task_030a4f33cb11",
+            "state": "succeeded",
+            "liveness": "unverifiable",
+            "terminal": null,
+            "workspace": "86b3fbe2-b9e6-4ac7-867d-7b116fddc78c::/home/alex/work/sample-app/bebb05",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_fab73af3bffd",
+            "taskId": "task_6d404c1056a6",
+            "state": "succeeded",
+            "liveness": "unverifiable",
+            "terminal": null,
+            "workspace": "8ccfa29e-15d6-484e-8555-3ed5bb4c3e12::/home/alex/work/sample-app/c2a244",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_e39dbbccea0d",
+            "taskId": "task_0882e7074008",
+            "state": "succeeded",
+            "liveness": "unverifiable",
+            "terminal": null,
+            "workspace": "3560cc15-7a13-48f0-8218-549362f594b6::/home/alex/work/sample-app/98b9c6",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_ef2404557ba3",
+            "taskId": "task_72bb8600da71",
+            "state": "failed",
+            "liveness": "unverifiable",
+            "terminal": null,
+            "workspace": "86b3fbe2-b9e6-4ac7-867d-7b116fddc78c::/home/alex/work/sample-app/bebb05",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_61b1f53a630b",
+            "taskId": "task_7389b4d61d20",
+            "state": "succeeded",
+            "liveness": "exited",
+            "terminal": "term_e2c69565-a692-4e8e-8095-4a236361a8f0",
+            "terminalState": "released",
+            "workspace": "b1a6ddcb-9ebd-4b8a-8c06-bc7fc988c724::/home/alex/work/sample-app/fb8bfd",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_da5e66c2a814",
+            "taskId": "task_992c3333ab82",
+            "state": "succeeded",
+            "liveness": "unverifiable",
+            "terminal": null,
+            "workspace": "b1a6ddcb-9ebd-4b8a-8c06-bc7fc988c724::/home/alex/work/sample-app/fb8bfd",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_aef96c2c3b2a",
+            "taskId": "task_992c3333ab82",
+            "state": "failed",
+            "liveness": "unverifiable",
+            "terminal": "term_e2c69565-a692-4e8e-8095-4a236361a8f0",
+            "terminalState": "retained",
+            "workspace": "b1a6ddcb-9ebd-4b8a-8c06-bc7fc988c724::/home/alex/work/sample-app/fb8bfd",
+            "host": "local"
+          },
+          {
+            "dispatchId": "ctx_abf782c2b6a5",
+            "taskId": "task_992c3333ab82",
+            "state": "failed",
+            "liveness": "exited",
+            "terminal": "term_84fca924-d750-410c-816b-3475cc06508e",
+            "terminalState": "released",
+            "workspace": "b1a6ddcb-9ebd-4b8a-8c06-bc7fc988c724::/home/alex/work/sample-app/fb8bfd",
+            "host": "local"
+          }
+        ]
+      },
+      "gates": {
+        "runId": "run_d6706d8168ae",
+        "gates": []
+      }
+    }
+  }
+}
