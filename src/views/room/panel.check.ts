@@ -5,6 +5,8 @@ import { readFileSync } from 'node:fs'
 import { defineCheck } from 'orca/testing'
 import { fixtureSnapshot } from '../../../test/waits-fixture.ts'
 import { lineFromCase } from '../line/demo.ts'
+import { funnelFromCase } from '../funnel/demo.ts'
+import type { FunnelSnapshot } from '../funnel/refresh.ts'
 import { agentsListOf, shiftCase, type AgentsCase } from '../agents/demo.ts'
 import { createAgentsRefresher } from '../agents/refresh.ts'
 import { emptySnapshot as emptyAgents, type AgentsSnapshot } from '../agents/model.ts'
@@ -34,6 +36,11 @@ const waitsNoCli: WaitsSnapshot = { waits: [], updatedAt: now, primed: true, ban
 const lineNoCli: LineSnapshot = { status: 'error', updatedAt: null, error: { kind: 'not_found', message: 'No Orca CLI on any path.', tried: TRIED }, runs: [], legacy: [], hiddenRuns: 0, notes: [], refreshSeconds: 20 }
 
 const all = (w: WaitsSnapshot, l: LineSnapshot, a: AgentsSnapshot) => ({ 'waits.get': w, 'line.snapshot': l, 'agents.get': a })
+
+/** Funnel slice 3: the funnel from the demo case, on the dev-only Funnel tab. One scenario only: `plugin check` renders all of a panel's scenarios in about 60 s, and a 9th (the empty funnel) went past it; funnel-view.test.tsx covers the empty case. */
+const funnel = funnelFromCase(caseJson('funnel-demo.json'), now)
+const withFunnel = (f: FunnelSnapshot) => ({ ...all(waits, line, agents), 'funnel.snapshot': f, 'funnel.open': { opened: true } })
+const onFunnel = { plugin: { 'room.tab': 'funnel', 'room.devFunnel': true } }
 const on = (tab: string) => ({ plugin: { 'room.tab': tab } })
 
 export default defineCheck({
@@ -46,6 +53,8 @@ export default defineCheck({
   // The CLI is missing: one banner with the paths tried; the Agents tab still works.
   'cli-missing': { requests: all(waitsNoCli, lineNoCli, agents) },
   'cli-missing-agents': { requests: all(waitsNoCli, lineNoCli, agents), persisted: on('agents') },
+  // Funnel (dev tab until funnel slice 5): four stage columns, amber waits, an unlinked wait.
+  funnel: { requests: withFunnel(funnel), persisted: onFunnel },
   // A new user: no waits, no Runs, no agents.
   empty: {
     requests: all(

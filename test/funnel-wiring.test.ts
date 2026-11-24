@@ -129,25 +129,28 @@ test('review 1: a timeout stops the funnel lane for the turn (no 9 x 10 s of cal
 
 test('review 2: identical calls from two loops at once run the CLI once (cli.status + Waits: bot list; Waits + Shipping line: run-list)', async () => {
   // A real runner (it merges identical in-flight calls by argv) over a slow fake exec, so the loops overlap.
+  const CALL_MS = 4000
   const execs: string[] = []
   const slowExec: ExecFileLike = (_file, args, _options, callback: ExecCallback) => {
     const key = args.slice(0, -1).join(' ')
     execs.push(key)
     const env = WAITS_CASE.cli[key] ?? { ok: true, result: {} }
-    setTimeout(() => callback(null, JSON.stringify(env), ''), 1500)
+    setTimeout(() => callback(null, JSON.stringify(env), ''), CALL_MS)
     return undefined
   }
   const { worker, settle, done } = await mount(createCliRunner({ exec: slowExec, resolve: foundAt(FIXTURE_CLI_PATH), env: () => ({}) }))
   void worker.request('line.snapshot', { force: true })
-  // Each call takes 1.5 s. At 2.5 s a queued copy would have run (at 1.5 s); a merged one never runs,
-  // and the line's own later bot list starts only after its run-list and per-Run reads (past 3 s).
-  await new Promise((d) => setTimeout(d, 2500))
+  // Each call takes 4 s, so the Waits run-list started at activate is still running when the line
+  // asks, even when a loaded test run takes 3 s to mount (at 1.5 s calls it flaked about 1 run in 2).
+  // 4.5 s after the ask a queued copy would have run; a merged one never runs, and the line's own
+  // later bot list starts only after its run-list and per-Run reads (8 s after activate).
+  await new Promise((d) => setTimeout(d, CALL_MS + 500))
   const early = [...execs]
   const count = (k: string) => early.filter((e) => e === k).length
   assert.ok(early.includes('bot list') && early.includes('orchestration run-list'))
   assert.equal(count('bot list'), 1, 'cli.status and the Waits slow pass asked bot list at once: one CLI run')
   assert.equal(count('orchestration run-list'), 1, 'Waits and the Shipping line asked run-list at once: one CLI run')
-  await new Promise((d) => setTimeout(d, 4000))
+  await new Promise((d) => setTimeout(d, 2 * CALL_MS))
   await done()
 })
 

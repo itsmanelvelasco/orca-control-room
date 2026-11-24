@@ -1,0 +1,62 @@
+{
+  "about": "Funnel slice 3 demo: invented data for the Funnel tab's check scenario, README and PR screenshots. Two bots, 8 items and one Run on its own: 2 pieces in Ideation, 2 in Planning (one Needs you), 3 in Execution (one failed worker, one open gate), 2 in Shipping, and one wait no piece holds. Same shapes as `bot item list`, `bot work list`, `orchestration run-list`, `task-list`, `worker-list`, `gate-list`. Times are fixed against `now`; demo.ts moves them to the time it runs.",
+  "now": 1795510000000,
+  "items": {
+    "atlas": {
+      "botId": "00000000-0000-4000-8000-00000000000a",
+      "botName": "Atlas",
+      "items": [
+        { "uid": "11111111-0000-4000-8000-000000000012", "number": 12, "owner": { "botId": "00000000-0000-4000-8000-00000000000a", "name": "Atlas" }, "title": "Weekly summary in the digest", "description": null, "status": "planned", "chat": { "id": "chat-atlas-home", "kind": "home", "title": null }, "question": null, "links": [], "createdAt": 1795502800000, "updatedAt": 1795502800000, "lastActivityAt": 1795502800000, "closedAt": null },
+        { "uid": "11111111-0000-4000-8000-000000000009", "number": 9, "owner": { "botId": "00000000-0000-4000-8000-00000000000a", "name": "Atlas" }, "title": "Export view for reports", "description": "Spec is ready. PRD: https://claude.ai/artifact/DemoPrdExportView01", "status": "in_progress", "chat": { "id": "chat-atlas-home", "kind": "home", "title": null }, "question": null, "links": [], "createdAt": 1795420000000, "updatedAt": 1795507600000, "lastActivityAt": 1795507600000, "closedAt": null },
+        { "uid": "11111111-0000-4000-8000-000000000007", "number": 7, "owner": { "botId": "00000000-0000-4000-8000-00000000000a", "name": "Atlas" }, "title": "Speed up the search index", "description": null, "status": "in_progress", "chat": { "id": "chat-atlas-home", "kind": "home", "title": null }, "question": null, "links": [
+          { "kind": "dispatch", "ref": "ctx_a1a1a1a1a1a1", "title": "Search index worker", "state": "working", "startedAt": 1795508500000, "settledAt": null, "report": null, "pr": null },
+          { "kind": "pr", "ref": "example-org/sample-app#41", "pr": { "shown": true, "ref": "example-org/sample-app#41", "number": 41, "url": "https://github.com/example-org/sample-app/pull/41", "state": "open", "checks": "pending", "review": null, "title": "Search index: batch writes" } }
+        ], "createdAt": 1795400000000, "updatedAt": 1795508500000, "lastActivityAt": 1795508500000, "closedAt": null },
+        { "uid": "11111111-0000-4000-8000-000000000004", "number": 4, "owner": { "botId": "00000000-0000-4000-8000-00000000000a", "name": "Atlas" }, "title": "Billing page redesign", "description": null, "status": "in_progress", "chat": { "id": "chat-atlas-home", "kind": "home", "title": null }, "question": null, "links": [
+          { "kind": "pr", "ref": "example-org/sample-app#30", "pr": { "shown": true, "ref": "example-org/sample-app#30", "number": 30, "url": "https://github.com/example-org/sample-app/pull/30", "state": "merged", "checks": "success", "review": "APPROVED", "title": "Billing: layout" } },
+          { "kind": "pr", "ref": "example-org/sample-app#33", "pr": { "shown": true, "ref": "example-org/sample-app#33", "number": 33, "url": "https://github.com/example-org/sample-app/pull/33", "state": "open", "checks": "success", "review": null, "title": "Billing: invoices list" } },
+          { "kind": "dispatch", "ref": "ctx_b2b2b2b2b2b2", "title": "Billing: payment form", "state": "failed", "startedAt": 1795507000000, "settledAt": 1795508200000, "report": null, "pr": { "shown": true, "ref": "example-org/sample-app#35", "number": 35, "url": "https://github.com/example-org/sample-app/pull/35", "state": "draft", "checks": "failure", "review": null, "title": "Billing: payment form" } }
+        ], "createdAt": 1795300000000, "updatedAt": 1795508200000, "lastActivityAt": 1795508200000, "closedAt": null },
+        { "uid": "11111111-0000-4000-8000-000000000001", "number": 1, "owner": { "botId": "00000000-0000-4000-8000-00000000000a", "name": "Atlas" }, "title": "Fix the flaky import test", "description": null, "status": "in_progress", "chat": { "id": "chat-atlas-home", "kind": "home", "title": null }, "question": null, "links": [
+          { "kind": "pr", "ref": "example-org/sample-app#26", "pr": { "shown": true, "ref": "example-org/sample-app#26", "number": 26, "url": "https://github.com/example-org/sample-app/pull/26", "state": "merged", "checks": "success", "review": "APPROVED", "title": "Import test: wait for the queue" } }
+        ], "createdAt": 1795200000000, "updatedAt": 1795496000000, "lastActivityAt": 1795496000000, "closedAt": null }
+      ]
+    },
+    "juno": {
+      "botId": "00000000-0000-4000-8000-00000000000b",
+      "botName": "Juno",
+      "items": [
+        { "uid": "22222222-0000-4000-8000-000000000003", "number": 3, "owner": { "botId": "00000000-0000-4000-8000-00000000000b", "name": "Juno" }, "title": "Import contacts from a CSV file", "description": null, "status": "planned", "chat": { "id": "chat-juno-home", "kind": "home", "title": null }, "question": null, "links": [], "createdAt": 1795423600000, "updatedAt": 1795423600000, "lastActivityAt": 1795423600000, "closedAt": null },
+        { "uid": "22222222-0000-4000-8000-000000000005", "number": 5, "owner": { "botId": "00000000-0000-4000-8000-00000000000b", "name": "Juno" }, "title": "Offline mode for the mobile app", "description": null, "status": "needs_you", "chat": { "id": "chat-juno-home", "kind": "home", "title": null }, "question": { "eventId": "ev-demo-1", "text": "Which sync rule should offline edits use?", "options": ["Last write wins", "Ask each time"] }, "links": [
+          { "kind": "url", "ref": "https://claude.ai/artifact/DemoPrdOffline02" }
+        ], "createdAt": 1795410000000, "updatedAt": 1795509100000, "lastActivityAt": 1795509100000, "closedAt": null },
+        { "uid": "22222222-0000-4000-8000-000000000002", "number": 2, "owner": { "botId": "00000000-0000-4000-8000-00000000000b", "name": "Juno" }, "title": "Dark theme for settings", "description": null, "status": "done", "chat": { "id": "chat-juno-home", "kind": "home", "title": null }, "question": null, "links": [
+          { "kind": "pr", "ref": "example-org/sample-app#28", "pr": { "shown": true, "ref": "example-org/sample-app#28", "number": 28, "url": "https://github.com/example-org/sample-app/pull/28", "state": "merged", "checks": "success", "review": "APPROVED", "title": "Settings: dark theme" } }
+        ], "createdAt": 1795100000000, "updatedAt": 1795423600000, "lastActivityAt": 1795423600000, "closedAt": 1795423600000 }
+      ]
+    }
+  },
+  "works": {},
+  "runList": { "runs": [{ "id": "run_settings_page", "objective": "Settings page, slice 2 of 3 (PRD https://claude.ai/artifact/DemoPrdSettings03)" }] },
+  "runs": {
+    "run_settings_page": {
+      "tasks": { "runId": "run_settings_page", "tasks": [
+        { "id": "task_s1layout", "title": "Settings layout", "status": "completed", "deps": [], "dispatchId": "ctx_c3c3c3c3c3c3", "assignee": null },
+        { "id": "task_s2form", "title": "Settings form and validation", "status": "dispatched", "deps": ["task_s1layout"], "dispatchId": "ctx_d4d4d4d4d4d4", "assignee": "term_demo_2" }
+      ] },
+      "workers": { "runId": "run_settings_page", "workers": [
+        { "dispatchId": "ctx_c3c3c3c3c3c3", "taskId": "task_s1layout", "state": "succeeded", "outcome": "succeeded", "liveness": "gone", "agent": "claude", "terminal": "term_demo_1", "workspace": "repo-demo::/work/sample-app/settings-1" },
+        { "dispatchId": "ctx_d4d4d4d4d4d4", "taskId": "task_s2form", "state": "ready", "outcome": "in_progress", "liveness": "live", "agent": "claude", "terminal": "term_demo_2", "workspace": "repo-demo::/work/sample-app/settings-2" }
+      ] },
+      "gates": { "runId": "run_settings_page", "gates": [
+        { "id": "gate_demo1", "taskId": "task_s2form", "status": "pending", "question": "Gate A: keep the old settings URL working?", "options": ["Keep it", "Redirect"] }
+      ] }
+    }
+  },
+  "homes": { "Atlas": "repo-demo::/work/atlas-home", "Juno": "repo-demo::/work/juno-home" },
+  "waits": [
+    { "key": "item:22222222-0000-4000-8000-000000000005", "notifyId": "item:22222222-0000-4000-8000-000000000005:ev-demo-1", "kind": "question", "who": "Juno", "what": "Which sync rule should offline edits use?", "options": ["Last write wins", "Ask each time"], "label": "Needs you", "since": 1795509100000, "target": { "kind": "workspace", "workspaceId": "repo-demo::/work/juno-home" }, "sources": ["item"] },
+    { "key": "task:task_s2form", "notifyId": "task:task_s2form:gate_demo1", "kind": "gate", "who": "Settings form and validation", "what": "Gate A: keep the old settings URL working?", "options": ["Keep it", "Redirect"], "label": "Gate", "since": 1795509400000, "target": { "kind": "terminal", "terminalId": "term_demo_2" }, "sources": ["gate"] },
+    { "key": "agent:pane-demo-9", "notifyId": "agent:pane-demo-9", "kind": "agent", "who": "claude in docs-site", "what": "Claude asks to trust this folder", "options": [], "label": "trust this folder", "since": 1795509700000, "target": { "kind": "workspace", "workspaceId": "repo-demo::/work/docs-site" }, "sources": ["agent"] }
+  ]
+}

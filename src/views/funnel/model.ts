@@ -485,3 +485,28 @@ export function buildFunnel(input: FunnelInput): Funnel {
   for (const p of order) columns[p.stage].push(p.key)
   return { pieces, columns, unlinkedWaits, left, looseWorks }
 }
+
+// ---------- card detail (funnel slice 3) ----------
+
+/** A task as a card's detail shows it. Title cut to one line. */
+export type TaskDetail = { id: string; title: string; status: Task['status'] }
+/** A gate as a card's detail shows it. Question and options cut, untrusted. */
+export type GateDetail = { id: string; taskId: string; status: Gate['status']; question: string; options: string[] }
+/** The tasks and gates the pieces hold, by id: a piece keeps only ids, the card shows these. */
+export type FunnelDetails = { tasks: Record<string, TaskDetail>; gates: Record<string, GateDetail> }
+
+export const MAX_OPTIONS = 6
+
+/** The task and gate lines of every piece in `f`, from the Runs it was built from. */
+export function funnelDetails(f: Funnel, runs: readonly FunnelRun[]): FunnelDetails {
+  const want = { tasks: new Set(f.pieces.flatMap((p) => p.taskIds)), gates: new Set(f.pieces.flatMap((p) => p.gateIds)) }
+  const out: FunnelDetails = { tasks: {}, gates: {} }
+  for (const fr of runs) {
+    for (const t of fr.tasks) if (want.tasks.has(t.id)) out.tasks[t.id] = { id: t.id, title: cleanText(t.title) || t.id, status: t.status }
+    for (const g of fr.gates) {
+      if (!want.gates.has(g.id)) continue
+      out.gates[g.id] = { id: g.id, taskId: g.taskId, status: g.status, question: cleanText(g.question, 200), options: g.options.slice(0, MAX_OPTIONS).map((o) => cleanText(o, 60)).filter(Boolean) }
+    }
+  }
+  return out
+}

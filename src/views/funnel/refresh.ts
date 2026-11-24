@@ -17,7 +17,7 @@ import type { CliFailure, CliResult } from '../../cli/run.ts'
 import { parseBotItemList, parseBotWorkList, type BotItem, type BotWork } from '../../model/index.ts'
 import { cleanText } from '../line/model.ts'
 import type { WaitsData } from '../waits/refresh.ts'
-import { buildFunnel, STAGES, type Funnel } from './model.ts'
+import { buildFunnel, funnelDetails, STAGES, type Funnel, type FunnelDetails } from './model.ts'
 
 export const DEFAULT_REFRESH_SECONDS = 20
 /** A panel tick (every 1 s) that lands a little early still refreshes. */
@@ -41,6 +41,8 @@ export type FunnelSnapshot = {
   /** When the Waits data the funnel was built from was read. */
   waitsAt: number | null
   funnel: Funnel
+  /** Task and gate lines for the cards' detail (funnel slice 3). */
+  details: FunnelDetails
   /** One line per source that failed in the last read, each saying the last good data shows. */
   notes: string[]
   /** How long the last build took (R8: under 50 ms for 60 bots). */
@@ -56,9 +58,15 @@ export type FunnelRefresher = {
   refresh(force?: boolean): Promise<FunnelSnapshot>
   /** The Waits data changed: rebuild with no call, if a panel is watching. */
   onWaitsChanged(): void
+  /** The last good `bot work list` rows of every bot, for opening a worker's place. No CLI call. */
+  works(): BotWork[]
 }
 
 export const emptyFunnel = (): Funnel => ({ pieces: [], columns: Object.fromEntries(STAGES.map((s) => [s, []])) as unknown as Funnel['columns'], unlinkedWaits: [], left: [], looseWorks: [] })
+export const emptyDetails = (): FunnelDetails => ({ tasks: {}, gates: {} })
+
+/** What a panel holds before the worker answers. */
+export const emptySnapshot = (refreshSeconds = DEFAULT_REFRESH_SECONDS): FunnelSnapshot => ({ status: 'loading', version: -1, updatedAt: null, waitsAt: null, funnel: emptyFunnel(), details: emptyDetails(), notes: [], buildMs: 0, refreshSeconds })
 
 /** CLI missing, Orca not answering or a call timed out (10 s): the rest of that lane makes no more calls this turn. */
 const isStop = (e: CliFailure): boolean => e.kind === 'timeout' || e.kind === 'not_found' || e.kind === 'spawn' || (e.kind === 'cli_error' && e.code === 'runtime_unavailable')
@@ -89,7 +97,7 @@ export function createFunnelRefresher(opts: {
   let running: Promise<FunnelSnapshot> | null = null
   let version = 0
   let sig = ''
-  let snap: FunnelSnapshot = { status: 'loading', version, updatedAt: null, waitsAt: null, funnel: emptyFunnel(), notes: [], buildMs: 0, refreshSeconds }
+  let snap: FunnelSnapshot = { status: 'loading', version, updatedAt: null, waitsAt: null, funnel: emptyFunnel(), details: emptyDetails(), notes: [], buildMs: 0, refreshSeconds }
 
   const gapOk = (): boolean => now() - lastEnd >= MIN_GAP_MS
   const due = (): boolean => now() - lastStart >= refreshSeconds * 1000 - SLACK_MS && gapOk()
@@ -105,17 +113,20 @@ export function createFunnelRefresher(opts: {
     for (const list of closedItems.values()) for (const i of list) if (!open.has(i.uid)) items.push(i)
     const t0 = performance.now()
     let funnel: Funnel
+    let details: FunnelDetails
     try {
       funnel = buildFunnel({ items, works: [...works.values()].flat(), runs: w.runs, waits: w.waits, now: now() })
+      details = funnelDetails(funnel, w.runs)
       buildNote = null
     } catch (e) {
       buildNote = `funnel build failed: ${cleanText(String((e as Error)?.message ?? e), 160)} (showing the last good funnel)`
       funnel = snap.funnel
+      details = snap.details
     }
     const buildMs = Math.round((performance.now() - t0) * 10) / 10
     const status = w.updatedAt !== null && readAt !== null ? 'ok' : 'loading'
     const notes = buildNote ? [...readNotes, buildNote] : [...readNotes]
-    const body = { status, updatedAt: readAt, waitsAt: w.updatedAt, funnel, notes, refreshSeconds } as const
+    const body = { status, updatedAt: readAt, waitsAt: w.updatedAt, funnel, details, notes, refreshSeconds } as const
     const next = JSON.stringify(body)
     if (next !== sig) {
       sig = next
@@ -184,6 +195,7 @@ export function createFunnelRefresher(opts: {
 
   return {
     snapshot: () => snap,
+    works: () => [...works.values()].flat(),
     refresh(force = false) {
       lastAsk = now()
       if (running) return running

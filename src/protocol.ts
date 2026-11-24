@@ -5,7 +5,7 @@ import type { AgentsSnapshot } from './views/agents/model.ts'
 import type { FunnelSnapshot } from './views/funnel/refresh.ts'
 
 export type { LineSnapshot, WaitsSnapshot, AgentsSnapshot, FunnelSnapshot }
-export type { Funnel, Piece, Stage } from './views/funnel/model.ts'
+export type { Funnel, FunnelDetails, Piece, Stage } from './views/funnel/model.ts'
 export type { Wait, WaitTarget } from './views/waits/collect.ts'
 
 declare module 'orca' {
@@ -26,6 +26,8 @@ declare module 'orca' {
     'line.snapshot': { input?: { force?: boolean; version?: number }; output: LineSnapshot | null }
     /** Funnel (funnel slice 2). Starts a read of closed items and bot work when one is due (or at once with `force`) and answers at once with the funnel the worker holds, or `null` when the panel already has that `version`. Asking every second while visible keeps the funnel live; no ask, no CLI call. */
     'funnel.snapshot': { input?: { force?: boolean; version?: number }; output: FunnelSnapshot | null }
+    /** Funnel slice 3 (R6): opens or focuses a card's place. Takes a piece key, plus a dispatch id for one of its workers; the worker looks up where it goes. Nothing is written. */
+    'funnel.open': { input: { key: string; dispatchId?: string }; output: { opened: boolean; reason?: 'unknown' | 'no_target' | 'failed' } }
     /** R4: the waits as the worker last read them. */
     'waits.get': { output: WaitsSnapshot }
     /** Opens or focuses the place of one wait. Takes only the row key; the worker looks up where it goes. */
