@@ -128,6 +128,7 @@ test('stop: kills the calls still running and refuses new ones (a stopped worker
   const r = await p
   assert.equal(killed, 1)
   assert.equal(r.ok, false)
+  assert.equal(!r.ok && r.error.kind, 'stopped', 'a killed call is reported as stopped, not as a timeout')
   assert.equal(!r.ok && r.error.message, 'The plugin stopped this call.')
   const after = await runner.run({ command: 'bot list' })
   assert.equal(!after.ok && after.error.message, 'The plugin is stopping.')

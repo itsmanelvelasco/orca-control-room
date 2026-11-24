@@ -12,43 +12,62 @@ import { createFunnelRefresher, type FunnelCli, type FunnelRefresher } from './r
 
 export type OpenInput = { key: string; dispatchId?: string }
 export type OpenResult = { opened: boolean; reason?: 'unknown' | 'no_target' | 'failed' }
+/** Where a press goes, and where to go instead when a terminal will not take focus. */
+export type OpenPlan = { target: WaitTarget; fallback?: WaitTarget }
 
-/** A worker's place: its live terminal, else its workspace (orchestration first, then bot work). */
-function workerPlace(dispatchId: string, w: WaitsData, works: readonly BotWork[]): WaitTarget | null {
+/** A worker's live terminal and its workspace (orchestration first, then bot work); either may be missing. */
+function workerPlaces(dispatchId: string, w: WaitsData, works: readonly BotWork[]): { terminal: WaitTarget | null; workspace: WaitTarget | null } {
   const orch = w.runs.flatMap((r) => r.workers).filter((x) => x.dispatchId === dispatchId)
   const live = orch.find((x) => x.terminal && x.liveness !== 'gone')
-  if (live?.terminal) return { kind: 'terminal', terminalId: live.terminal }
   const ws = orch.find((x) => x.workspace)?.workspace ?? works.find((x) => x.dispatchId === dispatchId && x.workspace)?.workspace
-  return ws ? { kind: 'workspace', workspaceId: ws } : null
+  return { terminal: live?.terminal ? { kind: 'terminal', terminalId: live.terminal } : null, workspace: ws ? { kind: 'workspace', workspaceId: ws } : null }
+}
+
+/** A worker's plan: its live terminal (its workspace as the fallback), else its workspace. */
+function workerPlan(dispatchId: string, w: WaitsData, works: readonly BotWork[]): OpenPlan | null {
+  const { terminal, workspace } = workerPlaces(dispatchId, w, works)
+  if (terminal) return workspace ? { target: terminal, fallback: workspace } : { target: terminal }
+  return workspace ? { target: workspace } : null
 }
 
 /**
- * Where a press goes (R6). A worker: its terminal, else its workspace. A card: the place of its
- * first wait, else the item's chat (its bot's home workspace, as a Waits question row opens), else
- * the place of its first worker that has one. Only pieces and workers in `f` are opened.
+ * Where a press goes (R6). A worker: its live terminal, else its workspace. A card: the place of
+ * its first wait; else the item's bot home (the plugin API cannot open a bot chat, so the bot's
+ * home workspace, as a Waits question row opens); else a worker: first the live terminals, newest
+ * first (working ones before others; Orca lists Dispatches oldest first), then the workspaces in
+ * the same order, so a finished worker's workspace never beats a live terminal. Only pieces and
+ * workers in `f` are opened.
  */
-export function funnelTarget(f: Funnel, input: OpenInput, w: WaitsData, works: readonly BotWork[]): { target: WaitTarget } | { reason: 'unknown' | 'no_target' } {
+export function funnelTarget(f: Funnel, input: OpenInput, w: WaitsData, works: readonly BotWork[]): OpenPlan | { reason: 'unknown' | 'no_target' } {
   const piece = f.pieces.find((p) => p.key === input.key)
   if (!piece) return { reason: 'unknown' }
   if (input.dispatchId !== undefined) {
     if (!piece.workers.some((x) => x.dispatchId === input.dispatchId)) return { reason: 'unknown' }
-    const t = workerPlace(input.dispatchId, w, works)
-    return t ? { target: t } : { reason: 'no_target' }
+    return workerPlan(input.dispatchId, w, works) ?? { reason: 'no_target' }
   }
   const wait = piece.waits.find((x) => x.target)
   if (wait?.target) return { target: wait.target }
   const home = piece.botName ? w.homes?.[piece.botName] : undefined
   if (piece.item && home) return { target: { kind: 'workspace', workspaceId: home } }
-  for (const x of piece.workers) {
-    const t = workerPlace(x.dispatchId, w, works)
-    if (t) return { target: t }
+  const newest = [...piece.workers].reverse()
+  const order = [...newest.filter((x) => x.state === 'working'), ...newest.filter((x) => x.state !== 'working')]
+  for (const x of order) {
+    const plan = workerPlan(x.dispatchId, w, works)
+    if (plan?.target.kind === 'terminal') return plan
+  }
+  for (const x of order) {
+    const plan = workerPlan(x.dispatchId, w, works)
+    if (plan) return plan
   }
   return { reason: 'no_target' }
 }
 
-/** Focuses a terminal or shows a workspace. */
-export async function openTarget(orca: OrcaWorkerApi, t: WaitTarget): Promise<boolean> {
-  if (t.kind === 'terminal') return (await orca.host.call('terminal.focus', { terminalId: t.terminalId })).focused
+/** Focuses a terminal or shows a workspace. A terminal that will not take focus opens `fallback` if given. */
+export async function openTarget(orca: OrcaWorkerApi, t: WaitTarget, fallback?: WaitTarget): Promise<boolean> {
+  if (t.kind === 'terminal') {
+    if ((await orca.host.call('terminal.focus', { terminalId: t.terminalId })).focused) return true
+    return fallback ? openTarget(orca, fallback) : false
+  }
   await orca.host.call('workspace.open', { workspaceId: t.workspaceId })
   return true
 }
@@ -78,7 +97,7 @@ export function registerFunnel(orca: OrcaWorkerApi, run: FunnelCli, waits: () =>
     const found = funnelTarget(funnel.snapshot().funnel, dispatchId === undefined ? { key } : { key, dispatchId }, waits(), funnel.works())
     if ('reason' in found) return { opened: false, reason: found.reason }
     try {
-      return (await openTarget(orca, found.target)) ? { opened: true } : { opened: false, reason: 'failed' }
+      return (await openTarget(orca, found.target, found.fallback)) ? { opened: true } : { opened: false, reason: 'failed' }
     } catch (e) {
       orca.log(`funnel.open failed: ${String((e as Error)?.message ?? e).split(/\r?\n/, 1)[0].slice(0, 200)}`)
       return { opened: false, reason: 'failed' }

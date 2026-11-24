@@ -12,15 +12,24 @@ export const TICK_MS = 1_000
 export const snap = atom<FunnelSnapshot>(emptySnapshot())
 /** One line when the worker did not answer; the last good funnel stays. */
 const askError = atom<string | null>(null)
-/** The card or worker whose last press opened nothing. */
+/** What the last press could not open (see FunnelActions.notOpened). */
 const notOpened = atom<string | null>(null)
+
+/**
+ * Keeps a snapshot only if it is not older than the one held: a `funnel.changed` can land before an
+ * older ask's reply. A restarted worker counts from 0 again, so a newer read time also wins.
+ */
+function take(s: FunnelSnapshot): void {
+  const held = read(snap)
+  if (s.version >= held.version || (s.updatedAt ?? 0) > (held.updatedAt ?? 0)) set(snap, s)
+}
 
 async function ask(force = false): Promise<void> {
   try {
     // Plain JSON only: `version` is sent once the panel holds one (an undefined field is refused).
     const version = read(snap).version
     const answer = await plugin.request('funnel.snapshot', version >= 0 ? { force, version } : { force })
-    if (answer) set(snap, answer)
+    if (answer) take(answer)
     set(askError, null)
   } catch (e) {
     set(askError, e instanceof Error ? e.message.split(/\r?\n/, 1)[0].slice(0, 200) : 'The worker did not answer.')
@@ -43,9 +52,9 @@ async function openWait(key: string): Promise<void> {
   set(notOpened, null)
   try {
     const r = await plugin.request('waits.open', { key })
-    if (!r.opened) set(notOpened, key)
+    if (!r.opened) set(notOpened, `wait:${key}`)
   } catch {
-    set(notOpened, key)
+    set(notOpened, `wait:${key}`)
   }
 }
 
@@ -55,7 +64,7 @@ export function wake(): void {
 }
 
 export function setup(ctx: PanelContext): void {
-  ctx.subscriptions.push(plugin.on('funnel.changed', (s) => set(snap, s)))
+  ctx.subscriptions.push(plugin.on('funnel.changed', take))
   if (read(ctx.visible)) void ask()
   let inFlight = false
   const timer = setInterval(() => {

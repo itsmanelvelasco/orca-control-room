@@ -31,7 +31,7 @@ export type FunnelActions = {
   onOpen?: (key: string, dispatchId?: string) => void
   /** An unlinked wait's Open: the Waits view's own open. */
   onOpenWait?: (key: string) => void
-  /** The card or worker (`<key>` or `<key>#<dispatchId>`) whose last press opened nothing. */
+  /** What the last press could not open: a card `<key>`, a worker `<key>#<dispatchId>` or an unlinked wait `wait:<key>`. */
   notOpened?: string | null
 }
 
@@ -39,6 +39,16 @@ export type FunnelActions = {
 function ownerLine(p: Piece): string {
   const who = p.botName ?? (p.kind === 'run' ? 'Run' : p.kind === 'work' ? 'Bot worker' : 'No bot')
   return p.item ? `${who} #${p.item.number}` : who
+}
+
+/**
+ * The card button says where it goes: a wait's place first, else (an item) its bot's home. The plugin
+ * API cannot open a bot chat, so the bot home is the nearest place to the item's chat (PRD R6).
+ */
+function openLabel(p: Piece): { label: string; tooltip: string } {
+  if (p.waits.some((w) => w.target)) return { label: 'Open', tooltip: 'Open where this waits on you' }
+  if (p.item) return { label: 'Open bot home', tooltip: `Open ${p.botName ?? 'the bot'}'s home workspace` }
+  return { label: 'Open', tooltip: 'Open where this work runs' }
 }
 
 /** "2 open · 3 merged · 1 closed", only the counts above 0. */
@@ -173,8 +183,8 @@ export function PieceCard({ p, details, actions }: { p: Piece; details: FunnelDe
       ) : null}
       <Row gap="xs" justify="between" wrap>
         {actions.onOpen ? (
-          <Button size="xs" variant="ghost" icon="open-external" tooltip={p.item ? "Open the item's chat" : 'Open where this work runs'} onPress={() => actions.onOpen?.(p.key)}>
-            {p.item ? 'Open chat' : 'Open'}
+          <Button size="xs" variant="ghost" icon="open-external" tooltip={openLabel(p).tooltip} onPress={() => actions.onOpen?.(p.key)}>
+            {openLabel(p).label}
           </Button>
         ) : null}
         {p.updatedAt !== null ? (
@@ -235,21 +245,28 @@ function UnlinkedWaits({ waits, actions }: { waits: readonly Wait[]; actions: Fu
     <Callout key="unlinked" tone="warning" title={`Unlinked waits (${waits.length})`}>
       <Stack gap="xs">
         {waits.map((w) => (
-          <Row key={`unlinked:${w.key}`} gap="xs" justify="between" wrap>
-            <Stack gap="none">
-              <Text size="sm" weight="medium">
-                {`${w.label}: ${w.what}`}
+          <Stack key={`unlinked:${w.key}`} gap="none">
+            <Row gap="xs" justify="between" wrap>
+              <Stack gap="none">
+                <Text size="sm" weight="medium">
+                  {`${w.label}: ${w.what}`}
+                </Text>
+                <Text size="xs" muted>
+                  {w.who}
+                </Text>
+              </Stack>
+              {actions.onOpenWait && w.target ? (
+                <Button size="xs" variant="ghost" icon="open-external" onPress={() => actions.onOpenWait?.(w.key)}>
+                  Open
+                </Button>
+              ) : null}
+            </Row>
+            {actions.notOpened === `wait:${w.key}` ? (
+              <Text size="xs" tone="danger">
+                Could not open it.
               </Text>
-              <Text size="xs" muted>
-                {w.who}
-              </Text>
-            </Stack>
-            {actions.onOpenWait && w.target ? (
-              <Button size="xs" variant="ghost" icon="open-external" onPress={() => actions.onOpenWait?.(w.key)}>
-                Open
-              </Button>
             ) : null}
-          </Row>
+          </Stack>
         ))}
       </Stack>
     </Callout>

@@ -143,6 +143,11 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
       pass.answered = true
       return r.result
     }
+    // The worker is stopping: end the pass quietly, no banner and no backoff state.
+    if (r.error.kind === 'stopped') {
+      pass.backoff = true
+      return null
+    }
     pass.failed = true
     const e = r.error
     banner = {

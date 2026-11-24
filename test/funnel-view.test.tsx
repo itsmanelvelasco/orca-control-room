@@ -9,7 +9,10 @@ import { STAGES, type Piece } from '../src/views/funnel/model.ts'
 import * as funnelPanel from '../src/views/funnel/panel.tsx'
 import type { FunnelSnapshot } from '../src/views/funnel/refresh.ts'
 import { FunnelView, MAX_CARDS, STAGE_LABEL } from '../src/views/funnel/view.tsx'
-import { funnelTarget, registerFunnel } from '../src/views/funnel/worker.ts'
+import { funnelTarget, openTarget, registerFunnel } from '../src/views/funnel/worker.ts'
+import { createFunnelRefresher } from '../src/views/funnel/refresh.ts'
+import { createLineRefresher } from '../src/views/line/refresh.ts'
+import { createWaitsRefresher } from '../src/views/waits/refresh.ts'
 import { lineFromCase } from '../src/views/line/demo.ts'
 import * as room from '../src/views/room/panel.tsx'
 import { fixture } from './helpers.ts'
@@ -169,7 +172,7 @@ test('R6: a card press asks funnel.open with its key; a worker press adds its di
   let answer = { opened: true }
   const host = mockHost({ requests: { 'funnel.snapshot': () => demo(), 'funnel.open': (input: unknown) => (asked.push(input), answer) } })
   const view = await mount(funnelPanel, { host })
-  const open = view.findAll({ type: 'Button' }).filter((b) => b.text === 'Open chat' && b.path.startsWith(view.find({ testId: `piece:${OFFLINE}` })?.path ?? '-'))
+  const open = view.findAll({ type: 'Button' }).filter((b) => b.text === 'Open' && b.path.startsWith(view.find({ testId: `piece:${OFFLINE}` })?.path ?? '-'))
   assert.equal(open.length, 1)
   await view.press(open[0])
   assert.deepEqual(asked.at(-1), { key: OFFLINE })
@@ -208,7 +211,7 @@ test('R6: the worker opens a card where it belongs: its wait, else the bot home 
   // No wait: the item's chat, in its bot's home workspace.
   assert.deepEqual(t(SEARCH), { target: { kind: 'workspace', workspaceId: 'repo-demo::/work/atlas-home' } })
   // A worker: a live terminal; a gone one falls back to its workspace.
-  assert.deepEqual(t(RUN, 'ctx_d4d4d4d4d4d4'), { target: { kind: 'terminal', terminalId: 'term_demo_2' } })
+  assert.deepEqual(t(RUN, 'ctx_d4d4d4d4d4d4'), { target: { kind: 'terminal', terminalId: 'term_demo_2' }, fallback: { kind: 'workspace', workspaceId: 'repo-demo::/work/sample-app/settings-2' } })
   assert.deepEqual(t(RUN, 'ctx_c3c3c3c3c3c3'), { target: { kind: 'workspace', workspaceId: 'repo-demo::/work/sample-app/settings-1' } })
   // An item-link worker with no Run row and no bot work: nowhere to go.
   assert.deepEqual(t(BILLING, 'ctx_b2b2b2b2b2b2'), { reason: 'no_target' })
@@ -272,4 +275,86 @@ test('until slice 5: no Funnel tab and no funnel ask unless room.devFunnel is on
   assert.equal(on.asks.funnel, at)
   assert.deepEqual(dev.errors, [])
   await dev.unmount()
+})
+
+// ---------- review of PR #11 ----------
+
+test("review 1: with no wait and no bot home, Open prefers a live terminal over a finished worker's workspace", () => {
+  const { waits, works } = caseInputs(DEMO, NOW)
+  // The demo Run with its gate resolved: workers [ctx_c3 (gone, workspace settings-1), ctx_d4 (live, term_demo_2)].
+  const f = demo().funnel
+  const run = f.pieces.find((p) => p.key === RUN) as Piece
+  assert.deepEqual(run.workers.map((w) => w.dispatchId), ['ctx_c3c3c3c3c3c3', 'ctx_d4d4d4d4d4d4'])
+  const resolved = { ...f, pieces: f.pieces.map((p) => (p.key === RUN ? { ...p, waits: [] } : p)) }
+  assert.deepEqual(funnelTarget(resolved, { key: RUN }, waits, works), { target: { kind: 'terminal', terminalId: 'term_demo_2' }, fallback: { kind: 'workspace', workspaceId: 'repo-demo::/work/sample-app/settings-2' } })
+  // No live terminal at all: the newest worker's workspace, not the oldest.
+  const gone = { ...waits, runs: waits.runs.map((r) => ({ ...r, workers: r.workers.map((w) => ({ ...w, liveness: 'gone' })) })) }
+  assert.deepEqual(funnelTarget(resolved, { key: RUN }, gone, works), { target: { kind: 'workspace', workspaceId: 'repo-demo::/work/sample-app/settings-2' } })
+})
+
+test('review 2: a failed Open on an Unlinked waits row says "Could not open it." under that row', async () => {
+  const host = mockHost({ requests: { 'funnel.snapshot': () => demo(), 'waits.open': () => ({ opened: false, reason: 'failed' as const }) } })
+  const view = await mount(funnelPanel, { host })
+  const row = view.find({ testId: 'unlinked:agent:pane-demo-9' })
+  assert.ok(row)
+  assert.ok(!row.text.includes('Could not open it.'))
+  const open = view.findAll({ type: 'Button' }).find((b) => b.path.startsWith(row.path))
+  assert.ok(open)
+  await view.press(open)
+  assert.ok(view.find({ testId: 'unlinked:agent:pane-demo-9' })?.text.includes('Could not open it.'))
+  assert.equal(view.findAll({ text: 'Could not open it.' }).length, 1, 'the line shows on that row only')
+  await view.unmount()
+})
+
+test('review nit 3: a worker whose terminal will not take focus opens its workspace instead', async () => {
+  const calls: string[] = []
+  const orca = { host: { call: async (method: string) => (calls.push(method), method === 'terminal.focus' ? { focused: false } : {}) } } as any
+  assert.equal(await openTarget(orca, { kind: 'terminal', terminalId: 'term_demo_2' }, { kind: 'workspace', workspaceId: 'ws-1' }), true)
+  assert.deepEqual(calls, ['terminal.focus', 'workspace.open'])
+  calls.length = 0
+  assert.equal(await openTarget(orca, { kind: 'terminal', terminalId: 'term_demo_2' }), false)
+  assert.deepEqual(calls, ['terminal.focus'])
+})
+
+test('review nit 4: the card button says where it goes: "Open" with a wait, "Open bot home" for an item, "Open" for a Run', async () => {
+  const view = await mountView(demo())
+  const label = (key: string) => view.findAll({ type: 'Button' }).find((b) => b.path.startsWith(view.find({ testId: `piece:${key}` })?.path ?? '-') && b.text !== 'Focus')?.text
+  assert.equal(label(OFFLINE), 'Open')
+  assert.equal(label(SEARCH), 'Open bot home')
+  assert.equal(label(RUN), 'Open')
+  assert.equal(view.findAll({ text: 'Open chat' }).length, 0)
+  await view.unmount()
+})
+
+test('review nit 5: an older snapshot never replaces a newer one the panel holds', async () => {
+  const older = { ...demo(), version: 3 }
+  const host = mockHost({ requests: { 'funnel.snapshot': () => older } })
+  const view = await mount(funnelPanel, { host })
+  const newer = demo()
+  newer.version = 9
+  newer.funnel.pieces = newer.funnel.pieces.map((p) => (p.key === SEARCH ? { ...p, title: 'Newer title' } : p))
+  await view.post('funnel.changed', newer)
+  assert.ok(view.find({ testId: `piece:${SEARCH}` })?.text.startsWith('Newer title'))
+  await view.press({ label: 'Refresh the funnel' })
+  await view.settled()
+  assert.ok(view.find({ testId: `piece:${SEARCH}` })?.text.startsWith('Newer title'), 'the older reply overwrote the newer funnel.changed')
+  // A restarted worker (version from 0) with a newer read time is taken.
+  await view.post('funnel.changed', { ...demo(), version: 1, updatedAt: (newer.updatedAt ?? 0) + 1000 })
+  assert.ok(view.find({ testId: `piece:${SEARCH}` })?.text.startsWith('Speed up the search index'))
+  await view.unmount()
+})
+
+test('review nit 7: calls killed at shutdown come back "stopped", and no view shows a banner, error or note for them', async () => {
+  const stopped = async () => ({ ok: false as const, error: { kind: 'stopped' as const, message: 'The plugin stopped this call.' }, ms: 0, cliPath: null })
+  const waits = createWaitsRefresher({ run: stopped })
+  await waits.cycle(true)
+  assert.equal(waits.snapshot().banner, null)
+  const line = createLineRefresher({ cli: { run: stopped } as any })
+  const l = await line.refresh(true)
+  assert.equal(l.error, null)
+  assert.deepEqual(l.notes, [])
+  const inputs = caseInputs(DEMO, NOW).waits
+  const funnel = createFunnelRefresher({ run: stopped, waits: () => ({ ...inputs, bots: [{ id: '00000000-0000-4000-8000-00000000000a', name: 'Atlas', agent: 'claude', paused: false, specialty: null, chatCount: 1 }] }) })
+  const s = await funnel.refresh(true)
+  assert.deepEqual(s.notes, [])
 })

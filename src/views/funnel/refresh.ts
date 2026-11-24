@@ -85,6 +85,8 @@ export function createFunnelRefresher(opts: {
   const works = new Map<string, BotWork[]>()
   /** Notes of the last read, one per source that failed. */
   let readNotes: string[] = []
+  /** Set once a call comes back `stopped`: the worker is shutting down. */
+  let stopping = false
   /** Set while the build fails, cleared by a good build; never stacks. */
   let buildNote: string | null = null
   /** When the last real read ended: one made after Waits had read. Null until then (`loading`). */
@@ -152,6 +154,11 @@ export function createFunnelRefresher(opts: {
         into.set(bot, parse(r.result))
         continue
       }
+      // The worker is stopping: no note, the last good data and notes stay.
+      if (r.error.kind === 'stopped') {
+        stopping = true
+        return null
+      }
       failed++
       first ||= cleanText(r.error.message, 120)
       if (isStop(r.error)) {
@@ -172,6 +179,7 @@ export function createFunnelRefresher(opts: {
       lane(bots, (bot) => ({ command: 'bot item list', bot, all: true }), closedOnly, closedItems, 'closed items: bot item list --all'),
       lane(bots, (bot) => ({ command: 'bot work list', bot }), (r) => parseBotWorkList(r).items, works, 'bot work: bot work list')
     ])
+    if (stopping) return
     readNotes = [a, b].filter((n): n is string => n !== null)
   }
 

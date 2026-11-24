@@ -22,6 +22,7 @@ export type CliFailureKind =
   | 'too_large' // more than 16 MB of output
   | 'cli_error' // the CLI answered ok:false, e.g. runtime_unavailable
   | 'malformed' // stdout was not a JSON envelope
+  | 'stopped' // the worker is stopping: the call was killed or never ran; views show nothing for it
 
 export type CliFailure = { kind: CliFailureKind; message: string; code?: string; tried?: CliCandidate[] }
 
@@ -89,7 +90,7 @@ export function createCliRunner(deps: CliRunnerDeps): CliRunner {
           const out = String(stdout ?? '')
           if (error) {
             const code = typeof error.code === 'string' ? error.code : undefined
-            if (stopped) return finish({ ok: false, error: { kind: 'timeout', message: 'The plugin stopped this call.' } })
+            if (stopped) return finish({ ok: false, error: { kind: 'stopped', message: 'The plugin stopped this call.' } })
             if (error.killed || code === 'ETIMEDOUT') return finish({ ok: false, error: { kind: 'timeout', message: 'The Orca CLI did not answer in 10 s.' } })
             if (code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER') return finish({ ok: false, error: { kind: 'too_large', message: 'The Orca CLI answered more than 16 MB.' } })
             if (code === 'ENOENT' || code === 'EACCES' || code === 'EPERM' || code === 'UNKNOWN') {
@@ -124,7 +125,7 @@ export function createCliRunner(deps: CliRunnerDeps): CliRunner {
         const message = e instanceof CliRequestError ? e.message : 'request refused'
         return Promise.resolve({ ok: false, error: { kind: 'refused', message }, ms: 0, cliPath: null })
       }
-      if (stopped) return Promise.resolve({ ok: false, error: { kind: 'timeout', message: 'The plugin is stopping.' }, ms: 0, cliPath: null })
+      if (stopped) return Promise.resolve({ ok: false, error: { kind: 'stopped', message: 'The plugin is stopping.' }, ms: 0, cliPath: null })
       const key = argv.join('\u0000')
       const running = inFlight.get(key)
       if (running) return running
