@@ -352,6 +352,22 @@
         "item:it-wstop": { "stage": "planning", "why": "Worker stopped, no PR", "amber": false },
         "item:it-wdone": { "stage": "planning", "why": "Worker finished, no PR", "amber": false }
       } }
+    },
+    {
+      "name": "Review 2nd pass: a Run on its own whose tasks all failed stays in Planning, marked Run failed, amber, even with a merged PR",
+      "runs": [
+        { "id": "run_allfail", "objective": "Every task failed", "tasks": [{ "id": "task_af1", "status": "failed" }, { "id": "task_af2", "status": "circuit_broken" }], "workers": [{ "dispatchId": "ctx_af0000000001", "taskId": "task_af1", "state": "failed" }] },
+        { "id": "run_failnoworker", "objective": "Failed before any worker", "tasks": [{ "id": "task_af3", "status": "circuit_broken" }] },
+        { "id": "run_failmerged", "objective": "Failed after a merge", "tasks": [{ "id": "task_af4", "status": "failed" }], "workers": [{ "dispatchId": "ctx_af0000000004", "taskId": "task_af4", "state": "failed" }] },
+        { "id": "run_onegood", "objective": "One task completed", "tasks": [{ "id": "task_af5", "status": "completed" }, { "id": "task_af6", "status": "failed" }] }
+      ],
+      "works": [{ "id": "w-af4", "dispatchId": "ctx_af0000000004", "title": "Merged then failed", "state": "failed", "pr": { "number": 95, "state": "merged" } }],
+      "expect": { "pieces": {
+        "run:run_allfail": { "stage": "planning", "why": "Run failed", "amber": true, "failed": ["ctx_af0000000001"] },
+        "run:run_failnoworker": { "stage": "planning", "why": "Run failed", "amber": true, "failed": [] },
+        "run:run_failmerged": { "stage": "planning", "why": "Run failed", "amber": true },
+        "run:run_onegood": { "stage": "shipping", "why": "Run finished", "amber": false }
+      } }
     }
   ]
 }

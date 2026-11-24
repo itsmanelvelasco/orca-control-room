@@ -18,6 +18,8 @@
 //
 // A Run on its own whose tasks all finished is done, like a done item: Shipping, and it leaves
 // 7 days after its newest worker started. Runs carry no time, so with no known time it stays.
+// A Run on its own whose tasks all failed (failed or circuit broken) is not shipped: it stays in
+// Planning, marked "Run failed", and amber.
 
 import { isWorkerFailed, type BotItem, type BotItemLink, type BotWork, type Gate, type PullRequest, type Run, type Task, type Worker } from '../../model/index.ts'
 import { cleanText } from '../line/model.ts'
@@ -182,6 +184,9 @@ const PR_RANK: Record<PullRequest['state'], number> = { draft: 0, open: 0, close
 /** Task states that end a task. A Run on its own whose tasks are all here is finished. */
 const FINISHED_TASK: ReadonlySet<Task['status']> = new Set(['completed', 'failed', 'circuit_broken'])
 
+/** Task states of a failed task. A Run on its own whose tasks are all here failed. */
+const FAILED_TASK: ReadonlySet<Task['status']> = new Set(['failed', 'circuit_broken'])
+
 /** Task states where a failed worker still waits on the user, when no Dispatch is current. */
 const STUCK_TASK: ReadonlySet<Task['status']> = new Set(['failed', 'blocked', 'circuit_broken'])
 
@@ -267,6 +272,8 @@ export function buildFunnel(input: FunnelInput): Funnel {
   const runPrsByDispatch: { d: Draft; dispatchId: string }[] = []
   /** Run pieces whose every task finished. */
   const finishedRuns = new Set<Draft>()
+  /** Run pieces whose every task failed: Planning, amber. */
+  const failedRuns = new Set<Draft>()
   for (const fr of input.runs) {
     const { run } = fr
     if (run.unbound || run.legacy) {
@@ -298,8 +305,10 @@ export function buildFunnel(input: FunnelInput): Funnel {
     else if (matched.size === 0 && prdItems?.size === 1) home = [...prdItems][0]
     else {
       home = newDraft(`run:${run.id}`, 'run', cleanText(run.objective) || run.id)
-      // A Run on its own is finished when every task is: completed, failed or circuit broken.
-      if (fr.tasks.length > 0 && fr.tasks.every((t) => FINISHED_TASK.has(t.status))) finishedRuns.add(home)
+      // A Run on its own is finished when every task is: completed, failed or circuit broken. With
+      // none completed, it failed.
+      if (fr.tasks.length > 0 && fr.tasks.every((t) => FAILED_TASK.has(t.status))) failedRuns.add(home)
+      else if (fr.tasks.length > 0 && fr.tasks.every((t) => FINISHED_TASK.has(t.status))) finishedRuns.add(home)
     }
     home.hasRun = true
     home.piece.runIds.push(run.id)
@@ -434,6 +443,9 @@ export function buildFunnel(input: FunnelInput): Funnel {
     if (p.prCount.open > 0 || working > 0) {
       p.stage = 'execution'
       p.why = p.prCount.open > 0 ? (p.prCount.merged > 0 ? `${p.prCount.merged} of ${total} merged` : `${p.prCount.open} PR${p.prCount.open === 1 ? '' : 's'} open`) : `${working} worker${working === 1 ? '' : 's'} working`
+    } else if (failedRuns.has(d)) {
+      p.stage = 'planning'
+      p.why = 'Run failed'
     } else if (d.done) {
       p.stage = 'shipping'
       p.why = p.prCount.merged > 0 ? `${done}, ${p.prCount.merged} merged` : done
@@ -467,7 +479,7 @@ export function buildFunnel(input: FunnelInput): Funnel {
   }
 
   const pieces = drafts.map((d) => d.piece)
-  for (const p of pieces) p.amber = p.waits.length > 0 || p.failed.length > 0
+  for (const d of drafts) d.piece.amber = d.piece.waits.length > 0 || d.piece.failed.length > 0 || failedRuns.has(d)
   const columns = { ideation: [], planning: [], execution: [], shipping: [] } as Record<Stage, string[]>
   const order = [...pieces].sort((a, b) => Number(b.amber) - Number(a.amber) || (b.updatedAt ?? -1) - (a.updatedAt ?? -1) || a.key.localeCompare(b.key))
   for (const p of order) columns[p.stage].push(p.key)
