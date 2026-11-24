@@ -10,10 +10,14 @@
 //  2. A task belongs to the item that claims its current Dispatch or any of its workers' Dispatches.
 //  3. A Run joins the one item its tasks point at. Tasks pointing at two or more items split the
 //     Run: those tasks go to their items, the Run and its other tasks become their own piece.
-//     A Run whose tasks point at no item joins the one open item that has its PRD (R2); a PRD
-//     shared by several items leaves the Run on its own (one PRD, several pieces of work).
+//     A Run whose tasks point only at items that left the view (canceled, done over 7 days)
+//     leaves with them. A Run whose tasks point at no item joins the one open item that names its
+//     PRD (R2); a PRD shared by several items leaves the Run on its own (one PRD, several pieces).
 //  4. A bot worker (`bot work list`) follows its Dispatch; with no match and a PR it is its own piece.
 //  5. A PR (by URL) belongs to the first piece that names it, in the order items, Runs, workers.
+//
+// A Run on its own whose tasks all finished is done, like a done item: Shipping, and it leaves
+// 7 days after its newest worker started. Runs carry no time, so with no known time it stays.
 
 import { isWorkerFailed, type BotItem, type BotItemLink, type BotWork, type Gate, type PullRequest, type Run, type Task, type Worker } from '../../model/index.ts'
 import { cleanText } from '../line/model.ts'
@@ -165,13 +169,28 @@ function orchState(w: Worker): WorkerState {
 function addWorker(d: Draft, dispatchId: string, state: WorkerState, rank: number, taskId: string | null, startedAt: number | null = null): void {
   const prev = d.workers.get(dispatchId)
   if (prev && prev.rank > rank) {
+    // A lower source keeps the better state out, but may still know the task or the start time.
     if (!prev.taskId && taskId) prev.taskId = taskId
+    if (prev.startedAt === null) prev.startedAt = startedAt
     return
   }
   d.workers.set(dispatchId, { dispatchId, state, taskId: taskId ?? prev?.taskId ?? null, rank, startedAt: startedAt ?? prev?.startedAt ?? null })
 }
 
 const PR_RANK: Record<PullRequest['state'], number> = { draft: 0, open: 0, closed: 1, merged: 2 }
+
+/** Task states that end a task. A Run on its own whose tasks are all here is finished. */
+const FINISHED_TASK: ReadonlySet<Task['status']> = new Set(['completed', 'failed', 'circuit_broken'])
+
+/** Task states where a failed worker still waits on the user, when no Dispatch is current. */
+const STUCK_TASK: ReadonlySet<Task['status']> = new Set(['failed', 'blocked', 'circuit_broken'])
+
+/** Why a piece with workers but no PRD, Run or PR is in Planning, worded from its workers. */
+function workerWhy(ws: readonly FunnelWorker[]): string {
+  if (ws.some((w) => w.state === 'failed')) return 'Worker failed, no PR'
+  if (ws.some((w) => w.state === 'stopped')) return 'Worker stopped, no PR'
+  return 'Worker finished, no PR'
+}
 
 const isHttps = (url: string): boolean => /^https:\/\/[^\s"'<>]+$/i.test(url)
 
@@ -198,16 +217,16 @@ export function buildFunnel(input: FunnelInput): Funnel {
 
   // 1. Items, and the dispatch ids each claims.
   const byDispatch = new Map<string, Draft>()
+  /** Dispatch ids of items that left the view, so their Runs and workers leave with them. */
+  const leftDispatch = new Map<string, LeftReason>()
   const prsOfItem = new Map<Draft, PullRequest[]>()
   for (const item of input.items) {
     const key = `item:${item.uid}`
-    if (item.status === 'canceled') {
-      left.push({ key, reason: 'canceled' })
-      continue
-    }
     const closed = item.closedAt ?? item.updatedAt ?? item.lastActivityAt
-    if (item.status === 'done' && closed !== null && input.now - closed > DONE_KEEP_MS) {
-      left.push({ key, reason: 'done-over-7-days' })
+    const gone: LeftReason | null = item.status === 'canceled' ? 'canceled' : item.status === 'done' && closed !== null && input.now - closed > DONE_KEEP_MS ? 'done-over-7-days' : null
+    if (gone) {
+      left.push({ key, reason: gone })
+      for (const l of item.links) if (l.kind === 'dispatch' && !leftDispatch.has(l.dispatchId)) leftDispatch.set(l.dispatchId, gone)
       continue
     }
     if (draftOf.has(key)) continue
@@ -227,22 +246,27 @@ export function buildFunnel(input: FunnelInput): Funnel {
     for (const l of item.links) {
       if (l.kind === 'dispatch') {
         if (!byDispatch.has(l.dispatchId)) byDispatch.set(l.dispatchId, d)
-        addWorker(d, l.dispatchId, linkState(l.state), 1, null, l.startedAt)
+        // Only the item that claimed the dispatch counts its worker; its PR is shared by URL below.
+        if (byDispatch.get(l.dispatchId) === d) addWorker(d, l.dispatchId, linkState(l.state), 1, null, l.startedAt)
         if (l.pr) prs.push(l.pr)
       } else if (l.kind === 'pr' && l.pr) prs.push(l.pr)
     }
     prsOfItem.set(d, prs)
   }
 
-  // PRD -> the open items that have it (for rule 3's fallback).
-  const byPrd = new Map<string, Draft[]>()
-  for (const d of drafts) if (d.piece.prd && !d.done) byPrd.set(d.piece.prd.url, [...(byPrd.get(d.piece.prd.url) ?? []), d])
+  // PRD -> the open items that name it, by every PRD link of the item (for rule 3's fallback).
+  const byPrd = new Map<string, Set<Draft>>()
+  for (const d of drafts) if (!d.done) for (const url of d.piece.prds) byPrd.set(url, (byPrd.get(url) ?? new Set()).add(d))
 
   // 2-3. Runs and their tasks, workers and gates.
   const pieceOfTask = new Map<string, Draft>()
-  const pieceOfTerminal = new Map<string, Draft>()
+  /** Terminal -> the pieces whose live task or worker runs in it. Terminals are reused, so only live ones count. */
+  const piecesOfTerminal = new Map<string, Set<Draft>>()
   const piecesOfWorkspace = new Map<string, Set<Draft>>()
+  const addTo = (m: Map<string, Set<Draft>>, k: string, d: Draft): void => void m.set(k, (m.get(k) ?? new Set()).add(d))
   const runPrsByDispatch: { d: Draft; dispatchId: string }[] = []
+  /** Run pieces whose every task finished. */
+  const finishedRuns = new Set<Draft>()
   for (const fr of input.runs) {
     const { run } = fr
     if (run.unbound || run.legacy) {
@@ -251,18 +275,31 @@ export function buildFunnel(input: FunnelInput): Funnel {
     }
     const runPrd = prdLinks(run.objective)
     const workersOf = (t: Task): Worker[] => fr.workers.filter((w) => w.taskId === t.id || (t.dispatchId !== null && w.dispatchId === t.dispatchId))
+    const idsOf = (t: Task): string[] => [t.dispatchId, ...workersOf(t).map((w) => w.dispatchId)].filter((x): x is string => !!x)
     const itemOfTask = new Map<string, Draft>()
     for (const t of fr.tasks) {
-      const ids = [t.dispatchId, ...workersOf(t).map((w) => w.dispatchId)].filter((x): x is string => !!x)
-      const hit = ids.map((id) => byDispatch.get(id)).find((x) => x)
+      const hit = idsOf(t).map((id) => byDispatch.get(id)).find((x) => x)
       if (hit) itemOfTask.set(t.id, hit)
     }
     const matched = new Set(itemOfTask.values())
+    // A Run whose tasks point only at items that left the view leaves with them.
+    if (matched.size === 0) {
+      const pointed = fr.tasks.map(idsOf).filter((ids) => ids.length > 0)
+      const reasons = pointed.map((ids) => ids.map((id) => leftDispatch.get(id)).find((r) => r))
+      if (pointed.length > 0 && reasons.every((r) => r)) {
+        left.push({ key: `run:${run.id}`, reason: reasons[0] as LeftReason })
+        for (const w of fr.workers) if (!leftDispatch.has(w.dispatchId)) leftDispatch.set(w.dispatchId, reasons[0] as LeftReason)
+        continue
+      }
+    }
+    const prdItems = runPrd.length ? byPrd.get(runPrd[runPrd.length - 1]) : undefined
     let home: Draft
     if (matched.size === 1) home = [...matched][0]
-    else if (matched.size === 0 && runPrd.length && (byPrd.get(runPrd[runPrd.length - 1])?.length ?? 0) === 1) home = (byPrd.get(runPrd[runPrd.length - 1]) as Draft[])[0]
+    else if (matched.size === 0 && prdItems?.size === 1) home = [...prdItems][0]
     else {
       home = newDraft(`run:${run.id}`, 'run', cleanText(run.objective) || run.id)
+      // A Run on its own is finished when every task is: completed, failed or circuit broken.
+      if (fr.tasks.length > 0 && fr.tasks.every((t) => FINISHED_TASK.has(t.status))) finishedRuns.add(home)
     }
     home.hasRun = true
     home.piece.runIds.push(run.id)
@@ -278,14 +315,14 @@ export function buildFunnel(input: FunnelInput): Funnel {
       d.hasRun = true
       d.piece.taskIds.push(t.id)
       pieceOfTask.set(t.id, d)
-      if (t.assignee) pieceOfTerminal.set(t.assignee, d)
+      if (t.assignee && t.status === 'dispatched') addTo(piecesOfTerminal, t.assignee, d)
     }
     for (const w of fr.workers) {
       const d = (w.taskId && taskIds.has(w.taskId) ? pieceOfTask.get(w.taskId) : byDispatch.get(w.dispatchId)) ?? home
       addWorker(d, w.dispatchId, orchState(w), 3, w.taskId)
       if (!byDispatch.has(w.dispatchId)) byDispatch.set(w.dispatchId, d)
-      if (w.terminal) pieceOfTerminal.set(w.terminal, d)
-      if (w.workspace) piecesOfWorkspace.set(w.workspace, (piecesOfWorkspace.get(w.workspace) ?? new Set()).add(d))
+      if (w.terminal && (orchState(w) === 'working' || w.liveness === 'live')) addTo(piecesOfTerminal, w.terminal, d)
+      if (w.workspace) addTo(piecesOfWorkspace, w.workspace, d)
       runPrsByDispatch.push({ d, dispatchId: w.dispatchId })
     }
     for (const g of fr.gates) {
@@ -293,13 +330,16 @@ export function buildFunnel(input: FunnelInput): Funnel {
       d.piece.gateIds.push(g.id)
     }
 
-    // A failed worker is amber until its task completes or another worker on it succeeds or works.
+    // A task's failed worker is amber while the task is not completed. With a current Dispatch, only
+    // that worker counts (an older success does not hide a failed retry); with none, the task's own
+    // status says whether it still waits (failed, blocked, circuit broken).
     for (const t of fr.tasks) {
+      if (t.status === 'completed') continue
       const ws = workersOf(t)
-      const replaced = t.status === 'completed' || ws.some((w) => ['working', 'done'].includes(orchState(w)))
-      if (replaced) continue
+      const current = t.dispatchId ? ws.find((w) => w.dispatchId === t.dispatchId) : undefined
+      const failed = current ? (orchState(current) === 'failed' ? [current] : []) : STUCK_TASK.has(t.status) ? ws.filter((w) => orchState(w) === 'failed') : []
       const d = pieceOfTask.get(t.id) as Draft
-      for (const w of ws) if (orchState(w) === 'failed' && !d.piece.failed.includes(w.dispatchId)) d.piece.failed.push(w.dispatchId)
+      for (const w of failed) if (!d.piece.failed.includes(w.dispatchId)) d.piece.failed.push(w.dispatchId)
     }
   }
 
@@ -308,16 +348,16 @@ export function buildFunnel(input: FunnelInput): Funnel {
   const workPrs: { d: Draft; pr: PullRequest }[] = []
   for (const w of input.works) {
     let d = w.dispatchId ? byDispatch.get(w.dispatchId) : undefined
-    if (!d && w.pr) {
-      d = newDraft(`work:${w.id}`, 'work', cleanText(w.title) || w.id)
-      d.piece.updatedAt = w.startedAt
-    }
+    // A worker of an item or Run that left the view leaves with it.
+    const gone = w.dispatchId ? leftDispatch.has(w.dispatchId) : false
+    if (!d && w.pr && !gone) d = newDraft(`work:${w.id}`, 'work', cleanText(w.title) || w.id)
     if (!d) {
       looseWorks.push(w.id)
       continue
     }
     if (w.dispatchId) addWorker(d, w.dispatchId, w.state === 'unverifiable' || w.state === 'missing' ? 'unknown' : linkState(w.state), 2, null, w.startedAt)
-    if (w.workspace) piecesOfWorkspace.set(w.workspace, (piecesOfWorkspace.get(w.workspace) ?? new Set()).add(d))
+    else d.piece.updatedAt = latest(d.piece.updatedAt, w.startedAt)
+    if (w.workspace) addTo(piecesOfWorkspace, w.workspace, d)
     if (w.pr) workPrs.push({ d, pr: w.pr })
   }
   const prByDispatch = new Map<string, PullRequest>()
@@ -347,21 +387,38 @@ export function buildFunnel(input: FunnelInput): Funnel {
   }
   for (const { d, pr } of workPrs) claim(d, pr)
 
-  // Failed item links nothing replaced: no later Dispatch on the item that works or finished.
+  // A Run piece's newest time is its workers' newest start (Runs carry no time of their own).
+  for (const d of drafts) d.piece.updatedAt = latest(d.piece.updatedAt, ...[...d.workers.values()].map((w) => w.startedAt))
+
+  // A finished Run on its own is done; done for over 7 days (when a time is known), it leaves.
+  for (const d of finishedRuns) {
+    d.done = true
+    if (d.piece.updatedAt !== null && input.now - d.piece.updatedAt > DONE_KEEP_MS) {
+      left.push({ key: d.piece.key, reason: 'done-over-7-days' })
+      drafts.splice(drafts.indexOf(d), 1)
+      draftOf.delete(d.piece.key)
+      for (const [t, td] of pieceOfTask) if (td === d) pieceOfTask.delete(t)
+      for (const m of [piecesOfTerminal, piecesOfWorkspace]) for (const s of m.values()) s.delete(d)
+    }
+  }
+
+  // Failed item links nothing replaced: no later Dispatch on the item that works or finished. A
+  // replacement with no start time counts as later: the order is unknown, and a false amber costs more.
   for (const d of drafts) {
-    if (d.done) {
+    if (d.done && d.piece.kind === 'item') {
       d.piece.failed = []
       continue
     }
     const ws = [...d.workers.values()]
     for (const w of ws) {
       if (w.state !== 'failed' || w.taskId || d.piece.failed.includes(w.dispatchId)) continue
-      const later = ws.some((o) => o !== w && (o.state === 'working' || o.state === 'done') && (o.startedAt ?? 0) >= (w.startedAt ?? 0))
+      const later = ws.some((o) => o !== w && (o.state === 'working' || o.state === 'done') && (o.startedAt === null || o.startedAt >= (w.startedAt ?? 0)))
       if (!later) d.piece.failed.push(w.dispatchId)
     }
   }
 
-  // 6. R3: stage.
+  // 6. R3: stage. A done piece counts only open PRs: a worker link can still read "working" after
+  // the item closed.
   for (const d of drafts) {
     const p = d.piece
     p.workers = [...d.workers.values()].map(({ dispatchId, state, taskId }) => ({ dispatchId, state, taskId }))
@@ -370,21 +427,22 @@ export function buildFunnel(input: FunnelInput): Funnel {
       else if (pr.state === 'merged') p.prCount.merged++
       else p.prCount.closed++
     }
-    const working = p.workers.filter((w) => w.state === 'working').length
+    const working = d.done ? 0 : p.workers.filter((w) => w.state === 'working').length
     const total = p.prs.length
+    const done = p.kind === 'run' ? 'Run finished' : 'Done'
     p.prClosed = total > 0 && p.prCount.closed === total
     if (p.prCount.open > 0 || working > 0) {
       p.stage = 'execution'
       p.why = p.prCount.open > 0 ? (p.prCount.merged > 0 ? `${p.prCount.merged} of ${total} merged` : `${p.prCount.open} PR${p.prCount.open === 1 ? '' : 's'} open`) : `${working} worker${working === 1 ? '' : 's'} working`
     } else if (d.done) {
       p.stage = 'shipping'
-      p.why = p.prCount.merged > 0 ? `Done, ${p.prCount.merged} merged` : 'Done'
+      p.why = p.prCount.merged > 0 ? `${done}, ${p.prCount.merged} merged` : done
     } else if (p.prCount.merged > 0) {
       p.stage = 'shipping'
       p.why = `${p.prCount.merged} merged`
     } else if (p.prd || d.hasRun || p.workers.length > 0 || total > 0) {
       p.stage = 'planning'
-      p.why = p.prClosed ? 'PR closed' : p.prd ? (p.prd.from === 'description' ? 'PRD found in description' : p.prd.from === 'run' ? "PRD found in the Run's objective" : 'PRD linked') : d.hasRun ? 'Run started' : 'Worker finished, no PR'
+      p.why = p.prClosed ? 'PR closed' : p.prd ? (p.prd.from === 'description' ? 'PRD found in description' : p.prd.from === 'run' ? "PRD found in the Run's objective" : 'PRD linked') : d.hasRun ? 'Run started' : workerWhy(p.workers)
     } else {
       p.stage = 'ideation'
       p.why = 'No PRD, Run, worker or PR yet'
@@ -400,11 +458,10 @@ export function buildFunnel(input: FunnelInput): Funnel {
       const t = taskOfWaitKey(w.key)
       d = t ? pieceOfTask.get(t) : undefined
     }
-    if (!d && w.target?.kind === 'terminal') d = pieceOfTerminal.get(w.target.terminalId)
-    if (!d && w.target?.kind === 'workspace') {
-      const ds = piecesOfWorkspace.get(w.target.workspaceId)
-      if (ds && ds.size === 1) d = [...ds][0]
-    }
+    // A terminal or workspace two pieces claim is ambiguous: the wait goes to Unlinked waits.
+    const only = (ds: Set<Draft> | undefined): Draft | undefined => (ds?.size === 1 ? [...ds][0] : undefined)
+    if (!d && w.target?.kind === 'terminal') d = only(piecesOfTerminal.get(w.target.terminalId))
+    if (!d && w.target?.kind === 'workspace') d = only(piecesOfWorkspace.get(w.target.workspaceId))
     if (d) d.piece.waits.push(w)
     else unlinkedWaits.push(w)
   }

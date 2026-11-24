@@ -121,7 +121,7 @@
       "expect": { "pieces": {
         "item:it-split-a": { "stage": "execution", "taskIds": ["task_sa1"], "runIds": [] },
         "item:it-split-b": { "stage": "shipping", "taskIds": ["task_sb1"], "runIds": [] },
-        "run:run_split": { "stage": "planning", "taskIds": ["task_sc1"], "runIds": ["run_split"], "why": "Run started" }
+        "run:run_split": { "stage": "shipping", "taskIds": ["task_sc1"], "runIds": ["run_split"], "why": "Run finished" }
       } }
     },
     {
@@ -220,6 +220,138 @@
     {
       "name": "0 bots or 0 items: four empty columns",
       "expect": { "pieces": {} }
+    },
+    {
+      "name": "Review 1: a finished Run on its own goes to Shipping, and leaves 7 days after its newest worker started",
+      "runs": [
+        { "id": "run_fin1", "objective": "Finished, one PR merged", "tasks": [{ "id": "task_fn1", "status": "completed" }], "workers": [{ "dispatchId": "ctx_fn0000000001", "taskId": "task_fn1", "state": "succeeded" }] },
+        { "id": "run_fin2", "objective": "Finished long ago", "tasks": [{ "id": "task_fn2", "status": "completed" }], "workers": [{ "dispatchId": "ctx_fn0000000002", "taskId": "task_fn2", "state": "succeeded" }] },
+        { "id": "run_fin3", "objective": "Finished, one task failed, no time known", "tasks": [{ "id": "task_fn3", "status": "completed" }, { "id": "task_fn4", "status": "failed" }], "workers": [{ "dispatchId": "ctx_fn0000000003", "taskId": "task_fn3", "state": "succeeded" }, { "dispatchId": "ctx_fn0000000004", "taskId": "task_fn4", "state": "failed" }] },
+        { "id": "run_fin4", "objective": "One task still blocked", "tasks": [{ "id": "task_fn5", "status": "completed" }, { "id": "task_fn6", "status": "blocked" }] }
+      ],
+      "works": [
+        { "id": "w-fn1", "dispatchId": "ctx_fn0000000001", "title": "Slice", "state": "completed", "startedAt": 1795413600000, "pr": { "number": 91, "state": "merged" } },
+        { "id": "w-fn2", "dispatchId": "ctx_fn0000000002", "title": "Old slice", "state": "completed", "startedAt": 1794808800000 }
+      ],
+      "expect": {
+        "pieces": {
+          "run:run_fin1": { "stage": "shipping", "why": "Run finished, 1 merged", "amber": false, "updatedAt": 1795413600000 },
+          "run:run_fin3": { "stage": "shipping", "why": "Run finished", "amber": true, "failed": ["ctx_fn0000000004"], "updatedAt": null },
+          "run:run_fin4": { "stage": "planning", "why": "Run started" }
+        },
+        "left": [{ "key": "run:run_fin2", "reason": "done-over-7-days" }]
+      }
+    },
+    {
+      "name": "Review 2: the Run and worker of a canceled item leave with it, not as a new piece",
+      "items": [
+        { "uid": "it-cx", "status": "canceled", "links": [{ "kind": "dispatch", "ref": "ctx_cx0000000001", "state": "completed" }] },
+        { "uid": "it-aged", "status": "done", "closedAt": 1794808800000, "links": [{ "kind": "dispatch", "ref": "ctx_ag0000000001", "state": "completed" }] }
+      ],
+      "runs": [
+        { "id": "run_cx", "objective": "Canceled work", "tasks": [{ "id": "task_cx1", "status": "completed" }, { "id": "task_cx2", "status": "pending" }], "workers": [{ "dispatchId": "ctx_cx0000000001", "taskId": "task_cx1", "state": "succeeded" }] },
+        { "id": "run_ag", "objective": "Old work", "tasks": [{ "id": "task_ag1", "status": "completed", "dispatchId": "ctx_ag0000000001" }] }
+      ],
+      "works": [{ "id": "w-cx", "dispatchId": "ctx_cx0000000001", "title": "Canceled slice", "state": "completed", "pr": { "number": 92, "state": "open" } }],
+      "expect": {
+        "pieces": {},
+        "left": [
+          { "key": "item:it-cx", "reason": "canceled" },
+          { "key": "item:it-aged", "reason": "done-over-7-days" },
+          { "key": "run:run_cx", "reason": "canceled" },
+          { "key": "run:run_ag", "reason": "done-over-7-days" }
+        ],
+        "looseWorks": ["w-cx"]
+      }
+    },
+    {
+      "name": "Review 3: a done item with a stale working worker is in Shipping; only an open PR keeps it in Execution",
+      "items": [
+        { "uid": "it-stale", "status": "done", "closedAt": 1795413600000, "links": [{ "kind": "dispatch", "ref": "ctx_st0000000001", "state": "working", "pr": { "number": 93, "state": "merged" } }] },
+        { "uid": "it-done-open", "status": "done", "closedAt": 1795413600000, "links": [{ "kind": "pr", "ref": "example-org/sample-app#94", "pr": { "number": 94, "state": "open" } }] }
+      ],
+      "expect": { "pieces": {
+        "item:it-stale": { "stage": "shipping", "why": "Done, 1 merged" },
+        "item:it-done-open": { "stage": "execution", "why": "1 PR open" }
+      } }
+    },
+    {
+      "name": "Review 4: a failed retry after an earlier success is amber",
+      "items": [{ "uid": "it-rf", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_rf0000000001", "state": "completed" }] }],
+      "runs": [{ "id": "run_rf", "objective": "Retry", "tasks": [
+        { "id": "task_rf1", "status": "dispatched", "dispatchId": "ctx_rf0000000002" },
+        { "id": "task_rf2", "status": "failed" }
+      ], "workers": [
+        { "dispatchId": "ctx_rf0000000001", "taskId": "task_rf1", "state": "succeeded" },
+        { "dispatchId": "ctx_rf0000000002", "taskId": "task_rf1", "state": "failed" },
+        { "dispatchId": "ctx_rf0000000003", "taskId": "task_rf2", "state": "succeeded" },
+        { "dispatchId": "ctx_rf0000000004", "taskId": "task_rf2", "state": "failed" }
+      ] }],
+      "expect": { "pieces": { "item:it-rf": { "stage": "planning", "amber": true, "failed": ["ctx_rf0000000002", "ctx_rf0000000004"] } } }
+    },
+    {
+      "name": "Review 5: a working retry with no start time clears the older failure",
+      "items": [{ "uid": "it-ns", "status": "working", "links": [
+        { "kind": "dispatch", "ref": "ctx_ns0000000001", "state": "failed", "startedAt": 1795400000000 },
+        { "kind": "dispatch", "ref": "ctx_ns0000000002", "state": "working" }
+      ] }],
+      "expect": { "pieces": { "item:it-ns": { "stage": "execution", "amber": false, "failed": [] } } }
+    },
+    {
+      "name": "Review 6: an agent wait on a reused terminal goes to the live piece; a terminal two live pieces claim is unlinked",
+      "items": [
+        { "uid": "it-live", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_ro0000000002", "state": "working" }] },
+        { "uid": "it-old", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_ro0000000001", "state": "completed" }] }
+      ],
+      "runs": [
+        { "id": "run_ronew", "objective": "Live", "tasks": [{ "id": "task_ro2", "status": "dispatched", "dispatchId": "ctx_ro0000000002", "assignee": "term_reuse" }], "workers": [{ "dispatchId": "ctx_ro0000000002", "taskId": "task_ro2", "state": "ready", "liveness": "live", "terminal": "term_reuse" }] },
+        { "id": "run_roold", "objective": "Old", "tasks": [{ "id": "task_ro1", "status": "completed", "assignee": "term_reuse" }], "workers": [{ "dispatchId": "ctx_ro0000000001", "taskId": "task_ro1", "state": "succeeded", "liveness": "exited", "terminal": "term_reuse" }] },
+        { "id": "run_ro3", "objective": "Shares a terminal", "tasks": [{ "id": "task_ro3", "status": "dispatched", "dispatchId": "ctx_ro0000000003", "assignee": "term_both" }], "workers": [{ "dispatchId": "ctx_ro0000000003", "taskId": "task_ro3", "state": "ready", "liveness": "live", "terminal": "term_both" }] },
+        { "id": "run_ro4", "objective": "Shares it too", "tasks": [{ "id": "task_ro4", "status": "dispatched", "dispatchId": "ctx_ro0000000004", "assignee": "term_both" }], "workers": [{ "dispatchId": "ctx_ro0000000004", "taskId": "task_ro4", "state": "ready", "liveness": "live", "terminal": "term_both" }] }
+      ],
+      "waits": [
+        { "key": "agent:term_reuse", "kind": "agent", "target": { "kind": "terminal", "terminalId": "term_reuse" } },
+        { "key": "agent:term_both", "kind": "agent", "target": { "kind": "terminal", "terminalId": "term_both" } }
+      ],
+      "expect": {
+        "pieces": {
+          "item:it-live": { "stage": "execution", "amber": true, "waits": ["agent:term_reuse"] },
+          "item:it-old": { "stage": "planning", "amber": false, "waits": [] },
+          "run:run_ro3": { "stage": "execution", "amber": false },
+          "run:run_ro4": { "stage": "execution", "amber": false }
+        },
+        "unlinked": ["agent:term_both"]
+      }
+    },
+    {
+      "name": "Nit 7: a Run naming the item's older PRD joins the item",
+      "items": [{ "uid": "it-twoprd", "status": "planned", "description": "v1 https://claude.ai/artifact/PrdOldGggg1 then https://claude.ai/artifact/PrdNewGggg2" }],
+      "runs": [{ "id": "run_oldprd", "objective": "Per https://claude.ai/artifact/PrdOldGggg1", "tasks": [{ "id": "task_op1", "status": "pending" }] }],
+      "expect": { "pieces": { "item:it-twoprd": { "stage": "planning", "runIds": ["run_oldprd"], "prd": "https://claude.ai/artifact/PrdNewGggg2", "prdFrom": "description" } } }
+    },
+    {
+      "name": "Nit 8: two items linking one dispatch: only the item that claimed it counts its worker",
+      "items": [
+        { "uid": "it-claim", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_dd0000000001", "state": "working" }] },
+        { "uid": "it-copy", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_dd0000000001", "state": "working" }] }
+      ],
+      "expect": { "pieces": {
+        "item:it-claim": { "stage": "execution", "why": "1 worker working" },
+        "item:it-copy": { "stage": "ideation" }
+      } }
+    },
+    {
+      "name": "Nit 10: a piece with only a failed or stopped worker says so",
+      "items": [
+        { "uid": "it-wfail", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_wf0000000001", "state": "failed" }] },
+        { "uid": "it-wstop", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_wf0000000002", "state": "stopped" }] },
+        { "uid": "it-wdone", "status": "working", "links": [{ "kind": "dispatch", "ref": "ctx_wf0000000003", "state": "completed" }] }
+      ],
+      "expect": { "pieces": {
+        "item:it-wfail": { "stage": "planning", "why": "Worker failed, no PR", "amber": true },
+        "item:it-wstop": { "stage": "planning", "why": "Worker stopped, no PR", "amber": false },
+        "item:it-wdone": { "stage": "planning", "why": "Worker finished, no PR", "amber": false }
+      } }
     }
   ]
 }

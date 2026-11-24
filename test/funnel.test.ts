@@ -89,6 +89,7 @@ function checkPieces(f: Funnel, want: Record<string, any>, label: string): void 
     if ('waits' in e) assert.deepEqual(p.waits.map((w) => w.key).sort(), [...e.waits].sort(), `${at} waits`)
     if ('title' in e) assert.equal(p.title, e.title, `${at} title`)
     if ('chatKind' in e) assert.equal(p.item?.chatKind, e.chatKind, `${at} chat kind`)
+    if ('updatedAt' in e) assert.equal(p.updatedAt, e.updatedAt, `${at} updatedAt`)
   }
 }
 
@@ -105,10 +106,20 @@ function checkAccounting(input: FunnelInput, f: Funnel, label: string): void {
   for (const r of input.runs) assert.equal((runIds.get(r.run.id) ?? 0) + (left.has(`run:${r.run.id}`) ? 1 : 0), 1, `${label}: Run ${r.run.id} once`)
   const taskIds = count(f.pieces.flatMap((p) => p.taskIds))
   const gateIds = count(f.pieces.flatMap((p) => p.gateIds))
+  // A task or gate is in exactly one piece; when its Run left the view, in none (a split Run's
+  // tasks on items stay with their items).
+  const goneDispatch = new Set<string>()
   for (const r of input.runs) {
-    const gone = left.has(`run:${r.run.id}`) ? 1 : 0
-    for (const t of r.tasks) assert.equal((taskIds.get(t.id) ?? 0) + gone, 1, `${label}: task ${t.id} once`)
-    for (const g of r.gates) assert.equal((gateIds.get(g.id) ?? 0) + gone, 1, `${label}: gate ${g.id} once`)
+    const gone = left.has(`run:${r.run.id}`)
+    for (const t of r.tasks) {
+      const n = taskIds.get(t.id) ?? 0
+      assert.ok(n === 1 || (gone && n === 0), `${label}: task ${t.id} once (${n})`)
+    }
+    for (const g of r.gates) {
+      const n = gateIds.get(g.id) ?? 0
+      assert.ok(n === 1 || (gone && n === 0), `${label}: gate ${g.id} once (${n})`)
+    }
+    if (gone) for (const w of r.workers) goneDispatch.add(w.dispatchId)
   }
   const prUrls = count(f.pieces.flatMap((p) => p.prs.map((x) => x.url)))
   const inputPrs = new Set<string>()
@@ -116,7 +127,8 @@ function checkAccounting(input: FunnelInput, f: Funnel, label: string): void {
     if (left.has(`item:${i.uid}`)) continue
     for (const l of i.links) if ((l.kind === 'pr' || l.kind === 'dispatch') && l.pr) inputPrs.add(l.pr.url)
   }
-  for (const w of input.works) if (w.pr) inputPrs.add(w.pr.url)
+  // A bot worker's PR counts unless the worker left with its item or Run.
+  for (const w of input.works) if (w.pr && !f.looseWorks.includes(w.id) && !(w.dispatchId && goneDispatch.has(w.dispatchId))) inputPrs.add(w.pr.url)
   for (const url of inputPrs) assert.equal(prUrls.get(url) ?? 0, 1, `${label}: PR ${url} once`)
   for (const [url, n] of prUrls) assert.equal(n, 1, `${label}: PR ${url} not twice`)
   // Columns hold every piece once, in its stage.

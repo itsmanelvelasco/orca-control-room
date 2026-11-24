@@ -10,7 +10,7 @@
     "item:8f268c45-bffc-421b-820f-aeeeffc774e9": { "stage": "execution", "amber": false },
     "item:9a1a5f47-b0ab-4b27-86b4-b4e6fa367ac8": { "stage": "execution", "amber": false, "prd": "https://claude.ai/artifact/Prd8961466c001fcadf", "prdFrom": "run", "runIds": ["run_2d8204d2bc7c"], "note": "Lantern #26: the funnel Run joins it by its dispatch" },
     "item:62010b70-06f4-4fb6-85b7-3954476d26b6": { "stage": "ideation", "amber": false, "note": "Lantern #28: no link at all" },
-    "run:run_b3d5e8f75b01": { "stage": "planning", "amber": true, "prd": "https://claude.ai/artifact/Prdc9c6f24a6226917d", "prdFrom": "run", "failed": ["ctx_360c332ae60d"], "note": "The v1 Run: no item names it. Its PRs are not in the data (bot work list is empty), so Planning, not Shipping. One failed task was never retried." },
+    "run:run_b3d5e8f75b01": { "stage": "shipping", "amber": true, "why": "Run finished", "prd": "https://claude.ai/artifact/Prdc9c6f24a6226917d", "prdFrom": "run", "failed": ["ctx_360c332ae60d"], "note": "The v1 Run: no item names it. Every task finished (15 completed, 1 failed), so it is done: Shipping. Its PRs are not in the data (bot work list is empty), and Runs carry no time, so it cannot age out yet. The failed task was never retried: amber." },
     "run:run_d6706d8168ae": { "stage": "planning", "amber": true, "runIds": ["run_d6706d8168ae"], "failed": ["ctx_3ad5ce26a597", "ctx_abd15301f014", "ctx_08c9d1cd52e7", "ctx_fd56ac056ff9"], "why": "Run started", "note": "Tasks point at five Atlas items, so the Run splits; its own tasks keep four failed workers on blocked or failed tasks" }
   },
   "left": [
