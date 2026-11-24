@@ -1,6 +1,6 @@
 // The runner: failure kinds, re-resolve on failure, one call of each kind in flight.
 import { assert, test } from 'orca/testing'
-import { createCliRunner } from '../src/cli/run.ts'
+import { createCliRunner, type ExecCallback, type ExecFileLike } from '../src/cli/run.ts'
 import type { Resolution } from '../src/cli/resolve.ts'
 import { fakeExec, fixture, fixtureText, foundAt } from './helpers.ts'
 
@@ -113,4 +113,24 @@ test('exec that throws synchronously is a spawn failure, not a crash', async () 
   const cli = createCliRunner({ exec: () => { throw new Error('boom') }, resolve: foundAt(PATH), env: () => ({}) })
   const r = await cli.run({ command: 'bot list' })
   assert.equal(!r.ok && r.error.kind, 'spawn')
+})
+
+test('stop: kills the calls still running and refuses new ones (a stopped worker leaves no CLI process)', async () => {
+  let killed = 0
+  let cb: ExecCallback | null = null
+  const exec: ExecFileLike = (_f, _a, _o, callback) => {
+    cb = callback
+    return { kill: () => (killed++, cb?.(Object.assign(new Error('killed'), { killed: true }), '', '')) }
+  }
+  const runner = createCliRunner({ exec, resolve: foundAt(PATH), env: () => ({}) })
+  const p = runner.run({ command: 'bot list' })
+  runner.stop?.()
+  const r = await p
+  assert.equal(killed, 1)
+  assert.equal(r.ok, false)
+  assert.equal(!r.ok && r.error.kind, 'stopped', 'a killed call is reported as stopped, not as a timeout')
+  assert.equal(!r.ok && r.error.message, 'The plugin stopped this call.')
+  const after = await runner.run({ command: 'bot list' })
+  assert.equal(!after.ok && after.error.message, 'The plugin is stopping.')
+  assert.equal(killed, 1, 'a new call after stop ran')
 })

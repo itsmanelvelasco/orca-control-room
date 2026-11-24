@@ -10,6 +10,9 @@ import type { CliFailure, CliResult } from '../../cli/run.ts'
 import { parseBotList, parseBotWorkList, parseGateList, parseRunList, parseRunShow, parseTaskList, parseWorkerList, type PullRequest } from '../../model/index.ts'
 import { buildRunLine, cleanText, emptySnapshot, hasLine, indexPrs, type LineSnapshot, type RunInput } from './model.ts'
 
+/** Thrown inside a refresh when the worker stops; the refresh ends with no error shown. */
+const STOPPED = new Error('stopped')
+
 export const DEFAULT_REFRESH_SECONDS = 20
 /**
  * A refresh counts as due this much before `refreshSeconds` has passed since the last one
@@ -61,6 +64,8 @@ export function createLineRefresher(opts: { cli: LineCli; refreshSeconds?: numbe
 
   const one = async (request: CliRequest): Promise<{ ok: true; result: unknown } | { ok: false; error: CliFailure }> => {
     const r = await opts.cli.run(request)
+    // The worker is stopping: abandon the refresh, keep the last snapshot as it is.
+    if (!r.ok && r.error.kind === 'stopped') throw STOPPED
     return r.ok ? { ok: true, result: r.result } : { ok: false, error: r.error }
   }
 
@@ -147,6 +152,7 @@ export function createLineRefresher(opts: { cli: LineCli; refreshSeconds?: numbe
       lastStart = now()
       running = cycle()
         .catch((e: unknown) => {
+          if (e === STOPPED) return snap
           snap = { ...snap, status: snap.updatedAt === null ? 'error' : snap.status, error: { kind: 'internal', message: cleanText(String(e), 200), tried: [] } }
           return snap
         })

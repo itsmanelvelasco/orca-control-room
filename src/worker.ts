@@ -169,6 +169,8 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
   stop = () => {
     clearInterval(timer)
     if (soon) clearTimeout(soon)
+    // End the CLI calls still running, so a stopped worker leaves no child process behind.
+    cli.stop?.()
   }
   void agentCycle()
   void itemCycle(true)

@@ -55,6 +55,8 @@ export type WaitsData = {
   /** Every Run listed; legacy and unbound Runs with no lists. */
   runs: { run: Run; tasks: Task[]; workers: Worker[]; gates: Gate[] }[]
   waits: Wait[]
+  /** Bot name -> its home workspace (the first `worktree ps` row under it), where its chats open. */
+  homes?: Record<string, string>
 }
 
 /** Where the gates' first-seen times live between worker restarts (gate id -> ms since epoch). */
@@ -140,6 +142,11 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
     if (r.ok) {
       pass.answered = true
       return r.result
+    }
+    // The worker is stopping: end the pass quietly, no banner and no backoff state.
+    if (r.error.kind === 'stopped') {
+      pass.backoff = true
+      return null
     }
     pass.failed = true
     const e = r.error
@@ -352,7 +359,15 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
       bots: [...bots],
       items: [...items.values()].flat(),
       runs: runs.map((run) => ({ run, tasks: tasks.get(run.id) ?? [], workers: workers.get(run.id) ?? [], gates: gates.get(run.id) ?? [] })),
-      waits
+      waits,
+      homes: homesOf(worktrees)
     })
   }
+}
+
+/** Bot name -> the first workspace `worktree ps` lists under it (the same pick as a Waits question row). */
+export function homesOf(worktrees: readonly Worktree[]): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const w of worktrees) if (w.bot && !(w.bot in out)) out[w.bot] = w.worktreeId
+  return out
 }
