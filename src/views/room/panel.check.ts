@@ -37,7 +37,7 @@ const lineNoCli: LineSnapshot = { status: 'error', updatedAt: null, error: { kin
 
 const all = (w: WaitsSnapshot, l: LineSnapshot, a: AgentsSnapshot) => ({ 'waits.get': w, 'line.snapshot': l, 'agents.get': a })
 
-/** Funnel slice 3: the funnel from the demo case, on the dev-only Funnel tab. One scenario only: `plugin check` renders all of a panel's scenarios in about 60 s, and a 9th (the empty funnel) went past it; funnel-view.test.tsx covers the empty case. */
+/** Funnel slice 3: the funnel from the demo case, on the dev-only Funnel tab. funnel-view.test.tsx covers the empty funnel. */
 const funnel = funnelFromCase(caseJson('funnel-demo.json'), now)
 const withFunnel = (f: FunnelSnapshot) => ({ ...all(waits, line, agents), 'funnel.snapshot': f, 'funnel.open': { opened: true } })
 const onFunnel = { plugin: { 'room.tab': 'funnel', 'room.devFunnel': true } }

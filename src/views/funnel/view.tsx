@@ -3,7 +3,7 @@
 // and a detail per card (tasks, workers, gates, PRs). Pure: no host calls, so tests mount it with
 // any snapshot. Every text from the CLI arrives cut by the model and is drawn as text children,
 // never as Markdown or HTML. Presses only open or focus (R6), through the callbacks.
-import { Badge, Box, Button, Callout, Collapsible, Grid, Heading, IconButton, Link, Row, Skeleton, Stack, Text, type Tone } from 'orca'
+import { atom, Badge, Box, Button, Callout, Collapsible, Grid, Heading, IconButton, Link, read, Row, Skeleton, Stack, Text, update, type Tone } from 'orca'
 import { agoNow } from '../time.ts'
 import type { Wait } from '../waits/collect.ts'
 import { STAGES, type FunnelDetails, type FunnelWorker, type Piece, type Stage } from './model.ts'
@@ -11,6 +11,10 @@ import type { FunnelSnapshot } from './refresh.ts'
 
 /** Each column shows this many cards, then "+N more" (PRD section 5). */
 export const MAX_CARDS = 20
+
+/** Cards whose detail is open. A closed detail is not drawn at all, so 200 cards stay a small tree. */
+export const openDetails = atom<string[]>([])
+const toggleDetail = (key: string, open: boolean): void => update(openDetails, (keys) => (open ? (keys.includes(key) ? keys : [...keys, key]) : keys.filter((k) => k !== key)))
 
 export const STAGE_LABEL: Record<Stage, string> = { ideation: 'Ideation', planning: 'Planning', execution: 'Execution', shipping: 'Shipping' }
 /** What each column means, under its name. Shipping is merged only until a deploy source exists. */
@@ -139,6 +143,7 @@ function Detail({ p, details, actions }: { p: Piece; details: FunnelDetails; act
 }
 
 export function PieceCard({ p, details, actions }: { p: Piece; details: FunnelDetails; actions: FunnelActions }) {
+  const open = read(openDetails).includes(p.key)
   const prs = prLine(p)
   return (
     <Box key={`piece:${p.key}`} border={p.amber ? 'warning' : true} background={p.amber ? 'warning' : 'card'} radius="md" padding="sm" gap="xs">
@@ -183,8 +188,8 @@ export function PieceCard({ p, details, actions }: { p: Piece; details: FunnelDe
           Could not open it.
         </Text>
       ) : null}
-      <Collapsible key={`detail:${p.key}`} title="Details" defaultOpen={false}>
-        <Detail p={p} details={details} actions={actions} />
+      <Collapsible key={`detail:${p.key}`} title="Details" open={open} onChange={(o) => toggleDetail(p.key, o)}>
+        {open ? <Detail p={p} details={details} actions={actions} /> : null}
       </Collapsible>
     </Box>
   )
