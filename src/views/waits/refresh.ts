@@ -42,6 +42,21 @@ export type WaitsSnapshot = {
 
 export type RunCli = (request: CliRequest) => Promise<CliResult>
 
+/**
+ * What the Waits loops last read, for the Funnel (funnel slice 2): it builds from these and reads
+ * only what Waits does not (closed items, bot work), so it adds no call for data Waits has.
+ */
+export type WaitsData = {
+  /** When the last pass ended; null before the first. */
+  updatedAt: number | null
+  bots: Bot[]
+  /** Open items of every bot not paused. */
+  items: BotItem[]
+  /** Every Run listed; legacy and unbound Runs with no lists. */
+  runs: { run: Run; tasks: Task[]; workers: Worker[]; gates: Gate[] }[]
+  waits: Wait[]
+}
+
 /** Where the gates' first-seen times live between worker restarts (gate id -> ms since epoch). */
 export type SeenStore = { load(): Promise<unknown>; save(seen: Record<string, number>): Promise<unknown> }
 
@@ -55,6 +70,8 @@ export type WaitsRefresher = {
   /** An `agent.status.changed` payload: updates the list at once, no CLI call. */
   onAgentEvent(e: AgentStatusEvent): void
   snapshot(): WaitsSnapshot
+  /** The last good data of every source, as plain lists. No CLI call. */
+  data(): WaitsData
 }
 
 /** One pass of one loop: whether a call failed, a backoff-class failure stops it, a call answered. */
@@ -62,7 +79,7 @@ type Pass = { failed: boolean; backoff: boolean; answered: boolean }
 
 const isBackoff = (e: CliFailure): boolean => e.kind === 'not_found' || e.kind === 'spawn' || (e.kind === 'cli_error' && e.code === 'runtime_unavailable')
 
-export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; onChange?: (s: WaitsSnapshot) => void; cliPath?: () => string | null; seen?: SeenStore }): WaitsRefresher {
+export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; onChange?: (s: WaitsSnapshot) => void; onData?: () => void; cliPath?: () => string | null; seen?: SeenStore }): WaitsRefresher {
   const now = deps.now ?? Date.now
   const busy = new Set<string>()
   let bots: Bot[] = []
@@ -102,6 +119,12 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
     if (sig !== last) {
       last = sig
       deps.onChange?.(snap)
+    }
+    // Every pass and agent event, changed or not: the funnel builds from more than the waits.
+    try {
+      deps.onData?.()
+    } catch {
+      // A funnel failure never stops the waits.
     }
   }
 
@@ -323,6 +346,13 @@ export function createWaitsRefresher(deps: { run: RunCli; now?: () => number; on
       while (events.size > MAX_EVENTS) events.delete(events.keys().next().value as string)
       recompute()
     },
-    snapshot
+    snapshot,
+    data: () => ({
+      updatedAt,
+      bots: [...bots],
+      items: [...items.values()].flat(),
+      runs: runs.map((run) => ({ run, tasks: tasks.get(run.id) ?? [], workers: workers.get(run.id) ?? [], gates: gates.get(run.id) ?? [] })),
+      waits
+    })
   }
 }
