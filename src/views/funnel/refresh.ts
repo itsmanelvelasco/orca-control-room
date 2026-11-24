@@ -4,9 +4,10 @@
 // gates, the waits, agent events), so the funnel adds no call for it. The funnel reads only the
 // two sources Waits does not: closed items (`bot item list --all`) and each bot's workers with
 // their PRs (`bot work list`). Those reads run only while a panel asks (the Funnel tab is
-// visible), at most every `refreshSeconds` (20 s), one bot at a time per kind; the worker passes
-// a runner that also keeps other loops' calls of the same kind from running at once
-// (src/cli/turns.ts). A failed call keeps that bot's last good rows and says so in a note.
+// visible), at most every `refreshSeconds` (20 s), one bot at a time per source, and only once
+// Waits has read. They never queue in front of Waits: an identical call shares the one running
+// (the runner merges by argv), any other runs alongside. A failed call keeps that bot's last good
+// rows and says so in a note; a timeout or a missing CLI stops that source for the turn.
 // A change of the Waits data (a new read or an agent event) rebuilds the funnel at once, with no
 // call, while a panel is watching.
 
@@ -59,8 +60,8 @@ export type FunnelRefresher = {
 
 export const emptyFunnel = (): Funnel => ({ pieces: [], columns: Object.fromEntries(STAGES.map((s) => [s, []])) as unknown as Funnel['columns'], unlinkedWaits: [], left: [], looseWorks: [] })
 
-/** CLI missing or Orca not answering: the rest of that lane makes no more calls this turn. */
-const isStop = (e: CliFailure): boolean => e.kind === 'not_found' || e.kind === 'spawn' || (e.kind === 'cli_error' && e.code === 'runtime_unavailable')
+/** CLI missing, Orca not answering or a call timed out (10 s): the rest of that lane makes no more calls this turn. */
+const isStop = (e: CliFailure): boolean => e.kind === 'timeout' || e.kind === 'not_found' || e.kind === 'spawn' || (e.kind === 'cli_error' && e.code === 'runtime_unavailable')
 
 export function createFunnelRefresher(opts: {
   run: FunnelCli
@@ -71,10 +72,14 @@ export function createFunnelRefresher(opts: {
 }): FunnelRefresher {
   const now = opts.now ?? Date.now
   const refreshSeconds = opts.refreshSeconds ?? DEFAULT_REFRESH_SECONDS
-  /** Last good rows per bot id. */
-  const allItems = new Map<string, BotItem[]>()
+  /** Last good rows per bot id. Closed items only: Waits holds the open ones. */
+  const closedItems = new Map<string, BotItem[]>()
   const works = new Map<string, BotWork[]>()
-  let notes: string[] = []
+  /** Notes of the last read, one per source that failed. */
+  let readNotes: string[] = []
+  /** Set while the build fails, cleared by a good build; never stacks. */
+  let buildNote: string | null = null
+  /** When the last real read ended: one made after Waits had read. Null until then (`loading`). */
   let readAt: number | null = null
   let lastStart = -Infinity
   let lastEnd = -Infinity
@@ -86,7 +91,9 @@ export function createFunnelRefresher(opts: {
   let sig = ''
   let snap: FunnelSnapshot = { status: 'loading', version, updatedAt: null, waitsAt: null, funnel: emptyFunnel(), notes: [], buildMs: 0, refreshSeconds }
 
-  const due = (): boolean => now() - lastStart >= refreshSeconds * 1000 - SLACK_MS && now() - lastEnd >= MIN_GAP_MS
+  const gapOk = (): boolean => now() - lastEnd >= MIN_GAP_MS
+  const due = (): boolean => now() - lastStart >= refreshSeconds * 1000 - SLACK_MS && gapOk()
+  const watching = (): boolean => now() - lastAsk <= WATCH_MS
 
   /** Builds from the Waits data and the last good funnel reads; posts when the result changed. */
   const build = (): FunnelSnapshot => {
@@ -95,22 +102,24 @@ export function createFunnelRefresher(opts: {
     // Open items: Waits reads them every 4 s, so its copy wins. Closed items: the `--all` read.
     const open = new Set(w.items.map((i) => i.uid))
     const items = [...w.items]
-    for (const list of allItems.values()) for (const i of list) if (!open.has(i.uid)) items.push(i)
+    for (const list of closedItems.values()) for (const i of list) if (!open.has(i.uid)) items.push(i)
     const t0 = performance.now()
     let funnel: Funnel
     try {
       funnel = buildFunnel({ items, works: [...works.values()].flat(), runs: w.runs, waits: w.waits, now: now() })
+      buildNote = null
     } catch (e) {
-      notes = [...notes, `funnel build failed: ${cleanText(String((e as Error)?.message ?? e), 160)}`]
+      buildNote = `funnel build failed: ${cleanText(String((e as Error)?.message ?? e), 160)} (showing the last good funnel)`
       funnel = snap.funnel
     }
     const buildMs = Math.round((performance.now() - t0) * 10) / 10
     const status = w.updatedAt !== null && readAt !== null ? 'ok' : 'loading'
+    const notes = buildNote ? [...readNotes, buildNote] : [...readNotes]
     const body = { status, updatedAt: readAt, waitsAt: w.updatedAt, funnel, notes, refreshSeconds } as const
     const next = JSON.stringify(body)
     if (next !== sig) {
       sig = next
-      snap = { ...body, notes: [...notes], version: ++version, buildMs }
+      snap = { ...body, version: ++version, buildMs }
       try {
         opts.onChange?.(snap)
       } catch {
@@ -142,19 +151,35 @@ export function createFunnelRefresher(opts: {
     return failed ? `${label} failed for ${failed} bot${failed === 1 ? '' : 's'}: ${first} (showing the last good data)` : null
   }
 
-  async function read(): Promise<void> {
-    const w = opts.waits()
+  const closedOnly = (r: unknown): BotItem[] => parseBotItemList(r).items.filter((i) => i.status === 'done' || i.status === 'canceled')
+
+  async function read(w: WaitsData): Promise<void> {
     const bots = w.bots.filter((b) => !b.paused && isBotId(b.id)).slice(0, MAX_BOTS).map((b) => b.id)
-    // A bot no longer listed (or paused) drops its rows; before Waits lists bots, keep all.
-    if (w.updatedAt !== null) {
-      for (const m of [allItems, works] as Map<string, unknown>[]) for (const k of [...m.keys()]) if (!bots.includes(k)) m.delete(k)
-    }
+    // A bot no longer listed (or paused) drops its rows.
+    for (const m of [closedItems, works] as Map<string, unknown>[]) for (const k of [...m.keys()]) if (!bots.includes(k)) m.delete(k)
     const [a, b] = await Promise.all([
-      lane(bots, (bot) => ({ command: 'bot item list', bot, all: true }), (r) => parseBotItemList(r).items, allItems, 'closed items: bot item list --all'),
+      lane(bots, (bot) => ({ command: 'bot item list', bot, all: true }), closedOnly, closedItems, 'closed items: bot item list --all'),
       lane(bots, (bot) => ({ command: 'bot work list', bot }), (r) => parseBotWorkList(r).items, works, 'bot work: bot work list')
     ])
-    notes = [a, b].filter((n): n is string => n !== null)
-    readAt = now()
+    readNotes = [a, b].filter((n): n is string => n !== null)
+  }
+
+  /** Starts a read; only once Waits has read, so the bots are known and the result is real. */
+  const start = (): Promise<FunnelSnapshot> => {
+    const w = opts.waits()
+    if (w.updatedAt === null) return Promise.resolve(dirty ? build() : snap)
+    lastStart = now()
+    running = read(w)
+      .catch((e: unknown) => {
+        readNotes = [`funnel read failed: ${cleanText(String((e as Error)?.message ?? e), 160)}`]
+      })
+      .then(() => {
+        readAt = now()
+        lastEnd = now()
+        running = null
+        return build()
+      })
+    return running
   }
 
   return {
@@ -162,24 +187,19 @@ export function createFunnelRefresher(opts: {
     refresh(force = false) {
       lastAsk = now()
       if (running) return running
-      if (!force && !due()) return Promise.resolve(dirty ? build() : snap)
-      lastStart = now()
-      running = read()
-        .catch((e: unknown) => {
-          notes = [`funnel read failed: ${cleanText(String((e as Error)?.message ?? e), 160)}`]
-          readAt ??= now()
-        })
-        .then(() => {
-          lastEnd = now()
-          running = null
-          return build()
-        })
-      return running
+      // `force` skips the 20 s wait, never the 2 s gap: repeated clicks do not stack reads.
+      if (force ? !gapOk() : !due()) return Promise.resolve(dirty ? build() : snap)
+      return start()
     },
     onWaitsChanged() {
       dirty = true
       // No panel watching: the next ask builds, so a hidden tab costs no build either.
-      if (now() - lastAsk > WATCH_MS) return
+      if (!watching()) return
+      // Waits just read for the first time while a panel waits: read now, not 20 s later.
+      if (readAt === null && !running && opts.waits().updatedAt !== null) {
+        void start()
+        return
+      }
       build()
     }
   }

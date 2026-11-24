@@ -6,11 +6,11 @@
 //   keeps the status bar count.
 // - The shipping line (R6): src/views/line.
 // - The Agents view (R7): src/views/agents, no CLI.
-// - The funnel: src/views/funnel. Every CLI call goes through `inTurns`: one call per command at a time.
+// - The funnel: src/views/funnel, built from the Waits data.
 import type { OrcaWorkerApi } from 'orca/worker'
 import './protocol.ts'
 import { createHostCliRunner } from './cli/index.ts'
-import { inTurns } from './cli/turns.ts'
+import type { CliRequest } from './cli/commands.ts'
 import { parseBotList, type AgentStatusEvent } from './model/index.ts'
 import { createNotifier, NOTIFIED_KEY, NOTIFY_SETTING, STATUS_ITEM, statusBarOf } from './notify.ts'
 import { createWaitsRefresher, FAST_MS, SLOW_EVERY, type WaitsSnapshot } from './views/waits/refresh.ts'
@@ -44,8 +44,9 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
   // Key names only, never values: enough to see what Orca's worker env lacks.
   orca.log(`worker env: platform=${process.platform} node=${process.version} keys=${Object.keys(process.env).sort().join(',')}`)
   const cli = runtime.createRunner(() => setting)
-  // Waits, the Shipping line and the funnel share the CLI: a call waits while one of its kind runs.
-  const run = inTurns((r) => cli.run(r))
+  // Waits, the Shipping line and the funnel share one runner: an identical call (same argv) made
+  // while one runs gets that call's answer (src/cli/run.ts), so overlapping loops run it once.
+  const run = (r: CliRequest) => cli.run(r)
   orca.settings.onDidChange(() => {
     void readSettings().then(() => cli.reset())
   })
