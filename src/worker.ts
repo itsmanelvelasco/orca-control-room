@@ -1,19 +1,22 @@
 // Control Room worker. Slice 1: the CLI bridge. Slice 2: waits on you. Slice 3: the shipping line.
-// Slice 4: the Agents view.
+// Slice 4: the Agents view. Funnel slice 2: the funnel, built from the Waits data.
 // - `cli.status`: the CLI path and one timed `bot list` (slice 1's live check).
 // - Waits on you (R4, R5, R9): refreshes every 4 s and on each agent event, answers `waits.get`,
 //   posts `waits.changed`, opens a wait's place on `waits.open`, notifies new waits once, and
 //   keeps the status bar count.
 // - The shipping line (R6): src/views/line.
 // - The Agents view (R7): src/views/agents, no CLI.
+// - The funnel: src/views/funnel, built from the Waits data.
 import type { OrcaWorkerApi } from 'orca/worker'
 import './protocol.ts'
 import { createHostCliRunner } from './cli/index.ts'
+import type { CliRequest } from './cli/commands.ts'
 import { parseBotList, type AgentStatusEvent } from './model/index.ts'
 import { createNotifier, NOTIFIED_KEY, NOTIFY_SETTING, STATUS_ITEM, statusBarOf } from './notify.ts'
 import { createWaitsRefresher, FAST_MS, SLOW_EVERY, type WaitsSnapshot } from './views/waits/refresh.ts'
 import { registerLine } from './views/line/worker.ts'
 import { registerAgents } from './views/agents/worker.ts'
+import { registerFunnel } from './views/funnel/worker.ts'
 
 export const ORCA_CLI_SETTING = 'orcaCli'
 /** Gate id -> when this plugin first saw it, so a restart keeps "since". */
@@ -41,12 +44,15 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
   // Key names only, never values: enough to see what Orca's worker env lacks.
   orca.log(`worker env: platform=${process.platform} node=${process.version} keys=${Object.keys(process.env).sort().join(',')}`)
   const cli = runtime.createRunner(() => setting)
+  // Waits, the Shipping line and the funnel share one runner: an identical call (same argv) made
+  // while one runs gets that call's answer (src/cli/run.ts), so overlapping loops run it once.
+  const run = (r: CliRequest) => cli.run(r)
   orca.settings.onDidChange(() => {
     void readSettings().then(() => cli.reset())
   })
 
   const status = async () => {
-    const r = await cli.run({ command: 'bot list' })
+    const r = await run({ command: 'bot list' })
     const res = cli.lastResolution()
     const cur = cli.current()
     const out = {
@@ -64,7 +70,7 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
   orca.panels.handle('cli.status', status)
   registerAgents(orca)
 
-  registerLine(orca, cli)
+  registerLine(orca, { run })
 
   // One timed `bot list` at start: finds the path for the footer early and leaves a line in
   // `orca plugin logs` that shows the CLI answers from this worker (installed plugins take no dev request).
@@ -87,12 +93,16 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
     }
     void notifier.update(snap.waits, snap.primed).catch(() => undefined)
   }
+  let funnel: ReturnType<typeof registerFunnel> | null = null
   const refresher = createWaitsRefresher({
-    run: (r) => cli.run(r),
+    run,
     onChange,
+    onData: () => funnel?.onWaitsChanged(),
     cliPath: () => cli.current()?.path ?? null,
     seen: { load: () => orca.storage.get(GATES_SEEN_KEY), save: (seen) => orca.storage.set(GATES_SEEN_KEY, seen) }
   })
+
+  funnel = registerFunnel(orca, run, () => refresher.data())
 
   orca.panels.handle('waits.get', () => refresher.snapshot())
   orca.panels.handle('waits.open', async (input) => {
