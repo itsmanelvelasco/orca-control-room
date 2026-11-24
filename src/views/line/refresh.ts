@@ -3,8 +3,10 @@
 // what it would have read and says why (PRD 5). Read only: every call is an allow-listed read
 // (src/cli/commands.ts).
 
-import type { CliFailure, CliRequest, CliResult } from '../../cli/index.ts'
-import { isBotId } from '../../cli/index.ts'
+// The panel imports this file, so it takes the CLI's pure parts only: src/cli/index.ts pulls in
+// node:child_process, which a panel cannot load (test/panel-imports.test.ts).
+import { isBotId, type CliRequest } from '../../cli/commands.ts'
+import type { CliFailure, CliResult } from '../../cli/run.ts'
 import { parseBotList, parseBotWorkList, parseGateList, parseRunList, parseRunShow, parseTaskList, parseWorkerList, type PullRequest } from '../../model/index.ts'
 import { buildRunLine, cleanText, emptySnapshot, hasLine, indexPrs, type LineSnapshot, type RunInput } from './model.ts'
 
