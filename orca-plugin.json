@@ -23,6 +23,13 @@
         "icon": "bell",
         "entry": "src/views/room/panel.tsx",
         "ui": "components"
+      },
+      {
+        "id": "funnel-graph",
+        "title": "Funnel graph",
+        "icon": "activity",
+        "entry": "src/views/graph/page/index.html",
+        "ui": "html"
       }
     ],
     "statusBarItems": [

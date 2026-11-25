@@ -7,6 +7,8 @@
 // - The shipping line (R6): src/views/line.
 // - The Agents view (R7): src/views/agents, no CLI.
 // - The funnel: src/views/funnel, built from the Waits data.
+// - The Funnel graph panel (funnel slice 4): src/views/graph, built from the funnel; bot pictures
+//   are read here and sent to the panel as data.
 import type { OrcaWorkerApi } from 'orca/worker'
 import './protocol.ts'
 import { createHostCliRunner } from './cli/index.ts'
@@ -17,13 +19,15 @@ import { createWaitsRefresher, FAST_MS, SLOW_EVERY, type WaitsSnapshot } from '.
 import { registerLine } from './views/line/worker.ts'
 import { registerAgents } from './views/agents/worker.ts'
 import { registerFunnel } from './views/funnel/worker.ts'
+import { registerGraph } from './views/graph/worker.ts'
+import type { PictureDeps } from './views/graph/mascots.ts'
 
 export const ORCA_CLI_SETTING = 'orcaCli'
 /** Gate id -> when this plugin first saw it, so a restart keeps "since". */
 export const GATES_SEEN_KEY = 'waits.gatesSeen'
 
 /** Seams for the worker test: a fake CLI runner and timers. Orca never changes them. */
-export const runtime = { createRunner: createHostCliRunner, setInterval, setTimeout }
+export const runtime = { createRunner: createHostCliRunner, setInterval, setTimeout, pictureDeps: undefined as (() => PictureDeps) | undefined }
 
 let stop: (() => void) | null = null
 
@@ -103,6 +107,7 @@ export default async function activate(orca: OrcaWorkerApi): Promise<void> {
   })
 
   funnel = registerFunnel(orca, run, () => refresher.data())
+  registerGraph(orca, funnel, () => refresher.data(), runtime.pictureDeps)
 
   orca.panels.handle('waits.get', () => refresher.snapshot())
   orca.panels.handle('waits.open', async (input) => {

@@ -24,9 +24,9 @@ async function hostWithCounts() {
   return { host, asks, waits }
 }
 
-test('PRD goal: the manifest has one panel, Control Room, and the status bar item', () => {
+test('PRD goal: the manifest has the Control Room panel, the Funnel graph panel (funnel slice 4) and the status bar item', () => {
   const m = JSON.parse(readFileSync(new URL('../orca-plugin.json', import.meta.url), 'utf8')) as { contributes: { panels: { id: string; entry: string }[]; statusBarItems: { id: string }[] } }
-  assert.deepEqual(m.contributes.panels.map((p) => [p.id, p.entry]), [['control-room', 'src/views/room/panel.tsx']])
+  assert.deepEqual(m.contributes.panels.map((p) => [p.id, p.entry]), [['control-room', 'src/views/room/panel.tsx'], ['funnel-graph', 'src/views/graph/page/index.html']])
   assert.deepEqual(m.contributes.statusBarItems.map((s) => s.id), ['waits'])
 })
 

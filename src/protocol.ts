@@ -3,8 +3,11 @@ import type { LineSnapshot } from './views/line/model.ts'
 import type { WaitsSnapshot } from './views/waits/refresh.ts'
 import type { AgentsSnapshot } from './views/agents/model.ts'
 import type { FunnelSnapshot } from './views/funnel/refresh.ts'
+import type { GraphSnapshot } from './views/graph/worker.ts'
+import type { Picture } from './views/graph/mascots.ts'
 
-export type { LineSnapshot, WaitsSnapshot, AgentsSnapshot, FunnelSnapshot }
+export type { LineSnapshot, WaitsSnapshot, AgentsSnapshot, FunnelSnapshot, GraphSnapshot, Picture }
+export type { Graph, GraphNode, GraphBot, Wire } from './views/graph/model.ts'
 export type { Funnel, FunnelDetails, Piece, Stage } from './views/funnel/model.ts'
 export type { Wait, WaitTarget } from './views/waits/collect.ts'
 
@@ -28,6 +31,12 @@ declare module 'orca' {
     'funnel.snapshot': { input?: { force?: boolean; version?: number }; output: FunnelSnapshot | null }
     /** Funnel slice 3 (R6): opens or focuses a card's place. Takes a piece key, plus a dispatch id for one of its workers; the worker looks up where it goes. Nothing is written. */
     'funnel.open': { input: { key: string; dispatchId?: string }; output: { opened: boolean; reason?: 'unknown' | 'no_target' | 'failed' } }
+    /** Funnel slice 4: the Funnel graph panel's graph, built from the funnel. Same reads and `null` answer as `funnel.snapshot`. */
+    'graph.snapshot': { input?: { force?: boolean; version?: number }; output: GraphSnapshot | null }
+    /** Funnel slice 4 (R9): each bot's picture signature, by bot id and by `name:<bot name>`; null when it has none (draw the initial). Scans at most once a minute; a signature changes when its file changes. */
+    'graph.pictures': { output: { sigs: Record<string, string | null> } }
+    /** Funnel slice 4 (R9): one picture as a `data:` URL (at most 128 KB of file), with its signature. One per answer, so an answer stays far below 256 KiB. */
+    'graph.picture': { input: { key: string }; output: { key: string; sig: string | null; picture: Picture | null } }
     /** R4: the waits as the worker last read them. */
     'waits.get': { output: WaitsSnapshot }
     /** Opens or focuses the place of one wait. Takes only the row key; the worker looks up where it goes. */

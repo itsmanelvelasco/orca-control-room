@@ -1,0 +1,102 @@
+/* Funnel graph panel (funnel slice 4). Our own styles. Orca puts `light` or `dark` on <html>;
+   with neither, the system's choice decides. Amber = waits on you, blue = active, grey = done. */
+:root {
+  --bg: #ffffff; --card: #f6f7f9; --line: #d5dae1; --text: #1b1f24; --muted: #5b6573;
+  --amber: #b45309; --amber-bg: #fff4e5; --blue: #1d63c9; --blue-bg: #eaf2fd; --grey: #8a94a0;
+  --letter-bg: #e3e7ec; --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --bg: #16191d; --card: #1f2329; --line: #343a43; --text: #e6e9ee; --muted: #9aa4b1;
+    --amber: #f5a524; --amber-bg: #3a2a10; --blue: #5aa6ff; --blue-bg: #14273f; --grey: #6b7480;
+    --letter-bg: #2c323a; color-scheme: dark;
+  }
+}
+html.dark {
+  --bg: #16191d; --card: #1f2329; --line: #343a43; --text: #e6e9ee; --muted: #9aa4b1;
+  --amber: #f5a524; --amber-bg: #3a2a10; --blue: #5aa6ff; --blue-bg: #14273f; --grey: #6b7480;
+  --letter-bg: #2c323a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body { font: 13px/1.4 var(--font); padding: 12px; }
+h1 { font-size: 15px; margin: 0; }
+h2 { font-size: 13px; margin: 14px 0 6px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.muted { color: var(--muted); }
+
+.top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.status { color: var(--muted); flex: 1; }
+.refresh { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+.notes p { margin: 6px 0 0; color: var(--amber); }
+
+.unlinked:empty { display: none; }
+.unlinked-row { display: block; width: 100%; text-align: left; margin: 0 0 4px; padding: 6px 10px; cursor: pointer;
+  background: var(--amber-bg); border: 1px solid var(--amber); border-radius: 6px; }
+.unlinked-row b { color: var(--amber); }
+
+.scroll { overflow-x: auto; margin-top: 10px; }
+.graph { display: block; font-family: var(--font); }
+.graph text { fill: var(--text); font-size: 12px; }
+.col-title { font-weight: 600; font-size: 13px !important; }
+.col-count { fill: var(--muted); font-weight: 400; }
+.col-wait { fill: var(--amber); font-weight: 600; }
+.more, .empty { fill: var(--muted) !important; }
+
+.card { fill: var(--card); stroke: var(--line); stroke-width: 1; }
+.you .card { stroke-width: 2; }
+.you-text { font-weight: 700; font-size: 14px !important; }
+.bot .name { font-weight: 600; }
+.bot .sub { fill: var(--muted) !important; font-size: 11px !important; }
+.face-bg { fill: var(--letter-bg); }
+.face-letter { fill: var(--letter-bg); stroke: var(--line); }
+.letter { font-weight: 700; font-size: 15px !important; fill: var(--muted) !important; }
+
+.node { cursor: pointer; }
+.node .title { font-weight: 600; }
+.node .bar { fill: var(--grey); stroke: none; }
+.node.w-waiting .card { stroke: var(--amber); stroke-width: 2; fill: var(--amber-bg); }
+.node.w-waiting .bar, .bot.w-waiting .card, .you.w-waiting .card { fill: var(--amber); }
+.bot.w-waiting .card, .you.w-waiting .card { fill: var(--amber-bg); stroke: var(--amber); stroke-width: 2; }
+.node.w-active .bar { fill: var(--blue); }
+.bot.w-active .card, .you.w-active .card { stroke: var(--blue); }
+.node:hover .card { stroke: var(--text); }
+
+.chip rect { fill: var(--bg); stroke: var(--line); }
+.chip text { font-size: 10.5px !important; fill: var(--muted) !important; }
+.chip[role="button"] { cursor: pointer; }
+.chip-run rect { stroke: var(--blue); } .chip-run text { fill: var(--blue) !important; }
+.chip-fail rect { stroke: var(--amber); } .chip-fail text { fill: var(--amber) !important; }
+.pr-open rect, .pr-draft rect { stroke: var(--blue); }
+
+/* Wires: dashed; amber and blue flow, grey stands still. */
+.wire { fill: none; stroke-width: 2; stroke-dasharray: 6 5; stroke-linecap: round; }
+.wire.w-waiting { stroke: var(--amber); animation: flow 0.9s linear infinite; }
+.wire.w-active { stroke: var(--blue); animation: flow 1.6s linear infinite; }
+.wire.w-done { stroke: var(--grey); opacity: 0.7; }
+@keyframes flow { to { stroke-dashoffset: -11; } }
+.node.w-waiting .card { animation: glow 2s ease-in-out infinite; }
+@keyframes glow { 50% { stroke-opacity: 0.45; } }
+
+/* The OS asks for less motion: everything stands still (R5 AC). */
+@media (prefers-reduced-motion: reduce) {
+  .wire, .node .card { animation: none !important; }
+}
+
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; color: var(--muted); }
+.legend .key { display: inline-flex; align-items: center; gap: 6px; }
+.legend .wire { animation: none; }
+
+.doing:empty { display: none; }
+.doing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.doing-card { display: flex; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-left: 4px solid var(--grey);
+  border-radius: 8px; background: var(--card); min-width: 0; }
+.doing-card[role="button"] { cursor: pointer; }
+.doing-card.w-waiting { border-left-color: var(--amber); }
+.doing-card.w-active { border-left-color: var(--blue); }
+.doing-text { display: flex; flex-direction: column; min-width: 0; }
+.doing-text > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pic { width: 32px; height: 32px; border-radius: 50%; flex: none; object-fit: cover; background: var(--letter-bg); }
+.letter-pic { display: inline-flex; align-items: center; justify-content: center; font-weight: 700; color: var(--muted); }
