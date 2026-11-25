@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Funnel graph</title>
+    <link rel="stylesheet" href="./graph.css" />
+  </head>
+  <body>
+    <header class="top">
+      <h1>Funnel graph</h1>
+      <span class="status" id="status" aria-live="polite">reading…</span>
+      <button type="button" class="refresh" id="refresh" title="Read the funnel again now">Refresh</button>
+    </header>
+    <div class="notes" id="notes"></div>
+    <section class="unlinked" id="unlinked" aria-label="Waits no piece of work holds"></section>
+    <div class="scroll" id="graph"></div>
+    <div class="legend" id="legend" aria-label="Wire colours"></div>
+    <section class="doing" id="doing" aria-label="What the bots are doing"></section>
+    <script type="module" src="./page.js"></script>
+  </body>
+</html>

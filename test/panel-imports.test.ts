@@ -20,9 +20,24 @@ export function runtimeImports(text: string): string[] {
   return found
 }
 
-/** Why a frame cannot load `spec` from file `from` (a path from the repo root), or null. */
-export function frameRefusal(from: string, spec: string, exists: (path: string) => boolean): string | null {
-  if (spec === 'orca' || spec.startsWith('orca/')) return null
+/** The files an HTML entry loads: every `<script src>` and `<link href>`. Inline script counts as a refusal. */
+export function htmlRefs(text: string): string[] {
+  const found: string[] = []
+  for (const m of text.matchAll(/<script\b([^>]*)>/gi)) {
+    const src = /\ssrc\s*=\s*["']([^"']+)["']/i.exec(m[1])
+    found.push(src ? src[1] : 'inline:<script>')
+  }
+  for (const m of text.matchAll(/<link\b[^>]*\shref\s*=\s*["']([^"']+)["']/gi)) found.push(m[1])
+  return found
+}
+
+/**
+ * Why a frame cannot load `spec` from file `from` (a path from the repo root), or null. An HTML
+ * panel (funnel slice 4) gets Orca's API as the global `orca`: it is served no `orca` module.
+ */
+export function frameRefusal(from: string, spec: string, exists: (path: string) => boolean, html = false): string | null {
+  if (spec.startsWith('inline:')) return 'an inline script: an HTML panel loads its code from files'
+  if (spec === 'orca' || spec.startsWith('orca/')) return html ? `"${spec}" is not served to an HTML panel: use the global orca` : null
   if (/^[a-z][a-z0-9+.-]*:/i.test(spec)) return `"${spec}" is not a file: a panel frame cannot fetch it`
   if (!spec.startsWith('./') && !spec.startsWith('../')) return `"${spec}" is a package: plugins load without a bundler`
   const path = new URL(spec, new URL(from, 'file:///r/')).pathname.slice('/r/'.length)
@@ -34,12 +49,14 @@ export function panelGraphRefusals(entry: string, read: (path: string) => string
   const bad: string[] = []
   const seen = new Set<string>()
   const queue = [entry]
+  const html = entry.endsWith('.html')
   while (queue.length > 0) {
     const file = queue.shift() as string
     if (seen.has(file)) continue
     seen.add(file)
-    for (const spec of runtimeImports(read(file))) {
-      const why = frameRefusal(file, spec, exists)
+    const specs = file.endsWith('.html') ? htmlRefs(read(file)).map((r) => (r.startsWith('inline:') || /^[a-z][a-z0-9+.-]*:|^\.{0,2}\//i.test(r) ? r : `./${r}`)) : file.endsWith('.css') ? [] : runtimeImports(read(file))
+    for (const spec of specs) {
+      const why = frameRefusal(file, spec, exists, html)
       if (why) bad.push(`${file}: ${why}`)
       else if (spec.startsWith('.')) queue.push(new URL(spec, new URL(file, 'file:///r/')).pathname.slice('/r/'.length))
     }
@@ -70,6 +87,20 @@ test('the panel import walk catches each refused import (so a pass means somethi
     'src/cli/index.ts: "node:child_process" is not a file: a panel frame cannot fetch it',
     'src/b.ts: "lodash" is a package: plugins load without a bundler',
     'src/side.ts: "./gone.ts" is not in the plugin'
+  ])
+  // An HTML entry (funnel slice 4): its scripts and styles are followed; inline script, an outside
+  // URL and an `orca` module import are refused (the page gets the global `orca`).
+  const page: Record<string, string> = {
+    'p/index.html': '<link rel="stylesheet" href="./a.css"><script type="module" src="./main.js"></script><script>alert(1)</script><script src="https://cdn.example.com/x.js"></script>',
+    'p/a.css': '',
+    'p/main.js': "import { plugin } from 'orca'\nimport { d } from './draw.js'\n",
+    'p/draw.js': "import fs from 'node:fs'\n"
+  }
+  assert.deepEqual(panelGraphRefusals('p/index.html', (f) => page[f] ?? '', (f) => f in page), [
+    'p/index.html: an inline script: an HTML panel loads its code from files',
+    'p/index.html: "https://cdn.example.com/x.js" is not a file: a panel frame cannot fetch it',
+    'p/main.js: "orca" is not served to an HTML panel: use the global orca',
+    'p/draw.js: "node:fs" is not a file: a panel frame cannot fetch it'
   ])
   // A type-only import is erased, so a type from a Node-only file is fine.
   assert.deepEqual(runtimeImports("import type { CliResult } from '../../cli/index.ts'"), [])
