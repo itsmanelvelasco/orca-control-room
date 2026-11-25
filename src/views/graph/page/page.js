@@ -68,13 +68,45 @@ async function ask(force = false) {
   }
 }
 
+/** Picture signature per key, for the pictures held: a key is asked again only when it changes. */
+/** @type {Record<string, string>} */
+const held = {}
+
+/**
+ * Asks the signatures, then one picture per key the graph shows whose signature changed. One
+ * picture per answer keeps each answer far below the panel message size.
+ */
+let picturesBusy = false
 async function askPictures() {
+  if (picturesBusy) return
+  picturesBusy = true
   try {
     const r = await api.plugin.request('graph.pictures')
-    pictures = r && typeof r.pictures === 'object' && r.pictures ? r.pictures : {}
-    draw()
+    const sigs = r && typeof r.sigs === 'object' && r.sigs ? r.sigs : {}
+    const shown = new Set((snap?.graph?.bots ?? []).map((/** @type {{ id: string }} */ b) => b.id))
+    let changed = false
+    for (const key of Object.keys(held)) {
+      if (!shown.has(key) || typeof sigs[key] !== 'string') {
+        delete held[key]
+        delete pictures[key]
+        changed = true
+      }
+    }
+    for (const key of shown) {
+      const sig = sigs[key]
+      if (typeof sig !== 'string' || held[key] === sig) continue
+      const p = await api.plugin.request('graph.picture', { key })
+      if (p && p.sig === sig && p.picture) {
+        held[key] = sig
+        pictures[key] = p.picture
+        changed = true
+      }
+    }
+    if (changed) draw()
   } catch {
-    /* the initials stay */
+    /* the pictures held, or the initials, stay */
+  } finally {
+    picturesBusy = false
   }
 }
 

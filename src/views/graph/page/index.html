@@ -3,6 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- A second line behind the escaping: only our own files run, pictures only as data: URLs, no
+         network. Orca's own frame policy already sits under this one; a page policy can only tighten
+         it. Styles keep 'unsafe-inline' because Orca's frame shell rewrites its inline token <style>
+         on a theme change; this page itself uses no inline style. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'" />
     <title>Funnel graph</title>
     <link rel="stylesheet" href="./graph.css" />
   </head>

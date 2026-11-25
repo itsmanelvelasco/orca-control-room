@@ -33,8 +33,10 @@ declare module 'orca' {
     'funnel.open': { input: { key: string; dispatchId?: string }; output: { opened: boolean; reason?: 'unknown' | 'no_target' | 'failed' } }
     /** Funnel slice 4: the Funnel graph panel's graph, built from the funnel. Same reads and `null` answer as `funnel.snapshot`. */
     'graph.snapshot': { input?: { force?: boolean; version?: number }; output: GraphSnapshot | null }
-    /** Funnel slice 4 (R9): each bot's picture as a `data:` URL, by bot id and by `name:<bot name>`; null when it has none. Read by the worker, at most once a minute. */
-    'graph.pictures': { output: { pictures: Record<string, Picture | null> } }
+    /** Funnel slice 4 (R9): each bot's picture signature, by bot id and by `name:<bot name>`; null when it has none (draw the initial). Scans at most once a minute; a signature changes when its file changes. */
+    'graph.pictures': { output: { sigs: Record<string, string | null> } }
+    /** Funnel slice 4 (R9): one picture as a `data:` URL (at most 128 KB of file), with its signature. One per answer, so an answer stays far below 256 KiB. */
+    'graph.picture': { input: { key: string }; output: { key: string; sig: string | null; picture: Picture | null } }
     /** R4: the waits as the worker last read them. */
     'waits.get': { output: WaitsSnapshot }
     /** Opens or focuses the place of one wait. Takes only the row key; the worker looks up where it goes. */

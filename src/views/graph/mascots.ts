@@ -6,14 +6,18 @@
 //     `<Orca install>/resources/app.asar.unpacked/out/renderer/assets/<id>-<hash>.svg` (then `.webp`).
 //     The install folder comes from `process.execPath` (the same idea as the CLI finder).
 //  3. Nothing found: no picture; the panel draws the bot's initial.
-// Every file: a plain file, not empty, at most 1 MB, and really the image its name says. An SVG with
+// Every file: a plain file, not empty, at most 128 KB, and really the image its name says. An SVG with
 // script, event handlers, foreignObject, entities or any outside link is refused.
 // The plugin ships no mascot files. Panel code never reads files: only this worker module does.
 //
-// The pure parts (paths, checks) take no Node module; `readPictures` takes its file access as deps.
+// The pure parts (paths, checks) take no Node module. The store takes its file access as deps and
+// reads a file again only when its size or mtime changed; the panel gets one picture per answer.
 
-/** At most this many bytes per picture file. */
-export const MAX_BYTES = 1024 * 1024
+/**
+ * At most this many bytes per picture file. Its base64 (about 175 KB) goes in one answer of its own,
+ * far below the 256 KiB a panel message may hold.
+ */
+export const MAX_PICTURE = 128 * 1024
 /** At most this many bytes of a bot.json. */
 export const MAX_BOT_JSON = 64 * 1024
 /** At most this many bot homes are looked at. */
@@ -114,90 +118,164 @@ export type PictureDeps = {
   readFile(path: string): Promise<Uint8Array>
 }
 
-/** Reads one file if it is a plain file of 1..max bytes; null otherwise. */
-async function readSmall(deps: PictureDeps, path: string, max: number): Promise<Uint8Array | null> {
+const statOf = async (deps: PictureDeps, path: string): Promise<FileStat | null> => {
   try {
-    const s = await deps.stat(path)
-    if (!s.isFile || s.size <= 0 || s.size > max) return null
-    const b = await deps.readFile(path)
-    return b.length > 0 && b.length <= max ? b : null
+    return await deps.stat(path)
   } catch {
     return null
   }
 }
 
-/** The uploaded picture in a bot home: `avatar.png`, a real PNG. */
-export async function readUpload(deps: PictureDeps, home: string): Promise<Picture | null> {
-  const b = await readSmall(deps, join(deps.platform === 'win32', home, 'avatar.png'), MAX_BYTES)
-  return b && isPng(b) ? { url: dataUrl('image/png', b), from: 'upload' } : null
+/** A picture with the signature the panel keeps: it changes when the file changes. */
+export type PictureEntry = { sig: string; picture: Picture }
+
+export type PictureStore = {
+  /**
+   * Looks at every bot home and returns each key's picture signature (null: no picture, draw the
+   * initial). Keys are bot ids and `name:<bot name>`. Only a file whose size or mtime changed since
+   * the last scan is read again.
+   */
+  scan(): Promise<Record<string, string | null>>
+  /** The picture of one key as of the last scan; null when it has none. */
+  get(key: string): PictureEntry | null
 }
 
-/** Orca's mascot `id` from the installed app: the first file that passes its check. */
-export async function readMascot(deps: PictureDeps, dir: string, names: readonly string[], id: string): Promise<Picture | null> {
-  for (const name of mascotFiles(names, id)) {
-    const b = await readSmall(deps, join(deps.platform === 'win32', dir, name), MAX_BYTES)
-    if (!b) continue
-    if (name.endsWith('.svg')) {
-      const text = new TextDecoder('utf-8', { fatal: false }).decode(b)
-      if (isSafeSvg(text)) return { url: dataUrl('image/svg+xml', b), from: 'mascot' }
-    } else if (isWebp(b)) {
-      return { url: dataUrl('image/webp', b), from: 'mascot' }
-    }
-  }
-  return null
-}
+type Checked = { sig: string; picture: Picture | null }
+type BotJson = { id: string; name: string; avatar: Avatar }
 
 /**
- * Every bot's picture, by bot id (and by bot name, for pieces that know only the name). A bot with no
- * picture maps to null. A missing folder or an unreadable file is skipped with no error (R9 AC).
+ * Bot pictures with a cache by file size and mtime. A file over MAX_PICTURE, or one that fails its
+ * check, gives no picture and one log line per file version. A missing folder or file gives no
+ * picture and no line (R9 AC).
  */
-export async function readPictures(deps: PictureDeps): Promise<Record<string, Picture | null>> {
-  const out: Record<string, Picture | null> = {}
-  const bots = botsDir(deps.homedir, deps.platform)
-  if (!bots) return out
+export function createPictureStore(deps: PictureDeps, log: (line: string) => void = () => undefined): PictureStore {
   const win = deps.platform === 'win32'
-  let homes: string[] = []
-  try {
-    homes = (await deps.readdir(bots)).filter((n) => !n.startsWith('.')).sort().slice(0, MAX_BOTS)
-  } catch {
-    return out
+  const jsons = new Map<string, { sig: string; bot: BotJson | null }>()
+  const files = new Map<string, Checked>()
+  const logged = new Set<string>()
+  let current = new Map<string, PictureEntry | null>()
+  const once = (key: string, line: string): void => {
+    if (logged.has(key)) return
+    logged.add(key)
+    log(line)
   }
-  const assets = assetsDir(deps.execPath, deps.platform)
-  let assetNames: string[] | null = null
-  const listAssets = async (): Promise<string[]> => {
-    if (assetNames) return assetNames
+
+  /** One picture file: from the cache when its size and mtime match, else read and checked. */
+  async function checked(path: string, label: string, check: (b: Uint8Array) => Picture | null): Promise<Checked | null> {
+    const s = await statOf(deps, path)
+    if (!s || !s.isFile || s.size <= 0) return null
+    const sig = `${s.size}:${s.mtimeMs}`
+    const hit = files.get(path)
+    if (hit && hit.sig === sig) return hit
+    let picture: Picture | null = null
+    if (s.size > MAX_PICTURE) {
+      once(`big ${path} ${sig}`, `bot picture skipped: ${label} is ${Math.ceil(s.size / 1024)} KB, over ${MAX_PICTURE / 1024} KB; the initial shows`)
+    } else {
+      try {
+        const b = await deps.readFile(path)
+        picture = b.length > 0 && b.length <= MAX_PICTURE ? check(b) : null
+      } catch {
+        picture = null
+      }
+      if (!picture) once(`bad ${path} ${sig}`, `bot picture refused: ${label} is not a safe image of its type; the initial shows`)
+    }
+    const c = { sig, picture }
+    files.set(path, c)
+    return c
+  }
+
+  async function botJson(path: string): Promise<BotJson | null> {
+    const s = await statOf(deps, path)
+    if (!s || !s.isFile || s.size <= 0 || s.size > MAX_BOT_JSON) return null
+    const sig = `${s.size}:${s.mtimeMs}`
+    const hit = jsons.get(path)
+    if (hit && hit.sig === sig) return hit.bot
+    let bot: BotJson | null = null
     try {
-      assetNames = assets ? await deps.readdir(assets) : []
+      const v = JSON.parse(new TextDecoder().decode(await deps.readFile(path))) as { id?: unknown; name?: unknown; avatar?: unknown } | null
+      if (v && typeof v === 'object') {
+        const id = typeof v.id === 'string' ? v.id.slice(0, 80) : ''
+        const name = typeof v.name === 'string' ? v.name.slice(0, 80) : ''
+        if (id || name) bot = { id, name, avatar: avatarOf(v.avatar) }
+      }
     } catch {
-      assetNames = []
+      bot = null
     }
-    return assetNames
+    jsons.set(path, { sig, bot })
+    return bot
   }
-  const mascots = new Map<string, Picture | null>()
-  for (const name of homes) {
-    const home = join(win, bots, name)
-    const raw = await readSmall(deps, join(win, home, 'bot.json'), MAX_BOT_JSON)
-    if (!raw) continue
-    let bot: { id?: unknown; name?: unknown; avatar?: unknown }
-    try {
-      bot = JSON.parse(new TextDecoder().decode(raw))
-    } catch {
-      continue
-    }
-    if (!bot || typeof bot !== 'object') continue
-    const id = typeof bot.id === 'string' ? bot.id.slice(0, 80) : ''
-    const botName = typeof bot.name === 'string' ? bot.name.slice(0, 80) : ''
-    if (!id && !botName) continue
-    const avatar = avatarOf(bot.avatar)
-    let pic: Picture | null = null
-    // An uploaded picture first; a bot set to a mascot shows the mascot, as Orca's sidebar does.
-    if (avatar?.kind !== 'mascot') pic = await readUpload(deps, home)
-    else if (assets) {
-      if (!mascots.has(avatar.id)) mascots.set(avatar.id, await readMascot(deps, assets, await listAssets(), avatar.id))
-      pic = mascots.get(avatar.id) ?? null
-    }
-    if (id) out[id] = pic
-    if (botName && !(`name:${botName}` in out)) out[`name:${botName}`] = pic
+
+  const svgOrWebp = (name: string) => (b: Uint8Array): Picture | null => {
+    if (name.endsWith('.svg')) return isSafeSvg(new TextDecoder('utf-8', { fatal: false }).decode(b)) ? { url: dataUrl('image/svg+xml', b), from: 'mascot' } : null
+    return isWebp(b) ? { url: dataUrl('image/webp', b), from: 'mascot' } : null
   }
-  return out
+  const png = (b: Uint8Array): Picture | null => (isPng(b) ? { url: dataUrl('image/png', b), from: 'upload' } : null)
+
+  return {
+    async scan() {
+      const next = new Map<string, PictureEntry | null>()
+      const out: Record<string, string | null> = {}
+      const bots = botsDir(deps.homedir, deps.platform)
+      let homes: string[] = []
+      try {
+        homes = bots ? (await deps.readdir(bots)).filter((n) => !n.startsWith('.')).sort().slice(0, MAX_BOTS) : []
+      } catch {
+        homes = []
+      }
+      const assets = assetsDir(deps.execPath, deps.platform)
+      let assetNames: string[] | null = null
+      const mascots = new Map<string, PictureEntry | null>()
+      const mascot = async (id: string): Promise<PictureEntry | null> => {
+        if (mascots.has(id)) return mascots.get(id) ?? null
+        let found: PictureEntry | null = null
+        if (assets) {
+          if (!assetNames) {
+            try {
+              assetNames = await deps.readdir(assets)
+            } catch {
+              assetNames = []
+            }
+          }
+          for (const name of mascotFiles(assetNames, id)) {
+            const c = await checked(join(win, assets, name), `Orca mascot ${name}`, svgOrWebp(name))
+            if (c?.picture) {
+              found = { sig: `mascot:${name}:${c.sig}`, picture: c.picture }
+              break
+            }
+          }
+        }
+        mascots.set(id, found)
+        return found
+      }
+      for (const home of homes) {
+        const dir = join(win, bots as string, home)
+        const bot = await botJson(join(win, dir, 'bot.json'))
+        if (!bot) continue
+        let entry: PictureEntry | null = null
+        // An uploaded picture first; a bot set to a mascot shows the mascot, as Orca's sidebar does.
+        if (bot.avatar?.kind === 'mascot') entry = await mascot(bot.avatar.id)
+        else {
+          const c = await checked(join(win, dir, 'avatar.png'), `avatar.png of bot "${bot.name || home}"`, png)
+          entry = c?.picture ? { sig: `upload:${home}:${c.sig}`, picture: c.picture } : null
+        }
+        for (const key of [bot.id, bot.name ? `name:${bot.name}` : '']) {
+          if (!key || key in out) continue
+          next.set(key, entry)
+          out[key] = entry?.sig ?? null
+        }
+      }
+      current = next
+      return out
+    },
+    get(key) {
+      return current.get(key) ?? null
+    }
+  }
+}
+
+/** Every key's picture after one scan (tests and one-off use). */
+export async function readPictures(deps: PictureDeps, log?: (line: string) => void): Promise<Record<string, Picture | null>> {
+  const store = createPictureStore(deps, log)
+  const sigs = await store.scan()
+  return Object.fromEntries(Object.keys(sigs).map((k) => [k, store.get(k)?.picture ?? null]))
 }

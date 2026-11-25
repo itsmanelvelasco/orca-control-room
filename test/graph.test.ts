@@ -129,13 +129,21 @@ test('PRD section 5: each column shows 20 nodes, then "+N more"; 0 items gives f
   assert.match(draw.graphSvg(empty), /No work yet\./)
 })
 
-test('R8: building the graph for 60 bots and 240 pieces takes well under 50 ms', () => {
+test('R8: building and drawing the graph for 60 bots and 240 pieces: median under 50 ms', () => {
   const f = buildFunnel({ items: ideas(240, 60, true), works: [], runs: [], waits: [], now: NOW })
-  const t0 = performance.now()
-  const g = buildGraph(f)
-  draw.graphSvg(g)
-  const ms = performance.now() - t0
-  assert.ok(ms < 50, `${ms} ms`)
+  // The median of 7 runs after a warm-up, as slice 1's R8 test does: one cold sample on a busy
+  // machine is noise.
+  for (let i = 0; i < 3; i++) draw.graphSvg(buildGraph(f))
+  const runs: number[] = []
+  let g = buildGraph(f)
+  for (let i = 0; i < 7; i++) {
+    const t0 = performance.now()
+    g = buildGraph(f)
+    draw.graphSvg(g)
+    runs.push(performance.now() - t0)
+  }
+  const ms = runs.sort((a, b) => a - b)[3]
+  assert.ok(ms < 50, `median ${ms} ms`)
   assert.equal(g.bots.length, 60)
 })
 
