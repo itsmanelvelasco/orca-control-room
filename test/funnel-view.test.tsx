@@ -239,7 +239,7 @@ test('R6: funnel.open calls only terminal.focus or workspace.open (nothing writt
   assert.equal(cli, callsBefore, 'funnel.open made a CLI call')
 })
 
-// ---------- R8 with the panel: the dev tab ----------
+// ---------- slice 5: the Funnel tab in the panel (R8: hidden asks nothing) ----------
 
 async function roomHost() {
   const asks = { funnel: 0 }
@@ -255,26 +255,34 @@ async function roomHost() {
   return { host, asks }
 }
 
-test('until slice 5: no Funnel tab and no funnel ask unless room.devFunnel is on; with it, the Funnel tab shows the columns', async () => {
+test('slice 5: the Funnel tab shows for everyone, after Shipping line; hidden, it asks nothing (R8)', async () => {
+  // Opens on Waits: the Funnel tab is there, Shipping line stays (gate A), and the funnel asks nothing.
   const off = await roomHost()
-  const plain = await mount(room, { host: off.host, persisted: { plugin: { 'room.tab': 'funnel' } } })
-  assert.ok(!plain.summary()[0].includes('Funnel'), plain.summary()[0])
+  const plain = await mount(room, { host: off.host })
+  const tabs = plain.findAll({ type: 'Tab' }).map((t) => String(t.props.label))
+  assert.deepEqual(tabs.slice(1), ['Shipping line', 'Agents', 'Funnel'], tabs.join(' / '))
   await sleep(1_300)
   assert.equal(off.asks.funnel, 0, 'the hidden funnel asked')
+  // A press on the tab shows the columns and asks at once.
+  await plain.select({ type: 'Tabs' }, 'funnel')
+  assert.ok(plain.summary()[0].includes('"Funnel" selected'), plain.summary()[0])
+  assert.ok(off.asks.funnel >= 1, 'the funnel did not ask on the switch')
+  assert.ok(plain.find({ testId: 'col:execution' }))
+  assert.equal(plain.persisted.plugin['room.tab'], 'funnel')
+  assert.deepEqual(plain.errors, [])
   await plain.unmount()
 
+  // Opens where it was left, with no dev flag; leaving the tab stops the asks.
   const on = await roomHost()
-  const dev = await mount(room, { host: on.host, persisted: { plugin: { 'room.tab': 'funnel', 'room.devFunnel': true } } })
-  assert.ok(dev.summary()[0].includes('"Funnel" selected'), dev.summary()[0])
+  const kept = await mount(room, { host: on.host, persisted: { plugin: { 'room.tab': 'funnel' } } })
+  assert.ok(kept.summary()[0].includes('"Funnel" selected'), kept.summary()[0])
   assert.ok(on.asks.funnel >= 1)
-  assert.ok(dev.find({ testId: 'col:execution' }))
-  // Leaving the tab stops the asks (R8: a hidden tab costs nothing).
-  await dev.select({ type: 'Tabs' }, 'waits')
+  await kept.select({ type: 'Tabs' }, 'waits')
   const at = on.asks.funnel
   await sleep(1_300)
   assert.equal(on.asks.funnel, at)
-  assert.deepEqual(dev.errors, [])
-  await dev.unmount()
+  assert.deepEqual(kept.errors, [])
+  await kept.unmount()
 })
 
 // ---------- review of PR #11 ----------
