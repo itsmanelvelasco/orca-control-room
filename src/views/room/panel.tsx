@@ -1,8 +1,7 @@
-// The one Control Room panel (PRD goal: "one Orca panel"). Three tabs: Waits on you (R4),
-// Shipping line (R6) and Agents (R7). Each tab is the view module of its slice, set up once here.
+// The one Control Room panel (PRD goal: "one Orca panel"). Four tabs: Waits on you (R4),
+// Shipping line (R6), Agents (R7) and Funnel (funnel PRD, gate A: a 4th tab; Shipping line stays).
+// Each tab is the view module of its slice, set up once here.
 // A tab polls only while the panel is visible and that tab is the one shown.
-// Funnel slices 3-4 build a 4th tab, Funnel. Until slice 5 ships it, the tab shows only when
-// `room.devFunnel` is on: nothing in the UI sets it, only the `funnel` check scenarios do.
 import { atom, derived, read, set, Tab, Tabs, type PanelContext } from 'orca'
 import * as waits from '../waits/panel.tsx'
 import * as line from '../line/panel.tsx'
@@ -15,10 +14,7 @@ export type TabId = (typeof TABS)[number]
 
 /** The tab shown; kept by Orca for the plugin, so the panel opens where the user left it. */
 export const tab = atom<TabId>('room.tab', 'waits', { persist: 'plugin' })
-/** Dev only, until funnel slice 5: shows the Funnel tab. */
-export const devFunnel = atom<boolean>('room.devFunnel', false, { persist: 'plugin' })
-
-const isTab = (v: unknown): v is TabId => typeof v === 'string' && (TABS as readonly string[]).includes(v) && (v !== 'funnel' || read(devFunnel) === true)
+const isTab = (v: unknown): v is TabId => typeof v === 'string' && (TABS as readonly string[]).includes(v)
 
 /** The tab on screen. Tabs is controlled by it, so what shows and what polls never differ. */
 const shown = derived<TabId>(() => {
@@ -61,11 +57,9 @@ export default function Panel() {
       <Tab value="agents" label="Agents" icon="agent">
         <agents.default />
       </Tab>
-      {read(devFunnel) === true ? (
-        <Tab value="funnel" label="Funnel" icon="layers">
-          <funnel.default />
-        </Tab>
-      ) : null}
+      <Tab value="funnel" label="Funnel" icon="layers">
+        <funnel.default />
+      </Tab>
     </Tabs>
   )
 }

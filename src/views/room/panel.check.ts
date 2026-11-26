@@ -37,10 +37,9 @@ const lineNoCli: LineSnapshot = { status: 'error', updatedAt: null, error: { kin
 
 const all = (w: WaitsSnapshot, l: LineSnapshot, a: AgentsSnapshot) => ({ 'waits.get': w, 'line.snapshot': l, 'agents.get': a })
 
-/** Funnel slice 3: the funnel from the demo case, on the dev-only Funnel tab. funnel-view.test.tsx covers the empty funnel. */
+/** The funnel from the demo case, on the Funnel tab. funnel-view.test.tsx covers the empty funnel. */
 const funnel = funnelFromCase(caseJson('funnel-demo.json'), now)
 const withFunnel = (f: FunnelSnapshot) => ({ ...all(waits, line, agents), 'funnel.snapshot': f, 'funnel.open': { opened: true } })
-const onFunnel = { plugin: { 'room.tab': 'funnel', 'room.devFunnel': true } }
 const on = (tab: string) => ({ plugin: { 'room.tab': tab } })
 
 export default defineCheck({
@@ -53,8 +52,8 @@ export default defineCheck({
   // The CLI is missing: one banner with the paths tried; the Agents tab still works.
   'cli-missing': { requests: all(waitsNoCli, lineNoCli, agents) },
   'cli-missing-agents': { requests: all(waitsNoCli, lineNoCli, agents), persisted: on('agents') },
-  // Funnel (dev tab until funnel slice 5): four stage columns, amber waits, an unlinked wait.
-  funnel: { requests: withFunnel(funnel), persisted: onFunnel },
+  // Funnel: four stage columns, amber waits, an unlinked wait.
+  funnel: { requests: withFunnel(funnel), persisted: on('funnel') },
   // A new user: no waits, no Runs, no agents.
   empty: {
     requests: all(

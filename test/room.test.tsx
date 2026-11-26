@@ -1,4 +1,4 @@
-// The one Control Room panel: three tabs over the slice 2-4 views, the waits count on its tab,
+// The one Control Room panel: four tabs (Waits, Shipping line, Agents, Funnel), the waits count on its tab,
 // the tab kept in storage, and only the tab shown polls.
 import { readFileSync } from 'node:fs'
 import { assert, mockHost, mount, test } from 'orca/testing'
@@ -30,7 +30,7 @@ test('PRD goal: the manifest has the Control Room panel, the Funnel graph panel 
   assert.deepEqual(m.contributes.statusBarItems.map((s) => s.id), ['waits'])
 })
 
-test('three tabs; Waits first with its count; a tab switch shows that view', async () => {
+test('four tabs, Funnel last; Waits first with its count; a tab switch shows that view', async () => {
   const { host, waits } = await hostWithCounts()
   const view = await mount(room, { host })
   assert.ok(view.summary()[0].startsWith(`Tabs "Control Room": "Waits (${waits.waits.length})" selected`), view.summary()[0])
