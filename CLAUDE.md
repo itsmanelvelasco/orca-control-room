@@ -5,7 +5,7 @@ PRD: https://claude.ai/artifact/NwJN9uGm36gCJxwtCGCiQN
 The user-level standard applies: branch, gate, picture, PR, no merge unasked.
 
 ## Commands
-- Run from source: `orca plugin dev load .` (prints an approval fingerprint the first time), then `orca plugin dev request . cli.status` and `orca plugin logs local.control-room`.
+- Run from source: `orca plugin dev load .` (prints an approval fingerprint the first time), then `orca plugin dev request . cli.status` and `orca plugin logs local.control-room`. Every loaded folder shares the key `local.control-room`: run `orca plugin dev unload .` when you are done, or old worktrees clash and can show a blank panel.
 - Gate: `bash scripts/ci-local.sh` (full: manifest, tests, panels, fixtures clean, changelog untouched). While you iterate: `--changed`.
 - Picture: `orca plugin shot . --panel <id> --theme light|dark --out docs/screenshots/<branch-slug>/<name>.png`. No panel yet: a Mermaid diagram.
 - Types for the editor: `orca plugin types .` writes `.orca/types/` (git-ignored).
@@ -27,7 +27,7 @@ The user-level standard applies: branch, gate, picture, PR, no merge unasked.
 - Visible change: a screenshot of each changed panel, light and dark. Not visible: a Mermaid diagram.
 
 ## Deploy
-- Install: `orca plugin install itsmanelvelasco/orca-control-room` (pins the newest `vX.Y.Z` tag, else the default branch). Update: `orca plugin update`.
+- Install or move to the latest: `orca plugin install itsmanelvelasco/orca-control-room@main` (+ the `--approve <fingerprint>` it prints when asked). An install is pinned to one commit; with no `vX.Y.Z` tags, `orca plugin update` never moves it. Do not create tags: Manel decides.
 - A change to the manifest's access needs a new approval: say so in the PR.
 
 ## Do not

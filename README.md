@@ -39,10 +39,12 @@ A status bar item counts the waits. Each new wait shows one desktop notification
 ## Install
 
 ```sh
-orca plugin install itsmanelvelasco/orca-control-room
+orca plugin install itsmanelvelasco/orca-control-room@main
 ```
 
-Orca shows what the plugin asks for and prints an `--approve` command; run it to approve. Orca installs the newest `vX.Y.Z` tag, or the default branch when there is none. To update: `orca plugin update`.
+Orca shows what the plugin asks for and prints an `--approve` command; run it to approve. Orca pins the install to one commit.
+
+**To update:** run the same command again. Control Room has no `vX.Y.Z` tags yet, so `orca plugin update` keeps the pinned commit and never moves it. When an update adds a panel or access, Orca asks again: re-run with the `--approve` it prints. If Control Room is off, turn it on with `orca plugin enable itsmanelvelasco.control-room`.
 
 Needs Orca 1.4.260 or later.
 
@@ -107,7 +109,10 @@ orca plugin dev load .                       # run from source
 orca plugin test .                           # the tests
 bash scripts/ci-local.sh                     # the full gate
 orca plugin shot . --panel control-room --scenario waits --theme dark   # a screenshot from test data
+orca plugin dev unload .                     # when you are done testing
 ```
+
+Every folder you load this way gets the same key, `local.control-room`. Two loaded folders clash, and a stale one can show a blank panel. Unload each folder when you are done testing; the error of `orca plugin dev request <folder> x` lists the folders that are loaded.
 
 The test data in `test/fixtures/` is recorded CLI output with every name swapped for an invented one.
 
