@@ -39,10 +39,12 @@ A status bar item counts the waits. Each new wait shows one desktop notification
 ## Install
 
 ```sh
-orca plugin install itsmanelvelasco/orca-control-room@main
+orca plugin install https://github.com/itsmanelvelasco/orca-control-room.git --ref main
 ```
 
-Orca shows what the plugin asks for and prints an `--approve` command; run it to approve. Orca pins the install to one commit.
+The first run stops with `approval_required`: Orca shows what the plugin asks for and prints a fingerprint. Run the same command again with `--approve <fingerprint>`. Orca pins the install to one commit.
+
+Use this form. On Windows, `itsmanelvelasco/orca-control-room@main` can fail while Git writes its objects (`Permission denied`), and a `https://github.com/...@main` URL is read as a repository name. If the install fails with `EBUSY` (a locked temp folder), run it again.
 
 **To update:** run the same command again. Control Room has no `vX.Y.Z` tags yet, so `orca plugin update` keeps the pinned commit and never moves it. When an update adds a panel or access, Orca asks again: re-run with the `--approve` it prints. If Control Room is off, turn it on with `orca plugin enable itsmanelvelasco.control-room`.
 

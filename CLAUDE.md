@@ -27,7 +27,7 @@ The user-level standard applies: branch, gate, picture, PR, no merge unasked.
 - Visible change: a screenshot of each changed panel, light and dark. Not visible: a Mermaid diagram.
 
 ## Deploy
-- Install or move to the latest: `orca plugin install itsmanelvelasco/orca-control-room@main` (+ the `--approve <fingerprint>` it prints when asked). An install is pinned to one commit; with no `vX.Y.Z` tags, `orca plugin update` never moves it. Do not create tags: Manel decides.
+- Install or move to the latest: `orca plugin install https://github.com/itsmanelvelasco/orca-control-room.git --ref main`, then the same command with `--approve <fingerprint>` from its `approval_required` answer. Not `owner/repo@main` (on Windows Git failed with `Permission denied`) and not a `https://...@main` URL (read as a repo name). On `EBUSY`, run it again. An install is pinned to one commit; with no `vX.Y.Z` tags, `orca plugin update` never moves it. Do not create tags: Manel decides.
 - A change to the manifest's access needs a new approval: say so in the PR.
 
 ## Do not
