@@ -23,12 +23,20 @@ The user-level standard applies: branch, gate, picture, PR, no merge unasked.
 
 ## PRs
 - One slice per PR. Each PR adds `changelog.d/<YYYY-MM-DD>-pr<N>.md` after it has a number; never edit `CHANGELOG.md` on a branch.
-- Bump `version` in `orca-plugin.json` only in the release slice.
+- Bump `version` in `orca-plugin.json` only in the release slice (see Releasing).
 - Visible change: a screenshot of each changed panel, light and dark. Not visible: a Mermaid diagram.
 
 ## Deploy
-- Install or move to the latest: `orca plugin install https://github.com/itsmanelvelasco/orca-control-room.git --ref main`, then the same command with `--approve <fingerprint>` from its `approval_required` answer. Not `owner/repo@main` (on Windows Git failed with `Permission denied`) and not a `https://...@main` URL (read as a repo name). On `EBUSY`, run it again. An install is pinned to one commit; with no `vX.Y.Z` tags, `orca plugin update` never moves it. Do not create tags: Manel decides.
+- Install: `orca plugin install itsmanelvelasco/orca-control-room` (the newest `vX.Y.Z` tag, pinned to its commit), then the same command with `--approve <fingerprint>` from its `approval_required` answer. On Windows, if Git fails with `Permission denied`, use `https://github.com/itsmanelvelasco/orca-control-room.git`. On `EBUSY`, run it again.
+- Update: `orca plugin update itsmanelvelasco.control-room` moves to the newest tag. An old `--ref main` install is pinned to one commit and never moves: install again once.
+- Try unreleased `main`: `orca plugin install https://github.com/itsmanelvelasco/orca-control-room.git --ref main`. Not `owner/repo@main` (on Windows Git failed with `Permission denied`) and not a `https://...@main` URL (read as a repo name).
 - A change to the manifest's access needs a new approval: say so in the PR.
+
+## Releasing
+1. On a branch from `origin/main`: bump `version` in `orca-plugin.json` (semver), add its `changelog.d/` file, open the PR.
+2. Manel merges it.
+3. Tag the merge commit `vX.Y.Z` (the same version) and push the tag. Only Manel decides when to tag.
+4. `changelog.d/` entries are folded into `CHANGELOG.md` on `main`, never on a branch.
 
 ## Do not
 - Run a bare `orca`, or any path relative to Orca's cwd.

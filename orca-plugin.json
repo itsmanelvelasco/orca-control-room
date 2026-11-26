@@ -2,7 +2,7 @@
   "manifestVersion": 2,
   "id": "control-room",
   "name": "Control Room",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "One panel for what waits on you and where each piece of work stands: bot items, gates, Runs, tasks, workers and agents. Read only.",
   "author": {
     "name": "Manel Velasco"
